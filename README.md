@@ -30,56 +30,50 @@ This Sensor Module can read and provide data for up to 19 sensors.
 
 The hardware has 48 pins on 4 plugs and is pinned out as follows.
 
-A1. Fuel Pressure -
-A2. Fuel Pressure Signal
-A3. Fuel Temp +
-A4. Engine Bay Temp +
-A5. Fuel Temp -
-A6. Engine Bay Temp -
-A7. 12 Volt Power
-A8. 5 Volts for BME280
-A9. Ground
-A10. Ground for BME280
-A11. SCL for BME280
-A12. SDA for BME280
+| Pin A | Pin B | Pin C | Pin D |
+| ..... | ..... | ..... | ..... |
+| A1. Fuel Pressure -| B1. Oil Temperature + | C1. CAC Pressure +| D1. Transmission Temperature - |
+| A2. Fuel Pressure Signal | B2. Oil Pressure Signal | C2. CAC Temperature + | D2. Transmission Pressure - |
+| A3. Fuel Temp + | B3. Coolant Temperature + | C3. Intake Temperature + | D3. Boost Temperature - |
+| A4. Engine Bay Temp + | B4. Coolant Pressure + | C4. Intake Pressure Signal | D4. Ground\
+| A5. Fuel Temp - | B5. Oil Temperature - | C5. Intake Pressure + | D5. Egt+ |
 
-B1. Oil Temperature +
-B2. Oil Pressure Signal
-B3. Coolant Temperature +
-B4. Coolant Pressure +
-B5. Oil Temperature -
-B6. Oil Pressure -
-B7. Coolant Temperature -
-B8. Coolant Pressure -
-B9. Oil Pressure +
-B10. Coolant Pressure +
-B11. CanH
-B12. CanL
+| A6. Engine Bay Temp -
+| A7. 12 Volt Power
+| A8. 5 Volts for BME280
+| A9. Ground
+| A10. Ground for BME280
+| A11. SCL for BME280
+| A12. SDA for BME280
 
-C1. CAC Pressure +
-C2. CAC Temperature +
-C3. Intake Temperature +
-C4. Intake Pressure Signal
-C5. Intake Pressure +
-C6. Boost Pressure +
-C7. Intake Pressure -
-C8. CAC Pressure Signal
-C9. CAC Pressure -
-C10. CAC Temperature -
-C11. Intake Temperature -
-C12. Fuel Pressure +
 
-D1. Transmission Temperature -
-D2. Transmission Pressure -
-D3. Boost Temperature -
-D4. Ground
-D5. Egt+
-D6. Egt-
-D7. Boost Pressure -
-D8. Transmission Temperature +
-D9. Transmission Pressure Signal
-D10. Boost Pressure Signal
-D11. Boost Temperature +
-D12. Transmission Pressure +
+
+| B6. Oil Pressure -
+| B7. Coolant Temperature -
+| B8. Coolant Pressure -
+| B9. Oil Pressure +
+| B10. Coolant Pressure +
+| B11. CanH
+| B12. CanL
+
+
+
+| C6. Boost Pressure +
+| C7. Intake Pressure -
+| C8. CAC Pressure Signal
+| C9. CAC Pressure -
+| C10. CAC Temperature -
+| C11. Intake Temperature -
+| C12. Fuel Pressure +
+
+
+
+| D6. Egt-
+| D7. Boost Pressure -
+| D8. Transmission Temperature +
+| D9. Transmission Pressure Signal
+| D10. Boost Pressure Signal
+| D11. Boost Temperature +
+| D12. Transmission Pressure +
 
 
