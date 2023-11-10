@@ -1,3 +1,4 @@
+html = markdown(s, extensions=['tables'])
 # Open Source Sensor Module
 
 This software is designed to emulate a second PCM/ECM and read a bunch of sensors and respond to ODB2 requests. Some of the sensors won't have standard ODB2 requests associated with them, so this repo starts the idea of an open source set of ODB2 PIDS, and will provide the dbc and associated things needed to use those PIDS.
@@ -30,9 +31,9 @@ This Sensor Module can read and provide data for up to 19 sensors.
 
 The hardware has 48 pins on 4 plugs and is pinned out as follows.
 
-| Pin A | Pin B | Pin C | Pin D |\
+| Pin A | Pin B | Pin C | Pin D |
 | ----- | ----- | ----- | ----- |
-| A1. Fuel Pressure - | B1. Oil Temperature + | C1. CAC Pressure + | D1. Transmission Temperature - |\
+| A1. Fuel Pressure - | B1. Oil Temperature + | C1. CAC Pressure + | D1. Transmission Temperature - |
 
 | A2. Fuel Pressure Signal | B2. Oil Pressure Signal | C2. CAC Temperature + | D2. Transmission Pressure - |\
 | A3. Fuel Temp + | B3. Coolant Temperature + | C3. Intake Temperature + | D3. Boost Temperature - |\
