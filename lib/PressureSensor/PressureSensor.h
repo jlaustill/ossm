@@ -31,6 +31,7 @@ public:
     }
 
     float getPressureInPsi();
+    float getPressureInkPa();
 
 private:
     uint8_t DeviceId;

@@ -89,12 +89,11 @@ void ossm::setup() {
   }
 
   Serial.println("isAds1Initialized->" + String(ossm::isAds1Initialized));
-    Serial.println("isAds2Initialized->" + String(ossm::isAds2Initialized));
-    Serial.println("isAds3Initialized->" + String(ossm::isAds3Initialized));
-    Serial.println("isAds4Initialized->" + String(ossm::isAds4Initialized));
-    Serial.println("isEgtInitialized->" + String(ossm::isEgtInitialized));
-    Serial.println("isBmeInitialized->" + String(ossm::isBmeInitialized));
-    
+  Serial.println("isAds2Initialized->" + String(ossm::isAds2Initialized));
+  Serial.println("isAds3Initialized->" + String(ossm::isAds3Initialized));
+  Serial.println("isAds4Initialized->" + String(ossm::isAds4Initialized));
+  Serial.println("isEgtInitialized->" + String(ossm::isEgtInitialized));
+  Serial.println("isBmeInitialized->" + String(ossm::isBmeInitialized));
 }
 
 void ossm::loop() {
@@ -113,9 +112,9 @@ void ossm::loop() {
   }
 
   if (ossm::isAds2Initialized == true) {
-    ossm::appData.transmissionPressure =
-        transmissionPressureSensor.getPressureInPsi();
-    ossm::appData.transmissionTemperature =
+    ossm::appData.transmissionPressurekPa =
+        transmissionPressureSensor.getPressureInkPa();
+    ossm::appData.transmissionTemperatureC =
         transmissionTempSensor.getTempCelsius();
     ossm::appData.boostPressure = boostPressureSensor.getPressureInPsi();
     ossm::appData.boostTemperature = boostTempSensor.getTempCelsius();
@@ -163,9 +162,9 @@ void ossm::loop() {
   if (ossm::isAds2Initialized == true) {
     Serial.println(
         "AppData: Transmission Pressure->" +
-        String(ossm::appData.transmissionPressure) +
-        "psi, Transmission Temperature->" +
-        String(ossm::appData.transmissionTemperature) + "°C, Boost Pressure->" +
+        String(ossm::appData.transmissionPressurekPa) +
+        "kPa, Transmission Temperature->" +
+        String(ossm::appData.transmissionTemperatureC) + "°C, Boost Pressure->" +
         String(ossm::appData.boostPressure) + "psi, Boost Temperature->" +
         String(ossm::appData.boostTemperature) + "°C");
   }

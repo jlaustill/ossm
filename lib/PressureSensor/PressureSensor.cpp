@@ -32,3 +32,9 @@ float PressureSensor::getPressureInPsi() {
     float returnValue = showDecimals(map(this->rawValue, zeroVoltage, maxVoltage, 0.0f, this->PsiMax), 1);
     return returnValue;
 }
+
+float PressureSensor::getPressureInkPa() {
+    float pressureInPsi = this->getPressureInPsi();
+    float pressureInkPa = pressureInPsi * 6.894757f;
+    return pressureInkPa;
+}

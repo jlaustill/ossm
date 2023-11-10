@@ -20,11 +20,11 @@ CAN_message_t supportedPidsNinetySevenToOneHundredTwentyEightResponse = {
     .id = ecmResponseId,
     .buf = {6, currentDataService, 96, B00000000, B00000001, B00000000,
             B00000001, emptyBytePad}};
-CAN_message_t supportedPidsOneHundredTwentyNineToOneHundredOneHundredFiftyResponse = {
-    .id = ecmResponseId,
-    .buf = {6, currentDataService, 96, B00000000, B00000000, B00000000,
-            B00000001, emptyBytePad}};
-
+CAN_message_t
+    supportedPidsOneHundredTwentyNineToOneHundredOneHundredFiftyResponse = {
+        .id = ecmResponseId,
+        .buf = {6, currentDataService, 96, B00000000, B00000000, B00000000,
+                B00000001, emptyBytePad}};
 
 CAN_message_t waterTempResponse = {
     .id = ecmResponseId,
@@ -54,13 +54,10 @@ CAN_message_t oilTempResponse = {
 CAN_message_t boostResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 112, 0, 0, 0, 0, 0}};
 
-
-
 CAN_message_t osAmbientHumidityResponse = {
     .id = ecmResponseId,
     .buf = {5, currentDataService, 249, 0, emptyBytePad, emptyBytePad,
             emptyBytePad, emptyBytePad}};
-
 
 CAN_message_t osAmbientConditionsResponse = {
     .id = ecmResponseId,
@@ -73,5 +70,5 @@ CAN_message_t oilResponse = {
 CAN_message_t manifoldResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 254, 0, 0, 0, 0, 0}};
 
-CAN_message_t transResponse = {
+CAN_message_t osTransmissionResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 255, 0, 0, 0, 0, 0}};

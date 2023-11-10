@@ -44,3 +44,12 @@ The hardware has 48 pins on 4 plugs and is pinned out as follows.
 | 10. Ground for BME280   | 10. Coolant Pressure +   | 10. CAC Temperature -     | 10. Boost Pressure Signal       |
 | 11. SCL for BME280      | 11. CanH                 | 11. Intake Temperature -  | 11. Boost Temperature +         |
 | 12. SDA for BME280      | 12. CanL                 | 12. Fuel Pressure +       | 12. Transmission Pressure +     |
+
+## ODB2/CanBus
+
+This module returns the data collected from the sensors via CanBus. It will use all the standard PIDs, but also supports a custom set of PIDs that are designed for real-time gauges and accurate data and not smog enforcement. They are documented in the following table.
+
+| ID (hex) | ID (Dec) | Bytes returned | Description                 | Min Value        | Max Value      | Scale | Offset | Units | Formula                     |
+| -------- | -------- | -------------- | --------------------------- | ---------------- | -------------- | ----- | ------ | ----- | --------------------------- |
+| 0XFF     | 255      | 7              | Transmission Temperature    | -327.67(-557.8F) | 327.68(621.8F) | .01   | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XFF     | 255      | 7              | Transmission Pressure(line) | 0                | 6553.5(950psi) | .1    | 0      | kPa   | (256*C + D) / 10            |

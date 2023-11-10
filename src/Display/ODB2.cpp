@@ -157,17 +157,19 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Can1.write(manifoldResponse);
         break;
       case 255:
-        transPres = OBD2::appData->transmissionPressure;
-        transTemp = OBD2::appData->transmissionTemperature;
-        transPres *= 6.895;
-        transPres *= 10;
-        transResponse.buf[5] = highByte((long)transPres);
-        transResponse.buf[6] = lowByte((long)transPres);
+        transTemp = OBD2::appData->transmissionTemperatureC;
         transTemp *= 100;
         transTemp -= 32767;
-        transResponse.buf[3] = highByte((long)transTemp);
-        transResponse.buf[4] = lowByte((long)transTemp);
-        Can1.write(transResponse);
+
+        transPres = OBD2::appData->transmissionPressurekPa;
+        transPres *= 10;
+
+        osTransmissionResponse.buf[3] = highByte((long)transTemp);
+        osTransmissionResponse.buf[4] = lowByte((long)transTemp);
+        osTransmissionResponse.buf[5] = highByte((long)transPres);
+        osTransmissionResponse.buf[6] = lowByte((long)transPres);
+
+        Can1.write(osTransmissionResponse);
         break;
       default:
         // Serial.println("ODB2 unknown request ID: " + (String)msg.id + " " +
