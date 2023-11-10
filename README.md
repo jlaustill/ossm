@@ -31,7 +31,7 @@ This Sensor Module can read and provide data for up to 19 sensors.
 The hardware has 48 pins on 4 plugs and is pinned out as follows.
 
 | Pin A | Pin B | Pin C | Pin D |\
-| ----- | ----- | ----- | ----- |\
+| ----- | ----- | ----- | ----- |
 | A1. Fuel Pressure - | B1. Oil Temperature + | C1. CAC Pressure + | D1. Transmission Temperature - |\
 
 | A2. Fuel Pressure Signal | B2. Oil Pressure Signal | C2. CAC Temperature + | D2. Transmission Pressure - |\
