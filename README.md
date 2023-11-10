@@ -1,4 +1,3 @@
-html = markdown(s, extensions=['tables'])
 # Open Source Sensor Module
 
 This software is designed to emulate a second PCM/ECM and read a bunch of sensors and respond to ODB2 requests. Some of the sensors won't have standard ODB2 requests associated with them, so this repo starts the idea of an open source set of ODB2 PIDS, and will provide the dbc and associated things needed to use those PIDS.
