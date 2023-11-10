@@ -9,7 +9,7 @@
 
 class TempSensor {
 public:
-    TempSensor(float knownResistorValue, float a, float b, float c, uint8_t deviceId, uint8_t channelId, float wiringResistance) {
+    TempSensor(float knownResistorValue, float a, float b, float c, uint8_t deviceId, uint8_t channelId, float wiringResistance, bool *isInitialized) {
         Serial.println("Starting to initialize ADS. devicedId: " + (String)deviceId);
         KnownResistorValue = knownResistorValue;
         WiringResistance = wiringResistance;
@@ -23,6 +23,7 @@ public:
         if (!ads.begin(DeviceId)) {
             Serial.println("Failed to initialize ADS.");
         } else {
+            *isInitialized = true;
             Serial.println("Succesfuly initialized ADS.");
         }
     }
