@@ -61,7 +61,7 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Can1.write(supportedPidsOneToThirtyTwoResponse);
         break;
       case 5:
-        waterTempResponse.buf[3] = OBD2::appData->coolantTemperature + 40;
+        waterTempResponse.buf[3] = OBD2::appData->coolantTemperatureC + 40;
         Can1.write(waterTempResponse);
         break;
       case 15:
@@ -96,7 +96,7 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Can1.write(supportedPidsNinetySevenToOneHundredTwentyEightResponse);
         break;
       case 112:
-        boost = OBD2::appData->boostPressure;
+        boost = OBD2::appData->boostPressurekPa;
         boost *= 1.003;
         boost *= 220;
         boost -= 10;
@@ -131,35 +131,39 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Can1.write(osAmbientConditionsResponse);
         break;
       case 253:
-        oilPres = OBD2::appData->oilPressure;
-        oilPres *= 6.895;
-        oilPres *= 10;
-        oilResponse.buf[3] = highByte((long)oilPres);
-        oilResponse.buf[4] = lowByte((long)oilPres);
         oilTemp = OBD2::appData->oilTemperature;
         oilTemp *= 100;
         oilTemp += 32767;
-        oilResponse.buf[5] = highByte((long)oilTemp);
-        oilResponse.buf[6] = lowByte((long)oilTemp);
-        Can1.write(oilResponse);
+
+        oilPres = OBD2::appData->oilPressurekPa;
+        oilPres *= 10;
+
+        osOilResponse.buf[3] = highByte((long)oilTemp);
+        osOilResponse.buf[4] = lowByte((long)oilTemp);
+        osOilResponse.buf[5] = highByte((long)oilPres);
+        osOilResponse.buf[6] = lowByte((long)oilPres);
+
+        Can1.write(osOilResponse);
         break;
       case 254:
-        manifoldPres = OBD2::appData->boostPressure;
-        manifoldTemp = OBD2::appData->boostTemperature;
+        manifoldTemp = OBD2::appData->boostTemperatureC;
         manifoldTemp *= 100;
         manifoldTemp += 32767;
-        manifoldResponse.buf[3] = highByte((long)manifoldTemp);
-        manifoldResponse.buf[4] = lowByte((long)manifoldTemp);
-        manifoldPres *= 6.895;
+
+        manifoldPres = OBD2::appData->boostPressurekPa;
         manifoldPres *= 10;
-        manifoldResponse.buf[5] = highByte((long)manifoldPres);
-        manifoldResponse.buf[6] = lowByte((long)manifoldPres);
-        Can1.write(manifoldResponse);
+
+        osManifoldResponse.buf[3] = highByte((long)manifoldTemp);
+        osManifoldResponse.buf[4] = lowByte((long)manifoldTemp);
+        osManifoldResponse.buf[5] = highByte((long)manifoldPres);
+        osManifoldResponse.buf[6] = lowByte((long)manifoldPres);
+
+        Can1.write(osManifoldResponse);
         break;
       case 255:
         transTemp = OBD2::appData->transmissionTemperatureC;
         transTemp *= 100;
-        transTemp -= 32767;
+        transTemp += 32767;
 
         transPres = OBD2::appData->transmissionPressurekPa;
         transPres *= 10;

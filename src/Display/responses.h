@@ -64,10 +64,10 @@ CAN_message_t osAmbientConditionsResponse = {
     .buf = {7, currentDataService, 250, 0, emptyBytePad, emptyBytePad,
             emptyBytePad, emptyBytePad}};
 
-CAN_message_t oilResponse = {
+CAN_message_t osOilResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 253, 0, 0, 0, 0, 0}};
 
-CAN_message_t manifoldResponse = {
+CAN_message_t osManifoldResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 254, 0, 0, 0, 0, 0}};
 
 CAN_message_t osTransmissionResponse = {

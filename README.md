@@ -53,3 +53,7 @@ This module returns the data collected from the sensors via CanBus. It will use 
 | -------- | -------- | -------------- | --------------------------- | ---------------- | -------------- | ----- | ------ | ----- | --------------------------- |
 | 0XFF     | 255      | 7              | Transmission Temperature    | -327.67(-557.8F) | 327.68(621.8F) | .01   | -32767 | °C    | ((256*A + B) - 32767) / 100 |
 | 0XFF     | 255      | 7              | Transmission Pressure(line) | 0                | 6553.5(950psi) | .1    | 0      | kPa   | (256*C + D) / 10            |
+| 0XFE     | 254      | 7              | Boost Temperature           | -327.67(-557.8F) | 327.68(621.8F) | .01   | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XFE     | 254      | 7              | Boost Pressure              | 0                | 6553.5(950psi) | .1    | 0      | kPa   | (256*C + D) / 10            |
+| 0XFD     | 253      | 7              | Oil Temperature             | -327.67(-557.8F) | 327.68(621.8F) | .01   | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XFD     | 253      | 7              | Oil Pressure                | 0                | 6553.5(950psi) | .1    | 0      | kPa   | (256*C + D) / 10            |
