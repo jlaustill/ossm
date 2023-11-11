@@ -66,7 +66,7 @@ void OBD2::sendData(const CAN_message_t &msg) {
         break;
       case 15:
         ambientTemperatureResponse.buf[3] =
-            OBD2::appData->ambientTemperature + 40;
+            OBD2::appData->ambientTemperatureC + 40;
         Can1.write(ambientTemperatureResponse);
         break;
         break;
@@ -80,7 +80,7 @@ void OBD2::sendData(const CAN_message_t &msg) {
         break;
       case 51:
         odb2AbsoluteBarometricPressureResponse.buf[3] =
-            OBD2::appData->absoluteBarometricpressure / 10;
+            OBD2::appData->absoluteBarometricpressurehPa / 10;
         Can1.write(odb2AbsoluteBarometricPressureResponse);
         break;
       case 64:
@@ -88,7 +88,7 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Can1.write(supportedPidsSixtyFiveToNinetySixResponse);
         break;
       case 92:
-        oilTempResponse.buf[3] = OBD2::appData->oilTemperature + 40;
+        oilTempResponse.buf[3] = OBD2::appData->oilTemperatureC + 40;
         Can1.write(oilTempResponse);
         break;
       case 96:
@@ -112,26 +112,29 @@ void OBD2::sendData(const CAN_message_t &msg) {
       case 249:
         ambientHumidity = OBD2::appData->humidity;
         ambientHumidity *= 655.35;
+
         osAmbientHumidityResponse.buf[3] = highByte((long)ambientHumidity);
         osAmbientHumidityResponse.buf[4] = lowByte((long)ambientHumidity);
+
         Can1.write(osAmbientHumidityResponse);
         break;
       case 250:
-        ambientAirTemp = OBD2::appData->ambientTemperature;
+        ambientAirTemp = OBD2::appData->ambientTemperatureC;
         ambientAirTemp *= 100;
         ambientAirTemp += 32767;
-        ambientAirPressure = OBD2::appData->absoluteBarometricpressure;
+
+        ambientAirPressure = OBD2::appData->absoluteBarometricpressurehPa;
         ambientAirPressure *= 10;
-        ambientAirPressure += 32767;
-        osAmbientConditionsResponse.buf[3] = highByte((long)ambientAirPressure);
-        osAmbientConditionsResponse.buf[4] = lowByte((long)ambientAirPressure);
-        osAmbientConditionsResponse.buf[5] = highByte((long)ambientAirTemp);
-        osAmbientConditionsResponse.buf[6] = lowByte((long)ambientAirTemp);
+
+        osAmbientConditionsResponse.buf[3] = highByte((long)ambientAirTemp);
+        osAmbientConditionsResponse.buf[4] = lowByte((long)ambientAirTemp);
+        osAmbientConditionsResponse.buf[5] = highByte((long)ambientAirPressure);
+        osAmbientConditionsResponse.buf[6] = lowByte((long)ambientAirPressure);
 
         Can1.write(osAmbientConditionsResponse);
         break;
       case 253:
-        oilTemp = OBD2::appData->oilTemperature;
+        oilTemp = OBD2::appData->oilTemperatureC;
         oilTemp *= 100;
         oilTemp += 32767;
 

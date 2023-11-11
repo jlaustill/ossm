@@ -98,14 +98,14 @@ void ossm::setup() {
 
 void ossm::loop() {
   if (ossm::isBmeInitialized == true) {
-    ossm::appData.absoluteBarometricpressure =
+    ossm::appData.absoluteBarometricpressurehPa =
         ossm::ambientSensors->getPressureHPa();
     ossm::appData.humidity = ossm::ambientSensors->getHumidity();
-    ossm::appData.ambientTemperature = ossm::ambientSensors->getTemperatureC();
+    ossm::appData.ambientTemperatureC = ossm::ambientSensors->getTemperatureC();
   }
 
   if (ossm::isAds1Initialized) {
-    ossm::appData.oilTemperature = oilTempSensor.getTempCelsius();
+    ossm::appData.oilTemperatureC = oilTempSensor.getTempCelsius();
     ossm::appData.oilPressurekPa = oilPressureSensor.getPressureInkPa();
     ossm::appData.coolantTemperatureC = coolantTempSensor.getTempCelsius();
     ossm::appData.coolantPressurekPa = coolantPressureSensor.getPressureInPsi();
@@ -144,15 +144,15 @@ void ossm::loop() {
 
   if (ossm::isBmeInitialized == true) {
     Serial.println("AppData: Barometric Pressure->" +
-                   String(ossm::appData.absoluteBarometricpressure) +
+                   String(ossm::appData.absoluteBarometricpressurehPa) +
                    "hPa, Humidity->" + String(ossm::appData.humidity) +
                    "%, Ambient Temperature->" +
-                   String(ossm::appData.ambientTemperature) + "°C");
+                   String(ossm::appData.ambientTemperatureC) + "°C");
   }
 
   if (ossm::isAds1Initialized == true) {
     Serial.println(
-        "AppData: Oil Temperature->" + String(ossm::appData.oilTemperature) +
+        "AppData: Oil Temperature->" + String(ossm::appData.oilTemperatureC) +
         "°C, Oil Pressure->" + String(ossm::appData.oilPressurekPa) +
         "kPa, Coolant Temperature->" +
         String(ossm::appData.coolantTemperatureC) + "°C, Coolant Pressure->" +
