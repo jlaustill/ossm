@@ -20,6 +20,16 @@ double manifoldTemp;
 double manifoldPres;
 double transTemp;
 double transPres;
+double egtTemp;
+double coolantTemp;
+double coolantPressure;
+double cacTemp;
+double cacPressure;
+double intakeTemp;
+double intakePressure;
+double fuelTemp;
+double fuelPressure;
+double engineBayTemp;
 long odometer;
 long tripA;
 long tripB;
@@ -108,6 +118,86 @@ void OBD2::sendData(const CAN_message_t &msg) {
         Serial.println("ODB2 pids 129-160 requested");
         Can1.write(
             supportedPidsOneHundredTwentyNineToOneHundredOneHundredFiftyResponse);
+        break;
+      case 243:
+        engineBayTemp = OBD2::appData->engineBayTemperatureC;
+        engineBayTemp *= 100;
+        engineBayTemp += 32767;
+
+        osEngineBayResponse.buf[3] = highByte((long)engineBayTemp);
+        osEngineBayResponse.buf[4] = lowByte((long)engineBayTemp);
+
+        Can1.write(osEngineBayResponse);
+        break; 
+      case 244:
+        fuelTemp = OBD2::appData->intakeTemperatureC;
+        fuelTemp *= 100;
+        fuelTemp += 32767;
+
+        fuelPressure = OBD2::appData->intakePressurekPa;
+        fuelPressure *= 10;
+
+        osFuelResponse.buf[3] = highByte((long)fuelTemp);
+        osFuelResponse.buf[4] = lowByte((long)fuelTemp);
+        osFuelResponse.buf[5] = highByte((long)fuelPressure);
+        osFuelResponse.buf[6] = lowByte((long)fuelPressure);
+
+        Can1.write(osFuelResponse);
+        break; 
+      case 245:
+        intakeTemp = OBD2::appData->intakeTemperatureC;
+        intakeTemp *= 100;
+        intakeTemp += 32767;
+
+        intakePressure = OBD2::appData->intakePressurekPa;
+        intakePressure *= 10;
+
+        osIntakeResponse.buf[3] = highByte((long)intakeTemp);
+        osIntakeResponse.buf[4] = lowByte((long)intakeTemp);
+        osIntakeResponse.buf[5] = highByte((long)intakePressure);
+        osIntakeResponse.buf[6] = lowByte((long)intakePressure);
+
+        Can1.write(osIntakeResponse);
+        break; 
+      case 246:
+        cacTemp = OBD2::appData->cacTemperatureC;
+        cacTemp *= 100;
+        cacTemp += 32767;
+
+        cacPressure = OBD2::appData->cacPressurekPa;
+        cacPressure *= 10;
+
+        osCacResponse.buf[3] = highByte((long)cacTemp);
+        osCacResponse.buf[4] = lowByte((long)cacTemp);
+        osCacResponse.buf[5] = highByte((long)cacPressure);
+        osCacResponse.buf[6] = lowByte((long)cacPressure);
+
+        Can1.write(osCacResponse);
+        break;  
+      case 247:
+        coolantTemp = OBD2::appData->coolantTemperatureC;
+        coolantTemp *= 100;
+        coolantTemp += 32767;
+
+        coolantPressure = OBD2::appData->coolantPressurekPa;
+        coolantPressure *= 10;
+
+        osCoolantResponse.buf[3] = highByte((long)coolantTemp);
+        osCoolantResponse.buf[4] = lowByte((long)coolantTemp);
+        osCoolantResponse.buf[5] = highByte((long)coolantPressure);
+        osCoolantResponse.buf[6] = lowByte((long)coolantPressure);
+
+        Can1.write(osCoolantResponse);
+        break;
+      case 248:
+        egtTemp = OBD2::appData->egtTemperatureC;
+        egtTemp *= 10;
+        egtTemp += 32767;
+
+        osEgtResponse.buf[3] = highByte((long)egtTemp);
+        osEgtResponse.buf[4] = lowByte((long)egtTemp);
+
+        Can1.write(osEgtResponse);
         break;
       case 249:
         ambientHumidity = OBD2::appData->humidity;

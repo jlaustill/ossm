@@ -60,3 +60,13 @@ This module returns the data collected from the sensors via CanBus. It will use 
 | 0XFA     | 250      | 7              | Ambient Temperature          | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
 | 0XFA     | 250      | 7              | Absolute Barometric Pressure | 0                | 6553.5(95psi)  | .1     | 0      | hPa   | (256*C + D) / 10            |
 | 0XF9     | 249      | 7              | Ambient Humidity             | 0                | 100            | 655.35 | 0      | hPa   | (256*A + B) / 655.35        |
+| 0XF8     | 248      | 5              | EGT Temperature 1            | -3276.7(-5866F)  | 3276.8(5930F)  | .1     | -32767 | °C    | ((256*A + B) - 32767) / 10  |
+| 0XF7     | 247      | 7              | Coolant Temperature          | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XF7     | 247      | 7              | Coolant Pressure             | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
+| 0XF6     | 246      | 7              | CAC Temperature              | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XF6     | 246      | 7              | CAC Pressure                 | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
+| 0XF5     | 245      | 7              | Intake Temperature           | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XF5     | 245      | 7              | Intake Pressure              | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
+| 0XF4     | 244      | 7              | Fuel Temperature             | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+| 0XF4     | 244      | 7              | Fuel Pressure                | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
+| 0XF3     | 243      | 7              | Engine Bay Temperature       | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |

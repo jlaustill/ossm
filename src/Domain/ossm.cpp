@@ -67,7 +67,7 @@ void ossm::setup() {
   cacTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x4A, 1, 0, &ossm::isAds3Initialized);
-  cacPressureSensor = PressureSensor(0x4A, 0, 150);
+  cacPressureSensor = PressureSensor(0x4A, 0, 30);
   intakeTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x4A, 2, 0, &ossm::isAds3Initialized);
@@ -108,7 +108,7 @@ void ossm::loop() {
     ossm::appData.oilTemperatureC = oilTempSensor.getTempCelsius();
     ossm::appData.oilPressurekPa = oilPressureSensor.getPressureInkPa();
     ossm::appData.coolantTemperatureC = coolantTempSensor.getTempCelsius();
-    ossm::appData.coolantPressurekPa = coolantPressureSensor.getPressureInPsi();
+    ossm::appData.coolantPressurekPa = coolantPressureSensor.getPressureInkPa();
   }
 
   if (ossm::isAds2Initialized == true) {
@@ -121,25 +121,25 @@ void ossm::loop() {
   }
 
   if (ossm::isAds3Initialized == true) {
-    ossm::appData.cacPressure = cacPressureSensor.getPressureInPsi();
-    ossm::appData.cacTemperature = cacTempSensor.getTempCelsius();
-    ossm::appData.intakePressure = intakePressureSensor.getPressureInPsi();
-    ossm::appData.intakeTemperature = intakeTempSensor.getTempCelsius();
+    ossm::appData.cacPressurekPa = cacPressureSensor.getPressureInkPa();
+    ossm::appData.cacTemperatureC = cacTempSensor.getTempCelsius();
+    ossm::appData.intakePressurekPa = intakePressureSensor.getPressureInkPa();
+    ossm::appData.intakeTemperatureC = intakeTempSensor.getTempCelsius();
   }
 
   if (ossm::isAds4Initialized == true) {
-    ossm::appData.fuelPressure = fuelPressureSensor.getPressureInPsi();
-    ossm::appData.fuelTemperature = fuelTempSensor.getTempCelsius();
-    ossm::appData.engineBayTemperature = engineBayTempSensor.getTempCelsius();
+    ossm::appData.fuelPressurekPa = fuelPressureSensor.getPressureInkPa();
+    ossm::appData.fuelTemperatureC = fuelTempSensor.getTempCelsius();
+    ossm::appData.engineBayTemperatureC = engineBayTempSensor.getTempCelsius();
   }
 
   if (ossm::isEgtInitialized) {
-    ossm::appData.egtTemperature = thermocouple.readCelsius();
+    ossm::appData.egtTemperatureC = thermocouple.readCelsius();
   }
 
   if (ossm::isEgtInitialized) {
     Serial.println("AppData: egtTemperature->" +
-                   String(ossm::appData.egtTemperature) + "°C");
+                   String(ossm::appData.egtTemperatureC) + "°C");
   }
 
   if (ossm::isBmeInitialized == true) {
@@ -165,25 +165,25 @@ void ossm::loop() {
         String(ossm::appData.transmissionPressurekPa) +
         "kPa, Transmission Temperature->" +
         String(ossm::appData.transmissionTemperatureC) + "°C, Boost Pressure->" +
-        String(ossm::appData.boostPressurekPa) + "psi, Boost Temperature->" +
+        String(ossm::appData.boostPressurekPa) + "kPa, Boost Temperature->" +
         String(ossm::appData.boostTemperatureC) + "°C");
   }
 
   if (ossm::isAds3Initialized == true) {
     Serial.println(
-        "AppData: CAC Pressure->" + String(ossm::appData.cacPressure) +
-        "psi, CAC Temperature->" + String(ossm::appData.cacTemperature) +
-        "°C, Intake Pressure->" + String(ossm::appData.intakePressure) +
-        "psi, Intake Temperature->" + String(ossm::appData.intakeTemperature) +
+        "AppData: CAC Pressure->" + String(ossm::appData.cacPressurekPa) +
+        "kPa, CAC Temperature->" + String(ossm::appData.cacTemperatureC) +
+        "°C, Intake Pressure->" + String(ossm::appData.intakePressurekPa) +
+        "kPa, Intake Temperature->" + String(ossm::appData.intakeTemperatureC) +
         "°C");
   }
 
   if (ossm::isAds4Initialized == true) {
     Serial.println(
-        "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressure) +
-        "psi, Fuel Temperature->" + String(ossm::appData.fuelTemperature) +
+        "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressurekPa) +
+        "kPa, Fuel Temperature->" + String(ossm::appData.fuelTemperatureC) +
         "°C, Engine Bay Temperature->" +
-        String(ossm::appData.engineBayTemperature) + "°C");
+        String(ossm::appData.engineBayTemperatureC) + "°C");
   }
 
   delay(ossm::delayTime);

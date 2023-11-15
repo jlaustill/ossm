@@ -54,6 +54,24 @@ CAN_message_t oilTempResponse = {
 CAN_message_t boostResponse = {
     .id = ecmResponseId, .buf = {7, currentDataService, 112, 0, 0, 0, 0, 0}};
 
+CAN_message_t osEngineBayResponse = {
+    .id = ecmResponseId, .buf = {7, currentDataService, 243, 0, 0, 0, 0, 0}};
+
+CAN_message_t osFuelResponse = {
+    .id = ecmResponseId, .buf = {7, currentDataService, 244, 0, 0, 0, 0, 0}};
+
+CAN_message_t osIntakeResponse = {
+    .id = ecmResponseId, .buf = {7, currentDataService, 245, 0, 0, 0, 0, 0}};
+
+CAN_message_t osCacResponse = {
+    .id = ecmResponseId, .buf = {7, currentDataService, 246, 0, 0, 0, 0, 0}};
+
+CAN_message_t osCoolantResponse = {
+    .id = ecmResponseId, .buf = {7, currentDataService, 247, 0, 0, 0, 0, 0}};
+
+CAN_message_t osEgtResponse = {
+    .id = ecmResponseId, .buf = {5, currentDataService, 248, 0, 0, 0, 0, 0}};
+
 CAN_message_t osAmbientHumidityResponse = {
     .id = ecmResponseId,
     .buf = {5, currentDataService, 249, 0, emptyBytePad, emptyBytePad,

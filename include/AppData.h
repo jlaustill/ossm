@@ -17,14 +17,14 @@ struct AppData {
   float transmissionPressurekPa = 0.0f;
   float boostPressurekPa = 0.0f;
   float boostTemperatureC = 0.0f;
-  float cacPressure = 0.0f;
-  float cacTemperature = 0.0f;
-  float intakePressure = 0.0f;
-  float intakeTemperature = 0.0f;
-  float fuelPressure = 0.0f;
-  float fuelTemperature = 0.0f;
-  float engineBayTemperature = 0.0f;
-  double egtTemperature = 0.0f;
+  float cacPressurekPa = 0.0f;
+  float cacTemperatureC = 0.0f;
+  float intakePressurekPa = 0.0f;
+  float intakeTemperatureC = 0.0f;
+  float fuelPressurekPa = 0.0f;
+  float fuelTemperatureC = 0.0f;
+  float engineBayTemperatureC = 0.0f;
+  double egtTemperatureC = 0.0f;
 };
 
 #endif  // OSSM_APPDATA_H
