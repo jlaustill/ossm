@@ -49,7 +49,7 @@ void ossm::setup() {
   oilTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x48, 0, 0, &ossm::isAds1Initialized);
-  oilPressureSensor = PressureSensor(0x48, 1, 30);
+  oilPressureSensor = PressureSensor(0x48, 1, 150);
   coolantTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x48, 2, 0, &ossm::isAds1Initialized);
