@@ -15,6 +15,7 @@ void TempSensor::computeKelvin() {
 
 void TempSensor::updateSensor() {
     this->readVoltage = ads.computeVolts(ads.readADC_SingleEnded(ChannelId));
+    Serial.println("ReadVoltage? " + (String)this->readVoltage + " ChannelId? " + (String)this->ChannelId);
     this->computeResistorValue();
     this->computeKelvin();
 }
