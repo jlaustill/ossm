@@ -9,67 +9,85 @@ This software is designed to emulate a second PCM/ECM and read a bunch of sensor
 
 This Sensor Module can read and provide data for up to 19 sensors.
 
-1. Ambient Temp
-2. Relative Humidity
-3. Absolute Barometric Pressure
-4. EGT
-5. Oil Temperature
-6. Oil Pressure
-7. Coolant Temperature
-8. Coolant Pressure
-9. Tranmission Temperature
-10. Transmission Pressure(line pressure)
-11. Boost Pressure
-12. Boost Temperature
-13. CAC Pressure
-14. CAC Temperature
-15. Intake Temperature
-16. Intake Pressure
-17. Fuel Pressure
-18. Fuel Temperature
-19. Engine Bay Temperature
+1. Ambient Temp *
+2. Relative Humidity *
+3. Absolute Barometric Pressure *
+4. EGT *
+5. Oil Temperature *
+6. Oil Pressure *
+7. Coolant Temperature *
+8. Coolant Pressure *
+9. Transfer Pipe Temperature *
+10. Transfer Pipe Pressure *
+11. Boost Pressure *
+12. Boost Temperature *
+13. CAC Inlet Pressure *
+14. CAC Inlet Temperature *
+15. Air Inlet Temperature *
+16. Air Inlet Pressure *
+17. Fuel Pressure *
+18. Fuel Temperature *
+19. Engine Bay Temperature *
 
 ## Pinout
 
 The hardware has 48 pins on 4 plugs and is pinned out as follows.
 
-| Pin A                   | Pin B                    | Pin C                     | Pin D                           |
-| ----------------------- | ------------------------ | ------------------------- | ------------------------------- |
-| 1. Fuel Pressure -      | 1. Oil Temperature +     | 1. CAC Pressure +         | 1. Transmission Temperature -   |
-| 2. Fuel Pressure Signal | 2. Oil Pressure Signal   | 2. CAC Temperature +      | 2. Transmission Pressure -      |
-| 3. Fuel Temp +          | 3. Coolant Temperature + | 3. Intake Temperature +   | 3. Boost Temperature -          |
-| 4. Engine Bay Temp +    | 4. Coolant Pressure +    | 4. Intake Pressure Signal | 4. Ground                       |
-| 5. Fuel Temp -          | 5. Oil Temperature -     | 5. Intake Pressure +      | 5. Egt+                         |
-| 6. Engine Bay Temp -    | 6. Oil Pressure -        | 6. Boost Pressure +       | 6. Egt-                         |
-| 7. 12 Volt Power        | 7. Coolant Temperature - | 7. Intake Pressure -      | 7. Boost Pressure +             |
-| 8. 5 Volts for BME280   | 8. Coolant Pressure -    | 8. CAC Pressure Signal    | 8. Transmission Temperature +   |
-| 9. Ground               | 9. Oil Pressure +        | 9. CAC Pressure -         | 9. Transmission Pressure Signal |
-| 10. Ground for BME280   | 10. Coolant Pressure +   | 10. CAC Temperature -     | 10. Boost Pressure Signal       |
-| 11. SCL for BME280      | 11. CanH                 | 11. Intake Temperature -  | 11. Boost Temperature +         |
-| 12. SDA for BME280      | 12. CanL                 | 12. Fuel Pressure +       | 12. Transmission Pressure +     |
+| Pin A                   | Pin B                    | Pin C                        | Pin D                            |
+| ----------------------- | ------------------------ | ---------------------------- | -------------------------------  |
+| 1. Fuel Pressure -      | 1. Oil Temperature +     | 1. CAC Inlet Pressure +      | 1. Transfer Pipe Temperature -   |
+| 2. Fuel Pressure Signal | 2. Oil Pressure Signal   | 2. CAC Inlet Temperature +   | 2. Transfer Pipe Pressure -      |
+| 3. Fuel Temp +          | 3. Coolant Temperature + | 3. Air Inlet Temperature +   | 3. Boost Temperature -           |
+| 4. Engine Bay Temp +    | 4. Coolant Pressure +    | 4. Air Inlet Pressure Signal | 4. Ground                        |
+| 5. Fuel Temp -          | 5. Oil Temperature -     | 5. Air Inlet Pressure +      | 5. Egt+                          |
+| 6. Engine Bay Temp -    | 6. Oil Pressure -        | 6. Boost Pressure +          | 6. Egt-                          |
+| 7. 12 Volt Power        | 7. Coolant Temperature - | 7. Air Inlet Pressure -      | 7. Boost Pressure +              |
+| 8. 5 Volts for BME280   | 8. Coolant Pressure -    | 8. CAC Inlet Pressure Signal | 8. Transfer Pipe Temperature +   |
+| 9. Ground               | 9. Oil Pressure +        | 9. CAC Inlet Pressure -      | 9. Transfer Pipe Pressure Signal |
+| 10. Ground for BME280   | 10. Coolant Pressure +   | 10. CAC Inlet Temperature -  | 10. Boost Pressure Signal        |
+| 11. SCL for BME280      | 11. CanH                 | 11. Air Inlet Temperature -  | 11. Boost Temperature +          |
+| 12. SDA for BME280      | 12. CanL                 | 12. Fuel Pressure +          | 12. Transfer Pipe Pressure +     |
 
-## ODB2/CanBus
+## J1939
 
-This module returns the data collected from the sensors via CanBus. It will use all the standard PIDs, but also supports a custom set of PIDs that are designed for real-time gauges and accurate data and not smog enforcement. They are documented in the following table.
+This module sends the sensor data over canbus using J1939 messages.
 
-| ID (hex) | ID (Dec) | Bytes returned | Description                  | Min Value        | Max Value      | Scale  | Offset | Units | Formula                     |
-| -------- | -------- | -------------- | ---------------------------  | ---------------- | -------------- | -----  | ------ | ----- | --------------------------- |
-| 0XFF     | 255      | 7              | Transmission Temperature     | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XFF     | 255      | 7              | Transmission Pressure(line)  | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XFE     | 254      | 7              | Boost Temperature            | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XFE     | 254      | 7              | Boost Pressure               | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XFD     | 253      | 7              | Oil Temperature              | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XFD     | 253      | 7              | Oil Pressure                 | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XFA     | 250      | 7              | Ambient Temperature          | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XFA     | 250      | 7              | Absolute Barometric Pressure | 0                | 6553.5(95psi)  | .1     | 0      | hPa   | (256*C + D) / 10            |
-| 0XF9     | 249      | 7              | Ambient Humidity             | 0                | 100            | 655.35 | 0      | hPa   | (256*A + B) / 655.35        |
-| 0XF8     | 248      | 5              | EGT Temperature 1            | -3276.7(-5866F)  | 3276.8(5930F)  | .1     | -32767 | °C    | ((256*A + B) - 32767) / 10  |
-| 0XF7     | 247      | 7              | Coolant Temperature          | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XF7     | 247      | 7              | Coolant Pressure             | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XF6     | 246      | 7              | CAC Temperature              | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XF6     | 246      | 7              | CAC Pressure                 | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XF5     | 245      | 7              | Intake Temperature           | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XF5     | 245      | 7              | Intake Pressure              | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XF4     | 244      | 7              | Fuel Temperature             | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
-| 0XF4     | 244      | 7              | Fuel Pressure                | 0                | 6553.5(950psi) | .1     | 0      | kPa   | (256*C + D) / 10            |
-| 0XF3     | 243      | 7              | Engine Bay Temperature       | -327.67(-557.8F) | 327.68(621.8F) | .01    | -32767 | °C    | ((256*A + B) - 32767) / 100 |
+PGN 65269 - 1 seconds
+    spn171 Ambient Air Temperature "Sensor 1"
+    spn172 Air Inlet Temperature "Sensor 15"
+    spn108 Barometric Pressure "Sensor 3" 
+
+*PGN 65270 - .5 seconds
+    spn173 Exhaust Gas Temperature "Sensor 4"
+    spn102 Boost Pressure "Sensor 11"
+    spn105 Intake Manifold 1 Temperature "Sensor 15"
+    spn106 Air Inlet Pressure "Sensor 16"
+
+*PGN 65262 - 1 seconds
+    spn175 Engine Oil Temperature 1 "Sensor 5"
+    spn110 Engine Coolant Temperature "Sensor 7"
+    spn174 Fuel Temperature "Sensor 18"
+
+*PGN 65263 - .5 seconds
+    spn100 Engine Oil Pressure "Sensor 6"
+    spn109 Coolant Pressure "Sensor 8"
+    spn94  Fuel Delivery Pressure "Sensor 17"
+
+*PGN 65129 - 1 seconds
+    spn1637 Engine Coolant Temperature (High Resolution) "Sensor 7"
+    spn1363 Intake Manifold 1 Air Temperature (High Resolution) "Sensor 15"
+
+*PGN 65189 - 1 seconds
+    spn1131 Intake Manifold 2 Temperature "Sensor 9"
+    spn1132 Intake Manifold 2 Temperature "Sensor 14"
+    spn1133 Intake Manifold 2 Temperature "Sensor 12"
+
+*PGN 65190 - .5 seconds
+    spn1127 Turbocharger 1 Boost Pressure "Sensor 13"
+    spn1128 Turbocharger 2 Boost Pressure "Sensor 10"
+
+*PGN 65164 - On Request
+    spn354 Relative Humidity "Sensor 2"
+    spn441 Auxiliary Temperature 1 "Sensor 19" (Engine Bay Temperature)
+
+

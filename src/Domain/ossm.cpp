@@ -3,9 +3,10 @@
 #include <Adafruit_MAX31855.h>
 #include <AppData.h>
 #include <Arduino.h>
-#include <Display/ODB2.h>
 #include <PressureSensor.h>
 #include <TempSensor.h>
+
+#include "Display/J1939Bus.h"
 
 #define AEM_TEMP_SENSOR_A 1.485995686e-03
 #define AEM_TEMP_SENSOR_B 2.279654266e-04
@@ -25,8 +26,8 @@ TempSensor oilTempSensor;
 PressureSensor oilPressureSensor;
 TempSensor coolantTempSensor;
 PressureSensor coolantPressureSensor;
-TempSensor transmissionTempSensor;
-PressureSensor transmissionPressureSensor;
+TempSensor tranferPipeTempSensor;
+PressureSensor transferPipePressureSensor;
 TempSensor boostTempSensor;
 PressureSensor boostPressureSensor;
 PressureSensor cacPressureSensor;
@@ -38,13 +39,16 @@ TempSensor fuelTempSensor;
 TempSensor engineBayTempSensor;
 Adafruit_MAX31855 thermocouple(MAXCS);
 
+uint32_t lastMillis;
+
 void ossm::setup() {
+  lastMillis = millis();
   Serial.begin(115200);
-  while (!Serial)
-    ;  // time to get serial running
+  while (!Serial);  // time to get serial running
+
+  J1939Bus::initialize();
 
   ossm::ambientSensors = new AmbientSensors(&ossm::isBmeInitialized);
-  OBD2::initialize(&ossm::appData);
 
   oilTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
@@ -55,10 +59,10 @@ void ossm::setup() {
                  0x48, 2, 0, &ossm::isAds1Initialized);
   coolantPressureSensor = PressureSensor(0x48, 3, 50);
 
-  transmissionTempSensor =
+  tranferPipeTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x49, 0, 0, &ossm::isAds2Initialized);
-  transmissionPressureSensor = PressureSensor(0x49, 1, 500);
+  transferPipePressureSensor = PressureSensor(0x49, 1, 500);
   boostTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x49, 2, 0, &ossm::isAds2Initialized);
@@ -112,19 +116,19 @@ void ossm::loop() {
   }
 
   if (ossm::isAds2Initialized == true) {
-    ossm::appData.transmissionPressurekPa =
-        transmissionPressureSensor.getPressureInkPa();
-    ossm::appData.transmissionTemperatureC =
-        transmissionTempSensor.getTempCelsius();
+    ossm::appData.tranferPipePressurekPa =
+        transferPipePressureSensor.getPressureInkPa();
+    ossm::appData.transferPipeTemperatureC =
+        tranferPipeTempSensor.getTempCelsius();
     ossm::appData.boostPressurekPa = boostPressureSensor.getPressureInkPa();
     ossm::appData.boostTemperatureC = boostTempSensor.getTempCelsius();
   }
 
   if (ossm::isAds3Initialized == true) {
-    ossm::appData.cacPressurekPa = cacPressureSensor.getPressureInkPa();
-    ossm::appData.cacTemperatureC = cacTempSensor.getTempCelsius();
-    ossm::appData.intakePressurekPa = intakePressureSensor.getPressureInkPa();
-    ossm::appData.intakeTemperatureC = intakeTempSensor.getTempCelsius();
+    ossm::appData.cacInletPressurekPa = cacPressureSensor.getPressureInkPa();
+    ossm::appData.cacInletTemperatureC = cacTempSensor.getTempCelsius();
+    ossm::appData.airInletPressurekPa = intakePressureSensor.getPressureInkPa();
+    ossm::appData.airInletTemperatureC = intakeTempSensor.getTempCelsius();
   }
 
   if (ossm::isAds4Initialized == true) {
@@ -142,49 +146,56 @@ void ossm::loop() {
                    String(ossm::appData.egtTemperatureC) + "°C");
   }
 
-  if (ossm::isBmeInitialized == true) {
-    Serial.println("AppData: Barometric Pressure->" +
-                   String(ossm::appData.absoluteBarometricpressurehPa) +
-                   "hPa, Humidity->" + String(ossm::appData.humidity) +
-                   "%, Ambient Temperature->" +
-                   String(ossm::appData.ambientTemperatureC) + "°C");
-  }
+  // Every 1 second
+  if (lastMillis - millis() >= 1000) {
+    if (ossm::isBmeInitialized == true) {
+      Serial.println("AppData: Barometric Pressure->" +
+                     String(ossm::appData.absoluteBarometricpressurehPa) +
+                     "hPa, Humidity->" + String(ossm::appData.humidity) +
+                     "%, Ambient Temperature->" +
+                     String(ossm::appData.ambientTemperatureC) + "°C");
+    }
 
-  if (ossm::isAds1Initialized == true) {
-    Serial.println(
-        "AppData: Oil Temperature->" + String(ossm::appData.oilTemperatureC) +
-        "°C, Oil Pressure->" + String(ossm::appData.oilPressurekPa) +
-        "kPa, Coolant Temperature->" +
-        String(ossm::appData.coolantTemperatureC) + "°C, Coolant Pressure->" +
-        String(ossm::appData.coolantPressurekPa) + "kPa");
-  }
+    if (ossm::isAds1Initialized == true) {
+      Serial.println(
+          "AppData: Oil Temperature->" + String(ossm::appData.oilTemperatureC) +
+          "°C, Oil Pressure->" + String(ossm::appData.oilPressurekPa) +
+          "kPa, Coolant Temperature->" +
+          String(ossm::appData.coolantTemperatureC) + "°C, Coolant Pressure->" +
+          String(ossm::appData.coolantPressurekPa) + "kPa");
+    }
 
-  if (ossm::isAds2Initialized == true) {
-    Serial.println(
-        "AppData: Transmission Pressure->" +
-        String(ossm::appData.transmissionPressurekPa) +
-        "kPa, Transmission Temperature->" +
-        String(ossm::appData.transmissionTemperatureC) + "°C, Boost Pressure->" +
-        String(ossm::appData.boostPressurekPa) + "kPa, Boost Temperature->" +
-        String(ossm::appData.boostTemperatureC) + "°C");
-  }
+    if (ossm::isAds2Initialized == true) {
+      Serial.println("AppData: Transmission Pressure->" +
+                     String(ossm::appData.tranferPipePressurekPa) +
+                     "kPa, Transmission Temperature->" +
+                     String(ossm::appData.transferPipeTemperatureC) +
+                     "°C, Boost Pressure->" +
+                     String(ossm::appData.boostPressurekPa) +
+                     "kPa, Boost Temperature->" +
+                     String(ossm::appData.boostTemperatureC) + "°C");
+    }
 
-  if (ossm::isAds3Initialized == true) {
-    Serial.println(
-        "AppData: CAC Pressure->" + String(ossm::appData.cacPressurekPa) +
-        "kPa, CAC Temperature->" + String(ossm::appData.cacTemperatureC) +
-        "°C, Intake Pressure->" + String(ossm::appData.intakePressurekPa) +
-        "kPa, Intake Temperature->" + String(ossm::appData.intakeTemperatureC) +
-        "°C");
-  }
+    if (ossm::isAds3Initialized == true) {
+      Serial.println(
+          "AppData: CAC Pressure->" +
+          String(ossm::appData.cacInletPressurekPa) + "kPa, CAC Temperature->" +
+          String(ossm::appData.cacInletTemperatureC) + "°C, Intake Pressure->" +
+          String(ossm::appData.airInletPressurekPa) +
+          "kPa, Intake Temperature->" +
+          String(ossm::appData.airInletTemperatureC) + "°C");
+    }
 
-  if (ossm::isAds4Initialized == true) {
-    Serial.println(
-        "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressurekPa) +
-        "kPa, Fuel Temperature->" + String(ossm::appData.fuelTemperatureC) +
-        "°C, Engine Bay Temperature->" +
-        String(ossm::appData.engineBayTemperatureC) + "°C");
-  }
+    if (ossm::isAds4Initialized == true) {
+      Serial.println(
+          "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressurekPa) +
+          "kPa, Fuel Temperature->" + String(ossm::appData.fuelTemperatureC) +
+          "°C, Engine Bay Temperature->" +
+          String(ossm::appData.engineBayTemperatureC) + "°C");
+    }
 
-  delay(ossm::delayTime);
+    J1939Bus::sendPgn65269(ossm::appData.ambientTemperatureC,
+                           ossm::appData.airInletTemperatureC,
+                           ossm::appData.absoluteBarometricpressurehPa);
+  }
 }
