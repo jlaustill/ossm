@@ -68,12 +68,12 @@ PGN 65262 - 1 seconds
     spn110 Engine Coolant Temperature "Sensor 7"
     spn174 Fuel Temperature "Sensor 18"
 
-*PGN 65263 - .5 seconds
+PGN 65263 - .5 seconds
     spn100 Engine Oil Pressure "Sensor 6"
     spn109 Coolant Pressure "Sensor 8"
     spn94  Fuel Delivery Pressure "Sensor 17"
 
-*PGN 65129 - 1 seconds
+PGN 65129 - 1 seconds
     spn1637 Engine Coolant Temperature (High Resolution) "Sensor 7"
     spn1363 Intake Manifold 1 Air Temperature (High Resolution) "Sensor 15"
 

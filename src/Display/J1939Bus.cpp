@@ -19,7 +19,31 @@ void J1939Bus::initialize() {
   Can1.mailboxStatus();
 }
 
-void J1939Bus::sendPgn65262(float engineCoolantTemperature, float engineFuelTemperature, float engineOilTemperature) {
+void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC, float engineCoolantTemperatureC) {
+  J1939 message = J1939();
+  message.setPgn(65129);
+  message.setPriority(6);
+  message.setSourceAddress(149);
+
+  CAN_message_t msg;
+  msg.id = message.canId;
+  float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0;
+  intakeTempOffset /= 0.03125;
+  float coolantTempOffset = engineCoolantTemperatureC + 273.0;
+  coolantTempOffset /= 0.03125;
+  msg.buf[0] = highByte(static_cast<uint16_t>(intakeTempOffset)); // 1636
+  msg.buf[1] = lowByte(static_cast<uint16_t>(intakeTempOffset)); // 1636
+  msg.buf[2] = highByte(static_cast<uint16_t>(coolantTempOffset)); // 1637
+  msg.buf[3] = lowByte(static_cast<uint16_t>(coolantTempOffset)); // 1637
+  msg.buf[4] = 255;
+  msg.buf[5] = 255;
+  msg.buf[6] = 255;
+  msg.buf[7] = 255;
+
+  Can1.write(msg);
+}
+
+void J1939Bus::sendPgn65262(float engineCoolantTemperatureC, float engineFuelTemperatureC, float engineOilTemperatureC) {
   J1939 message = J1939();
   message.setPgn(65262);
   message.setPriority(6);
@@ -27,10 +51,10 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperature, float engineFuelTemp
 
   CAN_message_t msg;
   msg.id = message.canId;
-  float oilTempOffset = engineOilTemperature + 273.0;
+  float oilTempOffset = engineOilTemperatureC + 273.0;
   oilTempOffset /= 0.03125;
-  msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperature + 40); // 110
-  msg.buf[1] = static_cast<uint8_t>(engineFuelTemperature + 40); // 174
+  msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperatureC + 40); // 110
+  msg.buf[1] = static_cast<uint8_t>(engineFuelTemperatureC + 40); // 174
   msg.buf[2] = highByte(static_cast<uint16_t>(oilTempOffset)); // 175
   msg.buf[3] = lowByte(static_cast<uint16_t>(oilTempOffset)); // 175
   msg.buf[4] = 255;
@@ -39,10 +63,29 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperature, float engineFuelTemp
   msg.buf[7] = 255;
 
   Can1.write(msg);
-
 }
 
-void J1939Bus::sendPgn65269(float ambientTemperatureC, float airInletTemperatureC, float barometricPressureKpa) {
+void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa, float engineOilPressurekPa, float engineCoolantPressurekPa){
+  J1939 message = J1939();
+  message.setPgn(65263);
+  message.setPriority(6);
+  message.setSourceAddress(149);
+
+  CAN_message_t msg;
+  msg.id = message.canId;
+  msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4); // 94
+  msg.buf[1] = 255;
+  msg.buf[2] = 255;
+  msg.buf[3] = static_cast<uint8_t>(engineOilPressurekPa / 4); // 100
+  msg.buf[4] = 255;
+  msg.buf[5] = 255;
+  msg.buf[6] = static_cast<uint8_t>(engineCoolantPressurekPa / 2); // 109
+  msg.buf[7] = 255;
+
+  Can1.write(msg);
+}
+
+void J1939Bus::sendPgn65269(float ambientTemperatureC, float airInletTemperatureC, float barometricPressurekPa) {
   J1939 message = J1939();
   message.setPgn(65269);
   message.setPriority(6);
@@ -52,7 +95,7 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC, float airInletTemperature
   msg.id = message.canId;
   float ambientAirTempOffset = ambientTemperatureC + 273.0;
   ambientAirTempOffset /= 0.03125;
-  msg.buf[0] = static_cast<uint8_t>(barometricPressureKpa * 2); // 108
+  msg.buf[0] = static_cast<uint8_t>(barometricPressurekPa * 2); // 108
   msg.buf[1] = 255; 
   msg.buf[2] = 255;
   msg.buf[3] = highByte(static_cast<uint16_t>(ambientAirTempOffset)); // 171

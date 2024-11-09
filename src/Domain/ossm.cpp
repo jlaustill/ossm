@@ -151,6 +151,7 @@ void ossm::loop() {
   // Every .5 seconds
   if (lastHalfSecondMillis - millis() >= 500) {
     J1939Bus::sendPgn65270(ossm::appData.airInletPressurekPa, ossm::appData.airInletTemperatureC, ossm::appData.egtTemperatureC, ossm::appData.boostPressurekPa);
+    J1939Bus::sendPgn65263(ossm::appData.fuelPressurekPa, ossm::appData.oilPressurekPa, ossm::appData.coolantPressurekPa);
     lastHalfSecondMillis = millis();
   }
 
@@ -205,6 +206,9 @@ void ossm::loop() {
     J1939Bus::sendPgn65269(ossm::appData.ambientTemperatureC,
                            ossm::appData.airInletTemperatureC,
                            ossm::appData.absoluteBarometricpressurekPa);
+
+    J1939Bus::sendPgn65129(ossm::appData.boostTemperatureC, ossm::appData.coolantTemperatureC);
+    J1939Bus::sendPgn65262(ossm::appData.coolantTemperatureC, ossm::appData.fuelTemperatureC, ossm::appData.oilTemperatureC);
 
     lastOneSecondMillis = millis();
   }
