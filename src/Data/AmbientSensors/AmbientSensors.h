@@ -13,7 +13,7 @@ class AmbientSensors {
 
   float getTemperatureC();
   float getHumidity();
-  float getPressureHPa();
+  float getPressurekPa();
 
  private:
   Adafruit_BME280 bme;

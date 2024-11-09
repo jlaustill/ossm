@@ -57,13 +57,13 @@ PGN 65269 - 1 seconds
     spn172 Air Inlet Temperature "Sensor 15"
     spn108 Barometric Pressure "Sensor 3" 
 
-*PGN 65270 - .5 seconds
+PGN 65270 - .5 seconds
     spn173 Exhaust Gas Temperature "Sensor 4"
     spn102 Boost Pressure "Sensor 11"
     spn105 Intake Manifold 1 Temperature "Sensor 15"
     spn106 Air Inlet Pressure "Sensor 16"
 
-*PGN 65262 - 1 seconds
+PGN 65262 - 1 seconds
     spn175 Engine Oil Temperature 1 "Sensor 5"
     spn110 Engine Coolant Temperature "Sensor 7"
     spn174 Fuel Temperature "Sensor 18"

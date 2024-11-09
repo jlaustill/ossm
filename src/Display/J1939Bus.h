@@ -6,7 +6,9 @@
 class J1939Bus {
     public:
         static void initialize();
-        static void sendPgn65269(float ambientTemperatureC, float airInletTemperatureC, float barometricPressureHpa);
+        static void sendPgn65269(float ambientTemperatureC, float airInletTemperatureC, float barometricPressurekPa);
+        static void sendPgn65270(float airInletPressurekPa, float airInletTemperatureC, float egtTemperatureC, float boostPressurekPa);
+        static void sendPgn65262(float engineCoolantTemperature, float engineFuelTemperature, float engineOilTemperature);
 };
 
 

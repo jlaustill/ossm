@@ -39,10 +39,12 @@ TempSensor fuelTempSensor;
 TempSensor engineBayTempSensor;
 Adafruit_MAX31855 thermocouple(MAXCS);
 
-uint32_t lastMillis;
+uint32_t lastOneSecondMillis;
+uint32_t lastHalfSecondMillis;
 
 void ossm::setup() {
-  lastMillis = millis();
+  lastOneSecondMillis = millis();
+  lastHalfSecondMillis = millis();
   Serial.begin(115200);
   while (!Serial);  // time to get serial running
 
@@ -102,8 +104,8 @@ void ossm::setup() {
 
 void ossm::loop() {
   if (ossm::isBmeInitialized == true) {
-    ossm::appData.absoluteBarometricpressurehPa =
-        ossm::ambientSensors->getPressureHPa();
+    ossm::appData.absoluteBarometricpressurekPa =
+        ossm::ambientSensors->getPressurekPa();
     ossm::appData.humidity = ossm::ambientSensors->getHumidity();
     ossm::appData.ambientTemperatureC = ossm::ambientSensors->getTemperatureC();
   }
@@ -146,11 +148,17 @@ void ossm::loop() {
                    String(ossm::appData.egtTemperatureC) + "°C");
   }
 
+  // Every .5 seconds
+  if (lastHalfSecondMillis - millis() >= 500) {
+    J1939Bus::sendPgn65270(ossm::appData.airInletPressurekPa, ossm::appData.airInletTemperatureC, ossm::appData.egtTemperatureC, ossm::appData.boostPressurekPa);
+    lastHalfSecondMillis = millis();
+  }
+
   // Every 1 second
-  if (lastMillis - millis() >= 1000) {
+  if (lastOneSecondMillis - millis() >= 1000) {
     if (ossm::isBmeInitialized == true) {
       Serial.println("AppData: Barometric Pressure->" +
-                     String(ossm::appData.absoluteBarometricpressurehPa) +
+                     String(ossm::appData.absoluteBarometricpressurekPa) +
                      "hPa, Humidity->" + String(ossm::appData.humidity) +
                      "%, Ambient Temperature->" +
                      String(ossm::appData.ambientTemperatureC) + "°C");
@@ -196,6 +204,8 @@ void ossm::loop() {
 
     J1939Bus::sendPgn65269(ossm::appData.ambientTemperatureC,
                            ossm::appData.airInletTemperatureC,
-                           ossm::appData.absoluteBarometricpressurehPa);
+                           ossm::appData.absoluteBarometricpressurekPa);
+
+    lastOneSecondMillis = millis();
   }
 }

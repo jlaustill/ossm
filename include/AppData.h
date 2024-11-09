@@ -8,7 +8,7 @@
 struct AppData {
   float humidity = 0.0f;
   float ambientTemperatureC = 0.0f;
-  float absoluteBarometricpressurehPa = 0.0f;
+  float absoluteBarometricpressurekPa = 0.0f;
   float oilTemperatureC = 0.0f;
   float oilPressurekPa = 0.0f;
   float coolantTemperatureC = 0.0f;

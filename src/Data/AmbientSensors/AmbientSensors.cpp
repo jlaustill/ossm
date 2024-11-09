@@ -39,16 +39,10 @@ void AmbientSensors::printValues() {
   Serial.println(" %");
 
   Serial.println();
-  }
+}
 
-  float AmbientSensors::getTemperatureC() {
-    return bme.readTemperature();
-  }
+float AmbientSensors::getTemperatureC() { return bme.readTemperature(); }
 
-  float AmbientSensors::getHumidity() {
-    return bme.readHumidity();
-  }
+float AmbientSensors::getHumidity() { return bme.readHumidity(); }
 
-  float AmbientSensors::getPressureHPa() {
-    return bme.readPressure() / 100.0F;
-  }
+float AmbientSensors::getPressurekPa() { return bme.readPressure() / 1000.0F; }
