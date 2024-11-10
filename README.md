@@ -75,14 +75,14 @@ PGN 65263 - .5 seconds
 
 PGN 65129 - 1 seconds
     spn1637 Engine Coolant Temperature (High Resolution) "Sensor 7"
-    spn1363 Intake Manifold 1 Air Temperature (High Resolution) "Sensor 15"
+    spn1363 Intake Manifold 1 Air Temperature (High Resolution) "Sensor 12"
 
-*PGN 65189 - 1 seconds
-    spn1131 Intake Manifold 2 Temperature "Sensor 9"
-    spn1132 Intake Manifold 2 Temperature "Sensor 14"
-    spn1133 Intake Manifold 2 Temperature "Sensor 12"
+PGN 65189 - 1 seconds
+    spn1131 Intake Manifold 2 Temperature "Sensor 4"
+    spn1132 Intake Manifold 3 Temperature "Sensor 9"
+    spn1133 Intake Manifold 4 Temperature "Sensor 15"
 
-*PGN 65190 - .5 seconds
+PGN 65190 - .5 seconds
     spn1127 Turbocharger 1 Boost Pressure "Sensor 13"
     spn1128 Turbocharger 2 Boost Pressure "Sensor 10"
 
