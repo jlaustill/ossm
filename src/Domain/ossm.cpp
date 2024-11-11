@@ -41,10 +41,12 @@ Adafruit_MAX31855 thermocouple(MAXCS);
 
 uint32_t lastOneSecondMillis;
 uint32_t lastHalfSecondMillis;
+uint32_t thisMillis;
 
 void ossm::setup() {
   lastOneSecondMillis = millis();
   lastHalfSecondMillis = millis();
+  thisMillis = millis();
   Serial.begin(115200);
 
   J1939Bus::initialize(&ossm::appData);
@@ -102,6 +104,8 @@ void ossm::setup() {
 }
 
 void ossm::loop() {
+  thisMillis = millis();
+
   if (ossm::isBmeInitialized == true) {
     ossm::appData.absoluteBarometricpressurekPa =
         ossm::ambientSensors->getPressurekPa();
@@ -142,21 +146,21 @@ void ossm::loop() {
     ossm::appData.egtTemperatureC = thermocouple.readCelsius();
   }
 
-  if (ossm::isEgtInitialized) {
-    // Serial.println("AppData: egtTemperature->" +
-    //                String(ossm::appData.egtTemperatureC) + "°C");
-  }
-
   // Every .5 seconds
-  if (lastHalfSecondMillis - millis() >= 500) {
-    J1939Bus::sendPgn65270(ossm::appData.airInletPressurekPa, ossm::appData.airInletTemperatureC, ossm::appData.egtTemperatureC, ossm::appData.boostPressurekPa);
-    J1939Bus::sendPgn65263(ossm::appData.fuelPressurekPa, ossm::appData.oilPressurekPa, ossm::appData.coolantPressurekPa);
-    J1939Bus::sendPgn65190(ossm::appData.boostPressurekPa, ossm::appData.tranferPipePressurekPa);
-    lastHalfSecondMillis = millis();
+  if (lastHalfSecondMillis - thisMillis >= 500) {
+    J1939Bus::sendPgn65270(
+        ossm::appData.airInletPressurekPa, ossm::appData.airInletTemperatureC,
+        ossm::appData.egtTemperatureC, ossm::appData.boostPressurekPa);
+    J1939Bus::sendPgn65263(ossm::appData.fuelPressurekPa,
+                           ossm::appData.oilPressurekPa,
+                           ossm::appData.coolantPressurekPa);
+    J1939Bus::sendPgn65190(ossm::appData.boostPressurekPa,
+                           ossm::appData.tranferPipePressurekPa);
+    lastHalfSecondMillis = thisMillis;
   }
 
   // Every 1 second
-  if (lastOneSecondMillis - millis() >= 1000) {
+  if (lastOneSecondMillis - thisMillis >= 1000) {
     if (ossm::isBmeInitialized == true) {
       // Serial.println("AppData: Barometric Pressure->" +
       //                String(ossm::appData.absoluteBarometricpressurekPa) +
@@ -167,11 +171,11 @@ void ossm::loop() {
 
     if (ossm::isAds1Initialized == true) {
       // Serial.println(
-      //     "AppData: Oil Temperature->" + String(ossm::appData.oilTemperatureC) +
-      //     "°C, Oil Pressure->" + String(ossm::appData.oilPressurekPa) +
-      //     "kPa, Coolant Temperature->" +
-      //     String(ossm::appData.coolantTemperatureC) + "°C, Coolant Pressure->" +
-      //     String(ossm::appData.coolantPressurekPa) + "kPa");
+      //     "AppData: Oil Temperature->" +
+      //     String(ossm::appData.oilTemperatureC) + "°C, Oil Pressure->" +
+      //     String(ossm::appData.oilPressurekPa) + "kPa, Coolant Temperature->"
+      //     + String(ossm::appData.coolantTemperatureC) + "°C, Coolant
+      //     Pressure->" + String(ossm::appData.coolantPressurekPa) + "kPa");
     }
 
     if (ossm::isAds2Initialized == true) {
@@ -188,29 +192,35 @@ void ossm::loop() {
     if (ossm::isAds3Initialized == true) {
       // Serial.println(
       //     "AppData: CAC Pressure->" +
-      //     String(ossm::appData.cacInletPressurekPa) + "kPa, CAC Temperature->" +
-      //     String(ossm::appData.cacInletTemperatureC) + "°C, Intake Pressure->" +
-      //     String(ossm::appData.airInletPressurekPa) +
+      //     String(ossm::appData.cacInletPressurekPa) + "kPa, CAC
+      //     Temperature->" + String(ossm::appData.cacInletTemperatureC) + "°C,
+      //     Intake Pressure->" + String(ossm::appData.airInletPressurekPa) +
       //     "kPa, Intake Temperature->" +
       //     String(ossm::appData.airInletTemperatureC) + "°C");
     }
 
     if (ossm::isAds4Initialized == true) {
       // Serial.println(
-      //     "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressurekPa) +
-      //     "kPa, Fuel Temperature->" + String(ossm::appData.fuelTemperatureC) +
-      //     "°C, Engine Bay Temperature->" +
-      //     String(ossm::appData.engineBayTemperatureC) + "°C");
+      //     "AppData: Fuel Pressure->" + String(ossm::appData.fuelPressurekPa)
+      //     + "kPa, Fuel Temperature->" +
+      //     String(ossm::appData.fuelTemperatureC) + "°C, Engine Bay
+      //     Temperature->" + String(ossm::appData.engineBayTemperatureC) +
+      //     "°C");
     }
 
     J1939Bus::sendPgn65269(ossm::appData.ambientTemperatureC,
                            ossm::appData.airInletTemperatureC,
                            ossm::appData.absoluteBarometricpressurekPa);
 
-    J1939Bus::sendPgn65129(ossm::appData.boostTemperatureC, ossm::appData.coolantTemperatureC);
-    J1939Bus::sendPgn65262(ossm::appData.coolantTemperatureC, ossm::appData.fuelTemperatureC, ossm::appData.oilTemperatureC);
-    J1939Bus::sendPgn65189(ossm::appData.cacInletTemperatureC, ossm::appData.transferPipeTemperatureC, ossm::appData.airInletTemperatureC);
+    J1939Bus::sendPgn65129(ossm::appData.boostTemperatureC,
+                           ossm::appData.coolantTemperatureC);
+    J1939Bus::sendPgn65262(ossm::appData.coolantTemperatureC,
+                           ossm::appData.fuelTemperatureC,
+                           ossm::appData.oilTemperatureC);
+    J1939Bus::sendPgn65189(ossm::appData.cacInletTemperatureC,
+                           ossm::appData.transferPipeTemperatureC,
+                           ossm::appData.airInletTemperatureC);
 
-    lastOneSecondMillis = millis();
+    lastOneSecondMillis = thisMillis;
   }
 }
