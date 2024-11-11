@@ -38,7 +38,7 @@ The hardware has 48 pins on 4 plugs and is pinned out as follows.
 | 1. Fuel Pressure -      | 1. Oil Temperature +     | 1. CAC Inlet Pressure +      | 1. Transfer Pipe Temperature -   |
 | 2. Fuel Pressure Signal | 2. Oil Pressure Signal   | 2. CAC Inlet Temperature +   | 2. Transfer Pipe Pressure -      |
 | 3. Fuel Temp +          | 3. Coolant Temperature + | 3. Air Inlet Temperature +   | 3. Boost Temperature -           |
-| 4. Engine Bay Temp +    | 4. Coolant Pressure +    | 4. Air Inlet Pressure Signal | 4. Ground                        |
+| 4. Engine Bay Temp +    | 4. Coolant Pressure +    | 4. Air Inlet Pressure Signal | 4. Can Shield Ground             |
 | 5. Fuel Temp -          | 5. Oil Temperature -     | 5. Air Inlet Pressure +      | 5. Egt+                          |
 | 6. Engine Bay Temp -    | 6. Oil Pressure -        | 6. Boost Pressure +          | 6. Egt-                          |
 | 7. 12 Volt Power        | 7. Coolant Temperature - | 7. Air Inlet Pressure -      | 7. Boost Pressure +              |
