@@ -50,6 +50,7 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0;
   intakeTempOffset /= 0.03125;
@@ -74,6 +75,7 @@ void J1939Bus::sendPgn65164() {
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   msg.buf[0] =
       static_cast<uint8_t>(appData->engineBayTemperatureC + 40);  // 441
@@ -97,6 +99,7 @@ void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   msg.buf[0] =
       static_cast<uint8_t>(engineIntakeManifold2TemperatureC + 40);  // 1131
@@ -121,6 +124,7 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   float boost1Offset = engineTurbocharger1BoostPressurekPa / 0.125;
   float boost2Offset = engineTurbocharger2BoostPressurekPa / 0.125;
@@ -145,6 +149,7 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   float oilTempOffset = engineOilTemperatureC + 273.0;
   oilTempOffset /= 0.03125;
@@ -169,6 +174,7 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4);  // 94
   msg.buf[1] = 255;
@@ -191,6 +197,7 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   float ambientAirTempOffset = ambientTemperatureC + 273.0;
   ambientAirTempOffset /= 0.03125;
@@ -215,6 +222,7 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
   message.setSourceAddress(149);
 
   CAN_message_t msg;
+  msg.flags.extended = 1;
   msg.id = message.canId;
   float egtOffset = egtTemperatureC + 273.0;
   egtOffset /= 0.03125;
@@ -226,7 +234,7 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
   msg.buf[5] = highByte(static_cast<uint16_t>(egtOffset));  // 173
   msg.buf[6] = lowByte(static_cast<uint16_t>(egtOffset));   // 173
   msg.buf[7] = 255;
-
+  Serial.println("sending can message for PGN 65270 with canID: " + (String)msg.id + " " + message.canId);
   Can1.write(msg);
 }
 

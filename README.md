@@ -86,7 +86,7 @@ PGN 65190 - .5 seconds
     spn1127 Turbocharger 1 Boost Pressure "Sensor 13"
     spn1128 Turbocharger 2 Boost Pressure "Sensor 10"
 
-*PGN 65164 - On Request
+PGN 65164 - On Request
     spn354 Relative Humidity "Sensor 2"
     spn441 Auxiliary Temperature 1 "Sensor 19" (Engine Bay Temperature)
 
