@@ -3,10 +3,7 @@
 AmbientSensors::AmbientSensors(bool *isInitialized) {
   unsigned status;
 
-  // default settings
-  status = bme.begin();
-  // You can also pass in a Wire library object like &Wire2
-  // status = bme.begin(0x76, &Wire2)
+  status = bme.begin(0x76);
   if (!status) {
     Serial.println(
         "Could not find a valid BME280 sensor, check wiring, address, sensor "

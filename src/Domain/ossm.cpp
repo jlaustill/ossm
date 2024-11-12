@@ -65,16 +65,16 @@ void ossm::setup() {
   tranferPipeTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x49, 0, 0, &ossm::isAds2Initialized);
-  transferPipePressureSensor = PressureSensor(0x49, 1, 500);
+  transferPipePressureSensor = PressureSensor(0x49, 1, 58);
   boostTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
-                 0x49, 2, 0, &ossm::isAds2Initialized);
-  boostPressureSensor = PressureSensor(0x49, 3, 150);
+                 0x49, 3, 0, &ossm::isAds2Initialized);
+  boostPressureSensor = PressureSensor(0x49, 2, 150);
 
   cacTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x4A, 1, 0, &ossm::isAds3Initialized);
-  cacPressureSensor = PressureSensor(0x4A, 0, 30);
+  cacPressureSensor = PressureSensor(0x4A, 0, 150);
   intakeTempSensor =
       TempSensor(10000, AEM_TEMP_SENSOR_A, AEM_TEMP_SENSOR_B, AEM_TEMP_SENSOR_C,
                  0x4A, 2, 0, &ossm::isAds3Initialized);
@@ -149,12 +149,12 @@ void ossm::loop() {
   // Every .5 seconds
   if (lastHalfSecondMillis - thisMillis >= 500) {
     J1939Bus::sendPgn65270(
-        ossm::appData.airInletPressurekPa, ossm::appData.airInletTemperatureC,
+        ossm::appData.airInletPressurekPa, ossm::appData.boostTemperatureC,
         ossm::appData.egtTemperatureC, ossm::appData.boostPressurekPa);
     J1939Bus::sendPgn65263(ossm::appData.fuelPressurekPa,
                            ossm::appData.oilPressurekPa,
                            ossm::appData.coolantPressurekPa);
-    J1939Bus::sendPgn65190(ossm::appData.boostPressurekPa,
+    J1939Bus::sendPgn65190(ossm::appData.cacInletPressurekPa,
                            ossm::appData.tranferPipePressurekPa);
     lastHalfSecondMillis = thisMillis;
   }
