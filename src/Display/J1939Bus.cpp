@@ -70,7 +70,7 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
 
 void J1939Bus::sendPgn65164() {
   J1939 message = J1939();
-  message.setPgn(65189);
+  message.setPgn(65164);
   message.setPriority(6);
   message.setSourceAddress(149);
 
@@ -234,7 +234,6 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
   msg.buf[5] = highByte(static_cast<uint16_t>(egtOffset));  // 173
   msg.buf[6] = lowByte(static_cast<uint16_t>(egtOffset));   // 173
   msg.buf[7] = 255;
-  Serial.println("sending can message for PGN 65270 with canID: " + (String)msg.id + " " + message.canId);
   Can1.write(msg);
 }
 
