@@ -9,7 +9,7 @@
 
 class PressureSensor {
 public:
-    PressureSensor(uint8_t deviceId, uint8_t channelId, int _psiMax) {
+    PressureSensor(uint8_t deviceId, uint8_t channelId, int _psiMax, bool *isInitialized) {
         Serial.println("Starting to initialize ADS. devicedId: " + (String)deviceId);
 
         DeviceId = deviceId;
@@ -22,6 +22,7 @@ public:
             Serial.println("Failed to initialize ADS.");
         } else {
             initialized = true;
+            *isInitialized = true;
             Serial.println("Succesfuly initialized ADS.");
         }
     }

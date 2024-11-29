@@ -3,7 +3,7 @@
 
 #include <AppData.h>
 #include <FlexCAN_T4.h>
-#include <J1939.h>
+#include <J1939Message.h>
 
 class J1939Bus {
  public:

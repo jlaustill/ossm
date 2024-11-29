@@ -147,7 +147,7 @@ void ossm::setup() {
                  0x4B, 1, 0, &ossm::isAds4Initialized);
 #endif
 #if defined(SPN_94_FUEL_DELIVERY_PRESSURE)
-  fuelPressureSensor = PressureSensor(0x4B, 0, 100);
+  fuelPressureSensor = PressureSensor(0x4B, 0, 100, &ossm::isAds4Initialized);
 #endif
 #if defined(SPN_441_ENGINE_BAY_TEMPERATURE)
   engineBayTempSensor =
