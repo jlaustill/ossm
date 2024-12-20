@@ -10,10 +10,12 @@
 #include <SeaDash.hpp>
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
 
 AppData *J1939Bus::appData;
 
 void J1939Bus::sniffData(const CAN_message_t &msg) {
+  // Serial.println("Message sniffed");
   J1939Message message = J1939Message();
   message.setCanId(msg.id);
   message.setData(msg.buf);
@@ -25,7 +27,24 @@ void J1939Bus::sniffData(const CAN_message_t &msg) {
 
     if (requestedPgn == 65164) {
       sendPgn65164();
+    } else {
+      Can2.write(msg);
     }
+  }
+  else {
+    Can2.write(msg);
+  }
+}
+
+void J1939Bus::sniffData2(const CAN_message_t &msg) {
+  // Serial.println("Message sniffed");
+  J1939Message message = J1939Message();
+  message.setCanId(msg.id);
+  message.setData(msg.buf);
+
+  if (message.pgn == 59904) {
+    // Serial.println("Sniffed Data on 2 @ " + (String)millis() + " ID: " + (String)msg.id);
+    Can1.write(msg);
   }
 }
 
@@ -41,6 +60,14 @@ void J1939Bus::initialize(AppData *currentData) {
   Can1.enableFIFOInterrupt();
   Can1.onReceive(sniffData);
   Can1.mailboxStatus();
+
+  Can2.begin();
+  Can2.setBaudRate(250 * 1000);
+  Can2.setMaxMB(16);
+  Can2.enableFIFO();
+  Can2.enableFIFOInterrupt();
+  Can2.onReceive(sniffData2);
+  Can2.mailboxStatus();
 }
 
 void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
@@ -66,7 +93,7 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
   msg.buf[3] = lowByte(static_cast<uint16_t>(coolantTempOffset));   // 1637
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65164() {
@@ -86,7 +113,7 @@ void J1939Bus::sendPgn65164() {
   msg.buf[6] = static_cast<uint8_t>(appData->humidity / .4);  // 354
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
@@ -113,7 +140,7 @@ void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
       static_cast<uint8_t>(engineIntakeManifold4TemperatureC + 40);  // 1133
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
@@ -137,7 +164,7 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
   msg.buf[3] = lowByte(static_cast<uint16_t>(boost2Offset));   // 1128
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
@@ -164,7 +191,7 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
   msg.buf[3] = lowByte(static_cast<uint16_t>(oilTempOffset));         // 175
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
@@ -180,7 +207,6 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
   msg.id = message.canId;
 #if defined(SPN_94_FUEL_DELIVERY_PRESSURE)
   msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4);  // 94
-  Serial.println("Set Fuel Pressure to send");
 #endif
 #if defined(SPN_100_ENGINE_OIL_PRESSURE)
   msg.buf[3] = static_cast<uint8_t>(engineOilPressurekPa / 4);  // 100
@@ -189,7 +215,7 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
   msg.buf[6] = static_cast<uint8_t>(engineCoolantPressurekPa / 2);  // 109
 #endif
 
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65269(float ambientTemperatureC,
@@ -215,7 +241,7 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
 #if defined(SPN_172_AIR_INLET_TEMPERATURE)
   msg.buf[5] = static_cast<uint8_t>(airInletTemperatureC + 40);        // 172
 #endif
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 void J1939Bus::sendPgn65270(float airInletPressurekPa,
@@ -244,7 +270,7 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
   msg.buf[5] = highByte(static_cast<uint16_t>(egtOffset));  // 173
   msg.buf[6] = lowByte(static_cast<uint16_t>(egtOffset));   // 173
 #endif
-  Can1.write(msg);
+  Can2.write(msg);
 }
 
 #endif
