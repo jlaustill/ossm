@@ -31,8 +31,8 @@ class J1939Bus {
 
  private:
   static AppData *appData;
-  static void sniffData(const CAN_message_t &msg);
-  static void sniffData2(const CAN_message_t &msg);
+  static void sniffDataCumminsBus(const CAN_message_t &msg);
+  static void sniffDataPrivate(const CAN_message_t &msg);
 };
 
 #endif
