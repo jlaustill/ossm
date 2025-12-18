@@ -35,18 +35,18 @@ The hardware has 48 pins on 4 plugs and is pinned out as follows.
 
 | Pin A                   | Pin B                      | Pin C                        | Pin D                            |
 | ----------------------- | -------------------------- | ---------------------------- | -------------------------------  |
-| 1. Fuel Pressure -      | 1. Oil Temperature +       | 1. CAC Inlet Pressure +      | 1. Transfer Pipe Temperature -   |
-| 2. Fuel Pressure Signal | 2. Oil Pressure Signal     | 2. CAC Inlet Temperature +   | 2. Transfer Pipe Pressure -      |
-| 3. Fuel Temp +          | 3. Coolant Temperature +   | 3. Air Inlet Temperature +   | 3. Boost Temperature -           |
-| 4. Engine Bay Temp +    | 4. Coolant Pressure Signal | 4. Air Inlet Pressure Signal | 4. Can Shield Ground             |
-| 5. Fuel Temp -          | 5. Oil Temperature -       | 5. Air Inlet Pressure +      | 5. Egt+                          |
-| 6. Engine Bay Temp -    | 6. Oil Pressure -          | 6. Boost Pressure +          | 6. Egt-                          |
-| 7. 12 Volt Power        | 7. Coolant Temperature -   | 7. Air Inlet Pressure -      | 7. Boost Pressure -              |
-| 8. 5 Volts for BME280   | 8. Coolant Pressure -      | 8. CAC Inlet Pressure Signal | 8. Transfer Pipe Temperature +   |
-| 9. Ground               | 9. Oil Pressure +          | 9. CAC Inlet Pressure -      | 9. Transfer Pipe Pressure Signal |
-| 10. Ground for BME280   | 10. Coolant Pressure +     | 10. CAC Inlet Temperature -  | 10. Boost Pressure Signal        |
-| 11. SCL for BME280      | 11. CanH                   | 11. Air Inlet Temperature -  | 11. Boost Temperature +          |
-| 12. SDA for BME280      | 12. CanL                   | 12. Fuel Pressure +          | 12. Transfer Pipe Pressure +     |
+| 1. Ground               | 1. Oil Temperature -       | 1. Trans Temp +              | 1. SCL for BME280                |
+| 2. Fuel Pressure Signal | 2. Oil Temperature Signal  | 2. Trans Pressure +          | 2. SDA for BME280                |
+| 3. Fuel Temp +          | 3. Oil Pressure Signal     | 3. Boost Pressure +          | 3. Ground for BME280             |
+| 4. Engine Bay Temp +    | 4. Coolant Temperature +   | 4. Air Inlet Pressure Signal | 4. Trans Temp -                  |
+| 5. Fuel Pressure +      | 5. Coolant Pressure +      | 5. Air Inlet Temp +          | 5. Trans Pressure -              |
+| 6. Intake Pressure +    | 6. Oil Pressure +          | 6. CAC Temperature +         | 6. Trans Pressure Signal         |
+| 7. 12 Volt Power        | 7. Coolant Pressure +      | 7. CAC Inlet Pressure Signal | 7. CANL                          |
+| 8. 5 Volts for BME280   | 8. Oil Pressure -          | 8. CAC Inlet Pressure -      | 8. CANH                          |
+| 9. Ground               | 9. Coolant Temperature -   | 9. CAC Inlet Temperature -   | 9. EGT -                         |
+| 10. Fuel Pressure -     | 10. Coolant Pressure -     | 10. Intake Temperature -     | 10. EGT +                        |
+| 11. Fuel Temp -         | 11. Boost Temperature Sig  | 11. Intake Pressure -        | 11. Boost Pressure -             |
+| 12. Engine Bay Temp -   | 12. Boost Pressure Sig     | 12. CAC Inlet Pressure +     | 12. Boost Temperature -          |
 
 ## J1939
 

@@ -18,14 +18,10 @@ TempSensor boostTempSensor;
 PressureSensor boostPressureSensor;
 PressureSensor fuelPressureSensor;
 
-uint32_t lastOneSecondMillis;
-uint32_t lastHalfSecondMillis;
-uint32_t thisMillis;
+elapsedMillis oneSecondMillis;
+elapsedMillis halfSecondMillis;
 
 void ossm::setup() {
-  lastOneSecondMillis = millis();
-  lastHalfSecondMillis = millis();
-  thisMillis = millis();
   Serial.begin(115200);
 
   J1939Bus::initialize(&ossm::appData);
@@ -39,11 +35,9 @@ void ossm::setup() {
   Serial.println("isAds4Initialized->" + String(ossm::isAds4Initialized));
 } // ossm::setup
 
-void ossm::loop() {
-  thisMillis = millis();
-  
+void ossm::loop() {  
   // Every .5 seconds
-  if ((thisMillis - lastHalfSecondMillis) >= 500) {
+  if (halfSecondMillis >= 500) {
     ossm::appData.boostPressurekPa = boostPressureSensor.getPressureInkPa();
     ossm::appData.fuelPressurekPa = fuelPressureSensor.getPressureInkPa();
     J1939Bus::sendPgn65270(
@@ -53,11 +47,11 @@ void ossm::loop() {
     J1939Bus::sendPgn65263(ossm::appData.fuelPressurekPa,
                            0xFF,
                            0xFF);
-    lastHalfSecondMillis = thisMillis;
+    halfSecondMillis = 0;
   }
 
   // Every 1 second
-  if ((thisMillis - lastOneSecondMillis) >= 1000) {
+  if (oneSecondMillis >= 1000) {
     // Serial.print("boost pressure: ");
     // Serial.print(ossm::appData.boostPressurekPa);
     // Serial.print(" kPa, boost temperature: ");
@@ -72,6 +66,6 @@ void ossm::loop() {
     J1939Bus::sendPgn65129(ossm::appData.boostTemperatureC,
                            0xFF);
 
-    lastOneSecondMillis = thisMillis;
+    oneSecondMillis = 0;
   }
 }
