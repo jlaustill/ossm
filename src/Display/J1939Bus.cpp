@@ -2,9 +2,9 @@
 #define OSSM_J1939Bus_CPP
 
 #include "J1939Bus.h"
-#include "configuration.h"
 
 #include <AppData.h>
+#include <AppConfig.h>
 #include <FlexCAN_T4.h>
 
 #include <SeaDash.hpp>
@@ -13,6 +13,7 @@ FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> CanCumminsBus;
 FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CanPrivate;
 
 AppData *J1939Bus::appData;
+const AppConfig *J1939Bus::config;
 volatile bool warmedUp = false;
 volatile uint16_t rpms = 0;
 volatile float maxTiming = 12.0f;
@@ -34,7 +35,6 @@ void UpdateMaxTiming(float timing) {
 }
 
 void J1939Bus::sniffDataCumminsBus(const CAN_message_t &msg) {
-  // Serial.println("Message sniffed");
   J1939Message message = J1939Message();
   message.setCanId(msg.id);
   message.setData(msg.buf);
@@ -91,21 +91,20 @@ void J1939Bus::sniffDataCumminsBus(const CAN_message_t &msg) {
 }
 
 void J1939Bus::sniffDataPrivate(const CAN_message_t &msg) {
-  // Serial.println("Message sniffed");
   J1939Message message = J1939Message();
   message.setCanId(msg.id);
   message.setData(msg.buf);
 
   if (message.pgn == 59904) {
-    // Serial.println("Sniffed Data on 2 @ " + (String)millis() + " ID: " + (String)msg.id);
     CanCumminsBus.write(msg);
   }
 }
 
-void J1939Bus::initialize(AppData *currentData) {
+void J1939Bus::initialize(AppData *currentData, const AppConfig *cfg) {
   Serial.println("J1939 Bus initializing");
 
   appData = currentData;
+  config = cfg;
 
   CanCumminsBus.begin();
   CanCumminsBus.setBaudRate(250 * 1000);
@@ -122,6 +121,9 @@ void J1939Bus::initialize(AppData *currentData) {
   CanPrivate.enableFIFOInterrupt();
   CanPrivate.onReceive(sniffDataPrivate);
   CanPrivate.mailboxStatus();
+
+  Serial.print("J1939 Source Address: ");
+  Serial.println(config->j1939SourceAddress);
 }
 
 void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
@@ -129,23 +131,28 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
   J1939Message message = J1939Message();
   message.setPgn(65129);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
   float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0;
   intakeTempOffset /= 0.03125;
   float coolantTempOffset = engineCoolantTemperatureC + 273.0;
   coolantTempOffset /= 0.03125;
-#if defined(SPN_1363_INTAKE_MANIFOLD_1_AIR_TEMPERATURE)
-  msg.buf[0] = highByte(static_cast<uint16_t>(intakeTempOffset));   // 1636
-  msg.buf[1] = lowByte(static_cast<uint16_t>(intakeTempOffset));    // 1636
-#endif
-#if defined(SPN_110_ENGINE_COOLANT_TEMPERATURE)
-  msg.buf[2] = highByte(static_cast<uint16_t>(coolantTempOffset));  // 1637
-  msg.buf[3] = lowByte(static_cast<uint16_t>(coolantTempOffset));   // 1637
-#endif
+
+  if (config->j1939Spns.spn1363_intakeManifold1AirTemp) {
+    msg.buf[0] = highByte(static_cast<uint16_t>(intakeTempOffset));   // 1636
+    msg.buf[1] = lowByte(static_cast<uint16_t>(intakeTempOffset));    // 1636
+  }
+  if (config->j1939Spns.spn110_engineCoolantTemp) {
+    msg.buf[2] = highByte(static_cast<uint16_t>(coolantTempOffset));  // 1637
+    msg.buf[3] = lowByte(static_cast<uint16_t>(coolantTempOffset));   // 1637
+  }
 
   CanPrivate.write(msg);
 }
@@ -154,18 +161,21 @@ void J1939Bus::sendPgn65164() {
   J1939Message message = J1939Message();
   message.setPgn(65164);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
-#if defined(SPN_441_ENGINE_BAY_TEMPERATURE)
-  msg.buf[0] =
-      static_cast<uint8_t>(appData->engineBayTemperatureC + 40);  // 441
-#endif
-#if defined(SPN_354_RELATIVE_HUMIDITY)
-  msg.buf[6] = static_cast<uint8_t>(appData->humidity / .4);  // 354
-#endif
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
+  if (config->j1939Spns.spn441_engineBayTemp) {
+    msg.buf[0] = static_cast<uint8_t>(appData->engineBayTemperatureC + 40);  // 441
+  }
+  if (config->j1939Spns.spn354_relativeHumidity) {
+    msg.buf[6] = static_cast<uint8_t>(appData->humidity / .4);  // 354
+  }
 
   CanPrivate.write(msg);
 }
@@ -176,23 +186,24 @@ void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
   J1939Message message = J1939Message();
   message.setPgn(65189);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
-#if defined(SPN_1131_INTAKE_MANIFOLD_2_AIR_TEMPERATURE)
-  msg.buf[0] =
-      static_cast<uint8_t>(engineIntakeManifold2TemperatureC + 40);  // 1131
-#endif
-#if defined(SPN_1132_INTAKE_MANIFOLD_3_AIR_TEMPERATURE)
-  msg.buf[1] =
-      static_cast<uint8_t>(engineIntakeManifold3TemperatureC + 40);  // 1132
-#endif
-#if defined(SPN_1133_INTAKE_MANIFOLD_4_AIR_TEMPERATURE)
-  msg.buf[2] =
-      static_cast<uint8_t>(engineIntakeManifold4TemperatureC + 40);  // 1133
-#endif
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
+  if (config->j1939Spns.spn1131_intakeManifold2Temp) {
+    msg.buf[0] = static_cast<uint8_t>(engineIntakeManifold2TemperatureC + 40);  // 1131
+  }
+  if (config->j1939Spns.spn1132_intakeManifold3Temp) {
+    msg.buf[1] = static_cast<uint8_t>(engineIntakeManifold3TemperatureC + 40);  // 1132
+  }
+  if (config->j1939Spns.spn1133_intakeManifold4Temp) {
+    msg.buf[2] = static_cast<uint8_t>(engineIntakeManifold4TemperatureC + 40);  // 1133
+  }
 
   CanPrivate.write(msg);
 }
@@ -202,21 +213,26 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
   J1939Message message = J1939Message();
   message.setPgn(65190);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
   float boost1Offset = engineTurbocharger1BoostPressurekPa / 0.125;
   float boost2Offset = engineTurbocharger2BoostPressurekPa / 0.125;
-#if defined(SPN_1127_TURBOCHARGER_1_BOOST_PRESSURE)
-  msg.buf[0] = highByte(static_cast<uint16_t>(boost1Offset));  // 1127
-  msg.buf[1] = lowByte(static_cast<uint16_t>(boost1Offset));   // 1127
-#endif
-#if defined(SPN_1128_TURBOCHARGER_2_BOOST_PRESSURE)
-  msg.buf[2] = highByte(static_cast<uint16_t>(boost2Offset));  // 1128
-  msg.buf[3] = lowByte(static_cast<uint16_t>(boost2Offset));   // 1128
-#endif
+
+  if (config->j1939Spns.spn1127_turbo1BoostPressure) {
+    msg.buf[0] = highByte(static_cast<uint16_t>(boost1Offset));  // 1127
+    msg.buf[1] = lowByte(static_cast<uint16_t>(boost1Offset));   // 1127
+  }
+  if (config->j1939Spns.spn1128_turbo2BoostPressure) {
+    msg.buf[2] = highByte(static_cast<uint16_t>(boost2Offset));  // 1128
+    msg.buf[3] = lowByte(static_cast<uint16_t>(boost2Offset));   // 1128
+  }
 
   CanPrivate.write(msg);
 }
@@ -227,23 +243,28 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
   J1939Message message = J1939Message();
   message.setPgn(65262);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
   float oilTempOffset = engineOilTemperatureC + 273.0;
   oilTempOffset /= 0.03125;
-#if defined(SPN_110_ENGINE_COOLANT_TEMPERATURE)
-  msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperatureC + 40);  // 110
-#endif
-#if defined(SPN_174_FUEL_TEMPERATURE)
-  msg.buf[1] = static_cast<uint8_t>(engineFuelTemperatureC + 40);     // 174
-#endif
-#if defined(SPN_175_ENGINE_OIL_TEMPERATURE)
-  msg.buf[2] = highByte(static_cast<uint16_t>(oilTempOffset));        // 175
-  msg.buf[3] = lowByte(static_cast<uint16_t>(oilTempOffset));         // 175
-#endif
+
+  if (config->j1939Spns.spn110_engineCoolantTemp) {
+    msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperatureC + 40);  // 110
+  }
+  if (config->j1939Spns.spn174_fuelTemp) {
+    msg.buf[1] = static_cast<uint8_t>(engineFuelTemperatureC + 40);     // 174
+  }
+  if (config->j1939Spns.spn175_engineOilTemp) {
+    msg.buf[2] = highByte(static_cast<uint16_t>(oilTempOffset));        // 175
+    msg.buf[3] = lowByte(static_cast<uint16_t>(oilTempOffset));         // 175
+  }
 
   CanPrivate.write(msg);
 }
@@ -254,20 +275,24 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
   J1939Message message = J1939Message();
   message.setPgn(65263);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
-#if defined(SPN_94_FUEL_DELIVERY_PRESSURE)
-  msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4);  // 94
-#endif
-#if defined(SPN_100_ENGINE_OIL_PRESSURE)
-  msg.buf[3] = static_cast<uint8_t>(engineOilPressurekPa / 4);  // 100
-#endif
-#if defined(SPN_109_COOLANT_PRESSURE)
-  msg.buf[6] = static_cast<uint8_t>(engineCoolantPressurekPa / 2);  // 109
-#endif
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
+  if (config->j1939Spns.spn94_fuelDeliveryPressure) {
+    msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4);  // 94
+  }
+  if (config->j1939Spns.spn100_engineOilPressure) {
+    msg.buf[3] = static_cast<uint8_t>(engineOilPressurekPa / 4);  // 100
+  }
+  if (config->j1939Spns.spn109_coolantPressure) {
+    msg.buf[6] = static_cast<uint8_t>(engineCoolantPressurekPa / 2);  // 109
+  }
 
   CanPrivate.write(msg);
 }
@@ -278,23 +303,29 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
   J1939Message message = J1939Message();
   message.setPgn(65269);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
   float ambientAirTempOffset = ambientTemperatureC + 273.0;
   ambientAirTempOffset /= 0.03125;
-#if defined(SPN_108_BAROMETRIC_PRESSURE)
-  msg.buf[0] = static_cast<uint8_t>(barometricPressurekPa * 2);  // 108
-#endif
-#if defined(SPN_171_AMBIENT_AIR_TEMP)
-  msg.buf[3] = highByte(static_cast<uint16_t>(ambientAirTempOffset));  // 171
-  msg.buf[4] = lowByte(static_cast<uint16_t>(ambientAirTempOffset));   // 171
-#endif
-#if defined(SPN_172_AIR_INLET_TEMPERATURE)
-  msg.buf[5] = static_cast<uint8_t>(airInletTemperatureC + 40);        // 172
-#endif
+
+  if (config->j1939Spns.spn108_barometricPressure) {
+    msg.buf[0] = static_cast<uint8_t>(barometricPressurekPa * 2);  // 108
+  }
+  if (config->j1939Spns.spn171_ambientAirTemp) {
+    msg.buf[3] = highByte(static_cast<uint16_t>(ambientAirTempOffset));  // 171
+    msg.buf[4] = lowByte(static_cast<uint16_t>(ambientAirTempOffset));   // 171
+  }
+  if (config->j1939Spns.spn172_airInletTemp) {
+    msg.buf[5] = static_cast<uint8_t>(airInletTemperatureC + 40);        // 172
+  }
+
   CanPrivate.write(msg);
 }
 
@@ -304,26 +335,32 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
   J1939Message message = J1939Message();
   message.setPgn(65270);
   message.setPriority(6);
-  message.setSourceAddress(149);
+  message.setSourceAddress(config->j1939SourceAddress);
 
   CAN_message_t msg;
   msg.flags.extended = 1;
   msg.id = message.canId;
+
+  // Initialize buffer to 0xFF (not available)
+  for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
+
   float egtOffset = egtTemperatureC + 273.0;
   egtOffset /= 0.03125;
-#if defined(SPN_102_BOOST_PRESSURE)
-  msg.buf[1] = static_cast<uint8_t>(boostPressurekPa / 2);       // 102
-#endif
-#if defined(SPN_1363_INTAKE_MANIFOLD_1_AIR_TEMPERATURE)
-  msg.buf[2] = static_cast<uint8_t>(airInletTemperatureC + 40);  // 105
-#endif
-#if defined(SPN_106_AIR_INLET_PRESSURE)
-  msg.buf[3] = static_cast<uint8_t>(airInletPressurekPa / 2);    // 106
-#endif
-#if defined(SPN_173_EXHAUST_GAS_TEMPERATURE)
-  msg.buf[5] = highByte(static_cast<uint16_t>(egtOffset));  // 173
-  msg.buf[6] = lowByte(static_cast<uint16_t>(egtOffset));   // 173
-#endif
+
+  if (config->j1939Spns.spn102_boostPressure) {
+    msg.buf[1] = static_cast<uint8_t>(boostPressurekPa / 2);       // 102
+  }
+  if (config->j1939Spns.spn1363_intakeManifold1AirTemp) {
+    msg.buf[2] = static_cast<uint8_t>(airInletTemperatureC + 40);  // 105
+  }
+  if (config->j1939Spns.spn106_airInletPressure) {
+    msg.buf[3] = static_cast<uint8_t>(airInletPressurekPa / 2);    // 106
+  }
+  if (config->j1939Spns.spn173_exhaustGasTemp) {
+    msg.buf[5] = highByte(static_cast<uint16_t>(egtOffset));  // 173
+    msg.buf[6] = lowByte(static_cast<uint16_t>(egtOffset));   // 173
+  }
+
   CanPrivate.write(msg);
 }
 

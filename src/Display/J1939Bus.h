@@ -2,12 +2,13 @@
 #define OSSM_J1939Bus_H
 
 #include <AppData.h>
+#include <AppConfig.h>
 #include <FlexCAN_T4.h>
 #include <J1939Message.h>
 
 class J1939Bus {
  public:
-  static void initialize(AppData *appData);
+  static void initialize(AppData *appData, const AppConfig *config);
   static void sendPgn65269(float ambientTemperatureC,
                            float airInletTemperatureC,
                            float barometricPressurekPa);
@@ -31,6 +32,7 @@ class J1939Bus {
 
  private:
   static AppData *appData;
+  static const AppConfig *config;
   static void sniffDataCumminsBus(const CAN_message_t &msg);
   static void sniffDataPrivate(const CAN_message_t &msg);
 };

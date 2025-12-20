@@ -5,6 +5,107 @@
 
 This software is designed to emulate a second PCM/ECM and read a bunch of sensors and send the data over the appropriate J1939 PGNs. Everything in this repo is learned from reverse engineering, using data found on github, things shared on facebook, etc. So do your own testing if you decide to use it.
 
+## Architecture Overview
+
+OSSM uses a layered architecture with non-blocking sensor reads and runtime configuration:
+
+```
+Hardware (ADS1115 x4, MAX31856, BME280)
+           |
+    Data Layer (Hardware abstraction)
+           |
+    Domain Layer (Business logic)
+           |
+    Display/Interface Layer (CAN output, Serial commands)
+```
+
+### Key Features
+
+- **Non-blocking sensor reads**: ADS1115 continuous mode with DRDY pin detection
+- **50ms IntervalTimer**: Deterministic sensor polling independent of main loop
+- **Runtime configuration**: All settings stored in EEPROM, no recompilation needed
+- **Dual CAN bus**: Primary (Cummins) and Private CAN networks
+- **Serial command interface**: Configure sensors and SPNs over USB
+
+## File Structure
+
+```
+src/
+├── Data/                          # Hardware abstraction layer
+│   ├── types/
+│   │   ├── ESensorType.h          # Sensor type enumeration
+│   │   ├── TSensorConfig.h        # Per-sensor configuration struct
+│   │   └── TAdcReading.h          # Raw ADC reading with timestamp
+│   ├── ADS1115Manager/            # 4x ADS1115 ADC management
+│   ├── MAX31856Manager/           # Thermocouple management
+│   ├── BME280Manager/             # Ambient sensor management
+│   └── ConfigStorage/             # EEPROM configuration
+│
+├── Domain/                        # Business logic layer
+│   ├── SensorProcessor/           # Raw ADC → engineering units
+│   ├── ossm.h                     # Main orchestration
+│   └── ossm.cpp
+│
+├── Display/                       # CAN output layer
+│   ├── J1939Bus.h
+│   └── J1939Bus.cpp
+│
+└── Interface/                     # User interface layer
+    └── SerialCommandHandler/      # Serial USB commands
+
+include/
+├── AppData.h                      # Runtime sensor values
+└── AppConfig.h                    # EEPROM configuration structure
+```
+
+## Hardware Configuration
+
+| Device | Address/Pin | DRDY Pin | Notes |
+|--------|-------------|----------|-------|
+| ADS1115 | 0x48 | D0 | 4 ADC channels |
+| ADS1115 | 0x49 | D1 | 4 ADC channels |
+| ADS1115 | 0x4A | D4 | 4 ADC channels |
+| ADS1115 | 0x4B | D5 | 4 ADC channels |
+| MAX31856 | SPI (CS=D10) | D2 (DRDY), D3 (FAULT) | K-type thermocouple |
+| BME280 | I2C 0x76 | N/A | Temp, humidity, pressure |
+
+## Serial Commands
+
+Connect via USB serial at 115200 baud. Available commands:
+
+| Command | Description |
+|---------|-------------|
+| `help` | Show all available commands |
+| `status` | Display current sensor readings |
+| `config` | Show current configuration |
+| `save` | Save configuration to EEPROM |
+| `reset` | Reset to default configuration |
+| `address <n>` | Set J1939 source address (0-253) |
+| `spn <name> <0\|1>` | Enable/disable a SPN |
+| `sensor <idx> <type>` | Set sensor type for an input |
+
+### SPN Names
+
+`boost`, `egt`, `ambient`, `humidity`, `barometric`, `oiltemp`, `oilpres`,
+`coolanttemp`, `coolantpres`, `fueltemp`, `fuelpres`, `enginebay`,
+`intake1`, `intake2`, `intake3`, `intake4`, `airinlet`, `turbo1`, `turbo2`
+
+### Sensor Types
+
+| Type | ID | Description |
+|------|-----|-------------|
+| DISABLED | 0 | Sensor disabled |
+| PRESSURE_0_100PSI | 1 | 0-100 PSI pressure sensor |
+| PRESSURE_0_150PSI | 2 | 0-150 PSI pressure sensor |
+| PRESSURE_0_200PSI | 3 | 0-200 PSI pressure sensor |
+| TEMP_NTC_AEM | 10 | AEM NTC temperature sensor |
+| TEMP_NTC_BOSCH | 11 | Bosch NTC temperature sensor |
+| TEMP_NTC_GM | 12 | GM NTC temperature sensor |
+| TEMP_THERMOCOUPLE_K | 20 | K-type thermocouple |
+| AMBIENT_TEMP | 30 | BME280 temperature |
+| AMBIENT_HUMIDITY | 31 | BME280 humidity |
+| AMBIENT_PRESSURE | 32 | BME280 pressure |
+
 ## Sensors
 
 This Sensor Module can read and provide data for up to 19 sensors.
@@ -55,7 +156,7 @@ This module sends the sensor data over canbus using J1939 messages.
 PGN 65269 - 1 seconds
     spn171 Ambient Air Temperature "Sensor 1"
     spn172 Air Inlet Temperature "Sensor 15"
-    spn108 Barometric Pressure "Sensor 3" 
+    spn108 Barometric Pressure "Sensor 3"
 
 PGN 65270 - .5 seconds
     spn173 Exhaust Gas Temperature "Sensor 4"
@@ -90,4 +191,27 @@ PGN 65164 - On Request
     spn354 Relative Humidity "Sensor 2"
     spn441 Auxiliary Temperature 1 "Sensor 19" (Engine Bay Temperature)
 
+## Building
 
+This project uses PlatformIO. To build:
+
+```bash
+pio run
+```
+
+To upload to Teensy 4.1:
+
+```bash
+pio run -t upload
+```
+
+## Configuration
+
+On first boot, default configuration is loaded and saved to EEPROM. Use serial commands to modify settings, then `save` to persist changes.
+
+The configuration includes:
+- J1939 source address (default: 149)
+- Per-sensor type and calibration
+- SPN enable/disable flags for each J1939 parameter
+- ADS1115 device settings
+- Thermocouple and BME280 settings

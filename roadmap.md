@@ -4,14 +4,37 @@
 Restructure OSSM from blocking ADC reads with preprocessor config to IntervalTimer-based async reading with EEPROM-configurable sensor mappings. Configuration can be updated at runtime via Serial USB or J1939 requests.
 
 ## Hardware Configuration
+
+Reference: `hardware/V0.0.2/Schematic_OSSM_2025-12-18.pdf`
+
+### Device Overview
 | Device | I2C/Pin | DRDY Pin | Notes |
 |--------|---------|----------|-------|
 | ADS1115 | 0x48 | D0 | 4 channels |
 | ADS1115 | 0x49 | D1 | 4 channels |
 | ADS1115 | 0x4A | D4 | 4 channels |
-| ADS1115 | 0x4B | D5 | 4 channels |
-| MAX31856 | SPI | D2 (DRDY), D3 (FAULT) | Thermocouple |
+| ADS1115 | 0x4B | D5 | 3 channels used |
+| MAX31856 | SPI (CS=D10) | D2 (DRDY), D3 (FAULT) | EGT thermocouple |
 | BME280 | I2C | N/A | Ambient temp, humidity, barometric pressure |
+
+### ADS1115 Channel Mapping (from schematic)
+| ADS Addr | DRDY Pin | Ch0 (A0) | Ch1 (A1) | Ch2 (A2) | Ch3 (A3) |
+|----------|----------|----------|----------|----------|----------|
+| 0x48 | D0 | temp1 | temp2 | pres1 | pres2 |
+| 0x49 | D1 | temp3 | temp4 | pres5 | pres6 |
+| 0x4A | D4 | pres3 | temp5 | temp6 | pres4 |
+| 0x4B | D5 | pres7 | temp7 | temp8 | (unused) |
+
+### Sensor Totals
+| Type | Count | Source |
+|------|-------|--------|
+| Temperature (NTC) | 8 | temp1-8 via ADS1115 |
+| Pressure | 7 | pres1-7 via ADS1115 |
+| EGT (thermocouple) | 1 | MAX31856 |
+| Ambient temp | 1 | BME280 |
+| Humidity | 1 | BME280 |
+| Barometric pressure | 1 | BME280 |
+| **Total** | **19** | |
 
 ## New File Structure
 ```
@@ -161,6 +184,7 @@ Configuration Updates:
 ```
 
 ## Notes
-- ADS1115 at 128 SPS = ~8ms per conversion; 16 channels = ~125ms full cycle
+- ADS1115 at 128 SPS = ~8ms per conversion; 15 active channels = ~120ms full cycle
 - EEPROM size: ~640 bytes (Teensy 4.1 has 4284 bytes available)
 - Keep IntervalTimer callback fast - no Serial.print, no blocking I2C
+- One spare ADC channel available on 0x4B (A3) for future expansion
