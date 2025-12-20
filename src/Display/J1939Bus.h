@@ -8,7 +8,7 @@
 
 class J1939Bus {
  public:
-  static void initialize(AppData *appData, const AppConfig *config);
+  static void initialize(AppData *appData, AppConfig *config);
   static void sendPgn65269(float ambientTemperatureC,
                            float airInletTemperatureC,
                            float barometricPressurekPa);
@@ -32,9 +32,24 @@ class J1939Bus {
 
  private:
   static AppData *appData;
-  static const AppConfig *config;
+  static AppConfig *config;  // Non-const to allow command handler to modify
   static void sniffDataCumminsBus(const CAN_message_t &msg);
   static void sniffDataPrivate(const CAN_message_t &msg);
+
+  // J1939 Command Interface (PGN 65280/65281)
+  static void processConfigCommand(const uint8_t *data, uint8_t len);
+  static void sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t *data, uint8_t dataLen);
+
+  // Command handlers
+  static void handleJ1939EnableSpn(const uint8_t *data);
+  static void handleJ1939SetNtcParam(const uint8_t *data);
+  static void handleJ1939SetPressureRange(const uint8_t *data);
+  static void handleJ1939SetTcType(const uint8_t *data);
+  static void handleJ1939Query(const uint8_t *data);
+  static void handleJ1939Save();
+  static void handleJ1939Reset();
+  static void handleJ1939NtcPreset(const uint8_t *data);
+  static void handleJ1939PressurePreset(const uint8_t *data);
 };
 
 #endif

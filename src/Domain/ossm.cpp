@@ -87,7 +87,7 @@ void ossm::processSensorUpdates() {
     BME280Manager::update();
 
     // Process all sensor readings and update AppData
-    SensorProcessor::processAllSensors();
+    SensorProcessor::processAllInputs();
 }
 
 void ossm::sendJ1939Messages() {

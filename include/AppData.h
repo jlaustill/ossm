@@ -14,7 +14,7 @@ struct AppData {
   float coolantTemperatureC = 0.0f;
   float coolantPressurekPa = 0.0f;
   float transferPipeTemperatureC = 0.0f;
-  float tranferPipePressurekPa = 0.0f;
+  float transferPipePressurekPa = 0.0f;
   float boostPressurekPa = 0.0f;
   float boostTemperatureC = 0.0f;
   float cacInletPressurekPa = 0.0f;

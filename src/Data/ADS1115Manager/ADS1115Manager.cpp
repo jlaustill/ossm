@@ -30,10 +30,26 @@ void ADS1115Manager::initialize(const AppConfig* config) {
         }
     }
 
-    // Initialize each ADS1115 device
+    // Determine which ADS devices need to be enabled based on input usage
+    // Check temp inputs
+    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
+        if (config->tempInputs[i].assignedSpn != 0) {
+            uint8_t dev = TEMP_HARDWARE_MAP[i].adsDevice;
+            deviceEnabled[dev] = true;
+        }
+    }
+
+    // Check pressure inputs
+    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
+        if (config->pressureInputs[i].assignedSpn != 0) {
+            uint8_t dev = PRESSURE_HARDWARE_MAP[i].adsDevice;
+            deviceEnabled[dev] = true;
+        }
+    }
+
+    // Initialize each enabled ADS1115 device using fixed hardware mappings
     for (uint8_t d = 0; d < ADS_DEVICE_COUNT; d++) {
-        deviceEnabled[d] = config->adsDevices[d].enabled;
-        drdyPins[d] = config->adsDevices[d].drdyPin;
+        drdyPins[d] = ADS_DRDY_PINS[d];
 
         if (!deviceEnabled[d]) {
             deviceInitialized[d] = false;
@@ -43,8 +59,8 @@ void ADS1115Manager::initialize(const AppConfig* config) {
         // Configure DRDY pin as input
         pinMode(drdyPins[d], INPUT);
 
-        // Initialize ADS1115 at configured address
-        uint8_t addr = config->adsDevices[d].i2cAddress;
+        // Initialize ADS1115 at fixed address
+        uint8_t addr = ADS_I2C_ADDRESSES[d];
         if (ads[d].begin(addr)) {
             deviceInitialized[d] = true;
 

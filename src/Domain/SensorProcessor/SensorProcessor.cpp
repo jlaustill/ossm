@@ -2,8 +2,6 @@
 #include <Arduino.h>
 #include <math.h>
 #include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
 
 // Static member initialization
 const AppConfig* SensorProcessor::config = nullptr;
@@ -14,261 +12,165 @@ void SensorProcessor::initialize(const AppConfig* cfg, AppData* data) {
     appData = data;
 }
 
-void SensorProcessor::processAllSensors() {
+void SensorProcessor::processAllInputs() {
     if (config == nullptr || appData == nullptr) {
         return;
     }
 
-    for (uint8_t i = 0; i < MAX_SENSORS; i++) {
-        processSensor(i);
+    processTempInputs();
+    processPressureInputs();
+}
+
+void SensorProcessor::processTempInputs() {
+    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
+        const TTempInputConfig& inputCfg = config->tempInputs[i];
+
+        // Skip disabled inputs
+        if (inputCfg.assignedSpn == 0) {
+            continue;
+        }
+
+        // Get hardware mapping for this input
+        uint8_t device = TEMP_HARDWARE_MAP[i].adsDevice;
+        uint8_t channel = TEMP_HARDWARE_MAP[i].adsChannel;
+
+        // Get voltage from ADS1115
+        float voltage = ADS1115Manager::getVoltage(device, channel);
+
+        // Convert to temperature
+        float tempC = convertNtcTemperature(voltage, inputCfg);
+
+        // Update AppData based on assigned SPN
+        updateAppDataForSpn(inputCfg.assignedSpn, tempC);
     }
 }
 
-void SensorProcessor::processSensor(uint8_t sensorIndex) {
-    if (config == nullptr || appData == nullptr || sensorIndex >= MAX_SENSORS) {
-        return;
+void SensorProcessor::processPressureInputs() {
+    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
+        const TPressureInputConfig& inputCfg = config->pressureInputs[i];
+
+        // Skip disabled inputs
+        if (inputCfg.assignedSpn == 0) {
+            continue;
+        }
+
+        // Get hardware mapping for this input
+        uint8_t device = PRESSURE_HARDWARE_MAP[i].adsDevice;
+        uint8_t channel = PRESSURE_HARDWARE_MAP[i].adsChannel;
+
+        // Get voltage from ADS1115
+        float voltage = ADS1115Manager::getVoltage(device, channel);
+
+        // Convert to pressure in kPa
+        float pressurekPa = convertPressure(voltage, inputCfg.maxPsi);
+
+        // Update AppData based on assigned SPN
+        updateAppDataForSpn(inputCfg.assignedSpn, pressurekPa);
     }
-
-    const TSensorConfig& sensorCfg = config->sensors[sensorIndex];
-
-    // Skip disabled sensors
-    if (sensorCfg.sensorType == SENSOR_DISABLED) {
-        return;
-    }
-
-    float processedValue = 0.0f;
-
-    switch (sensorCfg.sensorType) {
-        // Pressure sensors (ADS1115-based)
-        case PRESSURE_0_100PSI:
-        case PRESSURE_0_150PSI:
-        case PRESSURE_0_200PSI: {
-            // Get voltage from ADS1115Manager
-            if (sensorCfg.adsDevice < ADS_DEVICE_COUNT &&
-                sensorCfg.adsChannel < ADS_CHANNEL_COUNT) {
-                float voltage = ADS1115Manager::getVoltage(
-                    sensorCfg.adsDevice, sensorCfg.adsChannel);
-                processedValue = convertPressure(voltage, sensorCfg);
-            }
-            break;
-        }
-
-        // NTC Temperature sensors (ADS1115-based)
-        case TEMP_NTC_AEM:
-        case TEMP_NTC_BOSCH:
-        case TEMP_NTC_GM: {
-            if (sensorCfg.adsDevice < ADS_DEVICE_COUNT &&
-                sensorCfg.adsChannel < ADS_CHANNEL_COUNT) {
-                float voltage = ADS1115Manager::getVoltage(
-                    sensorCfg.adsDevice, sensorCfg.adsChannel);
-                processedValue = convertNtcTemperature(voltage, sensorCfg);
-            }
-            break;
-        }
-
-        // Thermocouple (MAX31856)
-        case TEMP_THERMOCOUPLE_K: {
-            if (MAX31856Manager::isEnabled()) {
-                processedValue = MAX31856Manager::getTemperatureC();
-                // Skip update if invalid reading (returns -273.15)
-                if (processedValue < -270.0f) {
-                    return;
-                }
-            } else {
-                return;
-            }
-            break;
-        }
-
-        // BME280 ambient sensors
-        case AMBIENT_TEMP: {
-            if (BME280Manager::isEnabled()) {
-                processedValue = BME280Manager::getTemperatureC();
-                if (processedValue < -270.0f) {
-                    return;  // Invalid reading
-                }
-            } else {
-                return;
-            }
-            break;
-        }
-
-        case AMBIENT_HUMIDITY: {
-            if (BME280Manager::isEnabled()) {
-                processedValue = BME280Manager::getHumidity();
-                if (processedValue <= 0.0f) {
-                    return;  // Invalid reading
-                }
-            } else {
-                return;
-            }
-            break;
-        }
-
-        case AMBIENT_PRESSURE: {
-            if (BME280Manager::isEnabled()) {
-                processedValue = BME280Manager::getPressurekPa();
-                if (processedValue <= 0.0f) {
-                    return;  // Invalid reading
-                }
-            } else {
-                return;
-            }
-            break;
-        }
-
-        default:
-            return;
-    }
-
-    // Update the appropriate AppData field
-    updateAppDataField(sensorCfg.appDataIndex, processedValue);
 }
 
-float SensorProcessor::convertPressure(float voltage, const TSensorConfig& cfg) {
-    // cfg.coeffA = minimum voltage (typically 0.5V)
-    // cfg.coeffB = maximum voltage (typically 4.5V)
-    // cfg.coeffC = maximum PSI
+float SensorProcessor::convertPressure(float voltage, uint16_t maxPsi) {
+    // Voltage divider: 0.5V = 0 PSI, 4.5V = max PSI
+    if (voltage < PRESSURE_VOLTAGE_MIN) {
+        return 0.0f;
+    }
+    if (voltage > PRESSURE_VOLTAGE_MAX) {
+        voltage = PRESSURE_VOLTAGE_MAX;
+    }
 
-    float zeroVoltage = cfg.coeffA;
-    float maxVoltage = cfg.coeffB;
-    float maxPsi = cfg.coeffC;
-
-    // Map voltage to PSI
-    float psi = mapFloat(voltage, zeroVoltage, maxVoltage, 0.0f, maxPsi);
-
-    // Clamp to positive values
-    psi = clampPositive(psi);
+    // Linear interpolation
+    float psi = (voltage - PRESSURE_VOLTAGE_MIN) /
+                (PRESSURE_VOLTAGE_MAX - PRESSURE_VOLTAGE_MIN) * maxPsi;
 
     // Convert PSI to kPa
-    float kPa = psi * PSI_TO_KPA;
-
-    return kPa;
+    return clampPositive(psi * PSI_TO_KPA);
 }
 
-float SensorProcessor::convertNtcTemperature(float voltage, const TSensorConfig& cfg) {
-    // Steinhart-Hart equation coefficients
-    // cfg.coeffA = A coefficient
-    // cfg.coeffB = B coefficient
-    // cfg.coeffC = C coefficient
-    // cfg.resistorValue = known resistor value in voltage divider
-    // cfg.wiringResistance = wiring resistance compensation
+float SensorProcessor::convertNtcTemperature(float voltage, const TTempInputConfig& cfg) {
+    // NTC thermistor in voltage divider with known resistor to VREF
+    // V = VREF * R_ntc / (R_known + R_ntc)
+    // R_ntc = R_known * V / (VREF - V)
 
-    float A = cfg.coeffA;
-    float B = cfg.coeffB;
-    float C = cfg.coeffC;
-    float knownResistor = cfg.resistorValue;
-    float wiringResistance = cfg.wiringResistance;
-
-    // Prevent division by zero
-    if (voltage >= VREF || voltage <= 0.0f) {
-        return -273.15f;  // Return absolute zero as error indicator
+    if (voltage <= 0.0f || voltage >= VREF) {
+        return -273.15f;  // Error value
     }
 
-    // Calculate thermistor resistance using voltage divider formula
-    // Vout = Vin * R_thermistor / (R_known + R_thermistor)
-    // Solving for R_thermistor: R = (V * R_known) / (Vref - V)
-    float resistance = (voltage * knownResistor) / (VREF - voltage);
-    resistance -= wiringResistance;
+    float r_ntc = cfg.resistorValue * voltage / (VREF - voltage);
 
-    // Prevent invalid resistance values
-    if (resistance <= 0.0f) {
-        return -273.15f;
-    }
-
-    // Steinhart-Hart equation: 1/T = A + B*ln(R) + C*ln(R)^3
-    float lnR = log(resistance);
+    // Steinhart-Hart equation: 1/T = A + B*ln(R) + C*(ln(R))^3
+    float lnR = log(r_ntc);
     float lnR3 = lnR * lnR * lnR;
-    float invKelvin = A + (B * lnR) + (C * lnR3);
 
-    // Prevent division by zero
-    if (invKelvin <= 0.0f) {
-        return -273.15f;
-    }
+    float invT = cfg.coeffA + cfg.coeffB * lnR + cfg.coeffC * lnR3;
 
-    float kelvin = 1.0f / invKelvin;
-
-    // Convert to Celsius
-    float celsius = kelvin - 273.15f;
-
-    return celsius;
+    // Convert from Kelvin to Celsius
+    float tempK = 1.0f / invT;
+    return tempK - 273.15f;
 }
 
-void SensorProcessor::updateAppDataField(uint8_t index, float value) {
-    if (appData == nullptr) {
-        return;
-    }
-
-    switch (index) {
-        case IDX_HUMIDITY:
-            appData->humidity = value;
-            break;
-        case IDX_AMBIENT_TEMP:
-            appData->ambientTemperatureC = value;
-            break;
-        case IDX_BAROMETRIC_PRESSURE:
-            appData->absoluteBarometricpressurekPa = value;
-            break;
-        case IDX_OIL_TEMP:
+void SensorProcessor::updateAppDataForSpn(uint16_t spn, float value) {
+    // Map SPN to AppData field
+    switch (spn) {
+        // Temperature SPNs
+        case 175:  // Engine Oil Temperature
             appData->oilTemperatureC = value;
             break;
-        case IDX_OIL_PRESSURE:
-            appData->oilPressurekPa = value;
-            break;
-        case IDX_COOLANT_TEMP:
+        case 110:  // Engine Coolant Temperature
+        case 1637: // Engine Coolant Temperature (High Resolution)
             appData->coolantTemperatureC = value;
             break;
-        case IDX_COOLANT_PRESSURE:
-            appData->coolantPressurekPa = value;
-            break;
-        case IDX_TRANSFER_PIPE_TEMP:
-            appData->transferPipeTemperatureC = value;
-            break;
-        case IDX_TRANSFER_PIPE_PRESSURE:
-            appData->tranferPipePressurekPa = value;
-            break;
-        case IDX_BOOST_PRESSURE:
-            appData->boostPressurekPa = value;
-            break;
-        case IDX_BOOST_TEMP:
-            appData->boostTemperatureC = value;
-            break;
-        case IDX_CAC_INLET_PRESSURE:
-            appData->cacInletPressurekPa = value;
-            break;
-        case IDX_CAC_INLET_TEMP:
-            appData->cacInletTemperatureC = value;
-            break;
-        case IDX_AIR_INLET_PRESSURE:
-            appData->airInletPressurekPa = value;
-            break;
-        case IDX_AIR_INLET_TEMP:
-            appData->airInletTemperatureC = value;
-            break;
-        case IDX_FUEL_PRESSURE:
-            appData->fuelPressurekPa = value;
-            break;
-        case IDX_FUEL_TEMP:
+        case 174:  // Fuel Temperature
             appData->fuelTemperatureC = value;
             break;
-        case IDX_ENGINE_BAY_TEMP:
+        case 105:  // Intake Manifold 1 Temperature (Boost Temp)
+        case 1363: // Intake Manifold 1 Air Temperature (High Resolution)
+            appData->boostTemperatureC = value;
+            break;
+        case 1131: // Intake Manifold 2 Temperature (CAC Inlet)
+            appData->cacInletTemperatureC = value;
+            break;
+        case 1132: // Intake Manifold 3 Temperature (Transfer Pipe)
+            appData->transferPipeTemperatureC = value;
+            break;
+        case 1133: // Intake Manifold 4 Temperature (Air Inlet)
+            appData->airInletTemperatureC = value;
+            break;
+        case 172:  // Air Inlet Temperature
+            appData->airInletTemperatureC = value;
+            break;
+        case 441:  // Engine Bay Temperature
             appData->engineBayTemperatureC = value;
             break;
-        case IDX_EGT_TEMP:
-            appData->egtTemperatureC = static_cast<double>(value);
-            break;
-        default:
-            break;
-    }
-}
 
-float SensorProcessor::mapFloat(float x, float inMin, float inMax, float outMin, float outMax) {
-    if (inMax == inMin) {
-        return outMin;  // Prevent division by zero
+        // Pressure SPNs (value is already in kPa)
+        case 100:  // Engine Oil Pressure
+            appData->oilPressurekPa = value;
+            break;
+        case 109:  // Coolant Pressure
+            appData->coolantPressurekPa = value;
+            break;
+        case 94:   // Fuel Delivery Pressure
+            appData->fuelPressurekPa = value;
+            break;
+        case 102:  // Boost Pressure
+            appData->boostPressurekPa = value;
+            break;
+        case 106:  // Air Inlet Pressure
+            appData->airInletPressurekPa = value;
+            break;
+        case 1127: // Turbocharger 1 Boost Pressure (CAC Inlet)
+            appData->cacInletPressurekPa = value;
+            break;
+        case 1128: // Turbocharger 2 Boost Pressure (Transfer Pipe)
+            appData->transferPipePressurekPa = value;
+            break;
+
+        default:
+            // Unknown SPN, ignore
+            break;
     }
-    return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
 float SensorProcessor::clampPositive(float x) {
-    return (x < 0.0f) ? 0.0f : x;
+    return x < 0.0f ? 0.0f : x;
 }

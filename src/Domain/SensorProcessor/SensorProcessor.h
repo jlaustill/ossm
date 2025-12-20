@@ -3,32 +3,31 @@
 
 #include "AppConfig.h"
 #include "AppData.h"
-#include "Data/types/TAdcReading.h"
 
 class SensorProcessor {
    public:
     // Initialize with config and data pointers
     static void initialize(const AppConfig* config, AppData* appData);
 
-    // Process all enabled sensors and update AppData
-    static void processAllSensors();
-
-    // Process a single sensor by index
-    static void processSensor(uint8_t sensorIndex);
+    // Process all enabled inputs and update AppData
+    static void processAllInputs();
 
    private:
     static const AppConfig* config;
     static AppData* appData;
 
-    // Conversion functions for different sensor types
-    static float convertPressure(float voltage, const TSensorConfig& cfg);
-    static float convertNtcTemperature(float voltage, const TSensorConfig& cfg);
+    // Process temperature inputs
+    static void processTempInputs();
 
-    // Update specific AppData field by index
-    static void updateAppDataField(uint8_t index, float value);
+    // Process pressure inputs
+    static void processPressureInputs();
 
-    // Helper: map float value from one range to another
-    static float mapFloat(float x, float inMin, float inMax, float outMin, float outMax);
+    // Conversion functions
+    static float convertPressure(float voltage, uint16_t maxPsi);
+    static float convertNtcTemperature(float voltage, const TTempInputConfig& cfg);
+
+    // Update AppData based on SPN
+    static void updateAppDataForSpn(uint16_t spn, float value);
 
     // Helper: clamp value to non-negative
     static float clampPositive(float x);
@@ -38,6 +37,10 @@ class SensorProcessor {
 
     // Reference voltage for voltage divider (5V supply)
     static constexpr float VREF = 5.0f;
+
+    // Pressure sensor voltage range (0.5V-4.5V typical)
+    static constexpr float PRESSURE_VOLTAGE_MIN = 0.5f;
+    static constexpr float PRESSURE_VOLTAGE_MAX = 4.5f;
 };
 
 #endif  // OSSM_SENSORPROCESSOR_H

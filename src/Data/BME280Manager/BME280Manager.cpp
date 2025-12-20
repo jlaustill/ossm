@@ -14,14 +14,15 @@ bool BME280Manager::readingValid = false;
 uint32_t BME280Manager::lastReadTime = 0;
 
 void BME280Manager::initialize(const AppConfig* config) {
-    enabled = config->bme280.enabled;
+    enabled = config->bme280Enabled;
 
     if (!enabled) {
         Serial.println("BME280 disabled in config");
         return;
     }
 
-    i2cAddress = config->bme280.i2cAddress;
+    // Fixed I2C address (0x76 is standard for BME280)
+    i2cAddress = 0x76;
 
     if (bme.begin(i2cAddress)) {
         initialized = true;

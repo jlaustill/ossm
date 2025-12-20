@@ -17,17 +17,17 @@ uint8_t MAX31856Manager::faultCode = 0;
 bool MAX31856Manager::readingValid = false;
 
 void MAX31856Manager::initialize(const AppConfig* config) {
-    enabled = config->thermocouple.enabled;
+    enabled = config->egtEnabled;
 
     if (!enabled) {
         Serial.println("MAX31856 disabled in config");
         return;
     }
 
-    // Store pin configuration
-    csPin = config->thermocouple.csPin;
-    drdyPin = config->thermocouple.drdyPin;
-    faultPin = config->thermocouple.faultPin;
+    // Fixed pin configuration
+    csPin = 10;    // D10 for chip select
+    drdyPin = 2;   // D2 for data ready
+    faultPin = 3;  // D3 for fault
 
     // Configure pins
     pinMode(drdyPin, INPUT);
@@ -39,8 +39,9 @@ void MAX31856Manager::initialize(const AppConfig* config) {
     if (thermocouple->begin()) {
         initialized = true;
 
-        // Configure for K-type thermocouple
-        thermocouple->setThermocoupleType(MAX31856_TCTYPE_K);
+        // Configure thermocouple type from config
+        thermocouple->setThermocoupleType(
+            static_cast<max31856_thermocoupletype_t>(config->thermocoupleType));
 
         // Set noise rejection (60Hz for North America)
         thermocouple->setNoiseFilter(MAX31856_NOISE_FILTER_60HZ);
