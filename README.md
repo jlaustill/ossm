@@ -47,7 +47,7 @@ src/
 │   └── J1939Bus.cpp               # Includes PGN 65280 command handler
 │
 └── Interface/                     # User interface layer
-    └── SerialCommandHandler/      # Serial USB commands (CSV format)
+    └── SerialCommandHandler/      # Serial USB commands (byte format)
 
 include/
 ├── AppData.h                      # Runtime sensor values
@@ -81,25 +81,24 @@ On first boot, **all inputs are disabled**. Use serial commands to enable SPNs a
 ## Quick Start
 
 1. Connect via USB serial at 115200 baud
-2. Enable an SPN on an input:
+2. Enable an SPN on an input (SPNs sent as highByte,lowByte):
    ```
-   1,175,1,3    # Enable SPN 175 (oil temp) on temp3
-   1,100,1,1    # Enable SPN 100 (oil pressure) on pres1
-   1,173,1      # Enable SPN 173 (EGT)
-   1,171,1      # Enable BME280 (SPNs 171, 108, 354)
+   1,0,175,1,3    # Enable SPN 175 (0x00AF oil temp) on temp3
+   1,0,100,1,1    # Enable SPN 100 (0x0064 oil pressure) on pres1
+   1,0,173,1      # Enable SPN 173 (0x00AD EGT)
+   1,0,171,1      # Enable BME280 (SPNs 171, 108, 354)
    ```
 3. Save configuration: `6`
 4. Query enabled SPNs: `5,0`
 
 ## Serial Commands
 
-Connect via USB serial at 115200 baud. Commands use CSV integer format.
+Connect via USB serial at 115200 baud. Commands use **byte format** - all values are 0-255, and 16-bit values (SPNs, PSI) are sent as highByte,lowByte.
 
 | Cmd | Name | Format | Description |
 |-----|------|--------|-------------|
-| 1 | Enable/Disable SPN | `1,spn,enable,input?` | Enable (1) or disable (0) an SPN |
-| 2 | Set NTC Param | `2,input,param,value` | Set Steinhart-Hart coefficient |
-| 3 | Set Pressure Range | `3,input,max_psi` | Set pressure sensor range |
+| 1 | Enable/Disable SPN | `1,spnHi,spnLo,enable,input?` | Enable (1) or disable (0) an SPN |
+| 3 | Set Pressure Range | `3,input,psiHi,psiLo` | Set pressure sensor range |
 | 4 | Set TC Type | `4,type` | Set thermocouple type (0-7) |
 | 5 | Query Config | `5,query_type` | Query configuration |
 | 6 | Save | `6` | Save configuration to EEPROM |
@@ -107,46 +106,45 @@ Connect via USB serial at 115200 baud. Commands use CSV integer format.
 | 8 | NTC Preset | `8,input,preset` | Apply NTC sensor preset |
 | 9 | Pressure Preset | `9,input,preset` | Apply pressure sensor preset |
 
+> **Note:** Command 2 (Set NTC Param) was removed. Use Command 8 (NTC Preset) instead.
+
 ### Command 1: Enable/Disable SPN
 
 ```
-1,spn,enable,input
+1,spnHi,spnLo,enable,input
 ```
 
 | Parameter | Description |
 |-----------|-------------|
-| spn | SPN number (see SPN Reference below) |
+| spnHi | SPN high byte (SPN >> 8) |
+| spnLo | SPN low byte (SPN & 0xFF) |
 | enable | 1 = enable, 0 = disable |
 | input | 1-8 for temp SPNs, 1-7 for pressure SPNs (not needed for EGT/BME280) |
 
 **Examples:**
 ```
-1,175,1,3     # Enable SPN 175 (oil temp) on temp3
-1,175,0       # Disable SPN 175
-1,173,1       # Enable SPN 173 (EGT) - no input needed
-1,171,1       # Enable BME280 (enables SPNs 171, 108, 354)
-1,102,1,6     # Enable SPN 102 (boost) on pres6
+1,0,175,1,3   # Enable SPN 175 (0x00AF oil temp) on temp3
+1,0,175,0     # Disable SPN 175
+1,0,173,1     # Enable SPN 173 (0x00AD EGT) - no input needed
+1,0,171,1     # Enable BME280 (enables SPNs 171, 108, 354)
+1,0,102,1,6   # Enable SPN 102 (0x0066 boost) on pres6
 ```
 
-### Command 2: Set NTC Calibration
+### Command 3: Set Pressure Range
 
 ```
-2,input,param,value
+3,input,psiHi,psiLo
 ```
 
-| Param | Description |
-|-------|-------------|
-| 0 | Coefficient A |
-| 1 | Coefficient B |
-| 2 | Coefficient C |
-| 3 | Resistor value (ohms) |
+| Parameter | Description |
+|-----------|-------------|
+| input | Pressure input 1-7 |
+| psiHi | Max PSI high byte (PSI >> 8) |
+| psiLo | Max PSI low byte (PSI & 0xFF) |
 
-**Example:** Set temp3 to custom NTC calibration:
+**Example:** Set pres1 to 150 PSI (0x0096):
 ```
-2,3,0,0.001485995686
-2,3,1,0.0002279654266
-2,3,2,0.0000001197578033
-2,3,3,10050
+3,1,0,150     # 150 PSI = 0x0096
 ```
 
 ### Command 5: Query Configuration
