@@ -1,6 +1,5 @@
 #include "SerialCommandHandler.h"
 #include <Arduino.h>
-#include <string.h>
 #include "Data/ConfigStorage/ConfigStorage.h"
 
 // Static member initialization
@@ -8,6 +7,7 @@ AppConfig* SerialCommandHandler::config = nullptr;
 AppData* SerialCommandHandler::appData = nullptr;
 char SerialCommandHandler::cmdBuffer[128];
 uint8_t SerialCommandHandler::cmdIndex = 0;
+SeaDash::Parse::ParseResult SerialCommandHandler::parsed = {{0}, 0, false};
 
 void SerialCommandHandler::initialize(AppConfig* cfg, AppData* data) {
     config = cfg;
@@ -15,8 +15,8 @@ void SerialCommandHandler::initialize(AppConfig* cfg, AppData* data) {
     cmdIndex = 0;
     memset(cmdBuffer, 0, sizeof(cmdBuffer));
 
-    Serial.println("OSSM Command Interface Ready");
-    Serial.println("Commands: 1,spn,en,input - 5,query - 6 - 7");
+    Serial.println("OSSM Command Interface Ready (byte format)");
+    Serial.println("Commands: 1,spnHi,spnLo,en,input | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
 }
 
 void SerialCommandHandler::update() {
@@ -41,22 +41,23 @@ void SerialCommandHandler::processCommand(const char* cmd) {
     while (*cmd == ' ') cmd++;
     if (strlen(cmd) == 0) return;
 
-    // Parse CSV format: cmd,param1,param2,...
+    // Copy command for parsing (parse modifies the buffer)
     char cmdCopy[128];
     strncpy(cmdCopy, cmd, sizeof(cmdCopy) - 1);
     cmdCopy[sizeof(cmdCopy) - 1] = '\0';
 
-    char* token = strtok(cmdCopy, ",");
-    if (token == nullptr) return;
+    // Parse all tokens as bytes
+    parsed = SeaDash::Parse::parse(cmdCopy, ',');
+    if (!parsed.success || parsed.count < 1) {
+        Serial.println("ERR,1,Parse failed");
+        return;
+    }
 
-    int cmdNum = atoi(token);
+    uint8_t cmdNum = parsed.data[0];
 
     switch (cmdNum) {
         case 1:  // Enable/Disable SPN
             handleEnableSpn();
-            break;
-        case 2:  // Set NTC Calibration Parameter
-            handleSetNtcParam();
             break;
         case 3:  // Set Pressure Range
             handleSetPressureRange();
@@ -86,19 +87,21 @@ void SerialCommandHandler::processCommand(const char* cmd) {
 }
 
 void SerialCommandHandler::handleEnableSpn() {
-    // Format: 1,spn,enable,input?
-    char* spnStr = strtok(nullptr, ",");
-    char* enableStr = strtok(nullptr, ",");
-    char* inputStr = strtok(nullptr, ",");
+    // Format: 1,spnHi,spnLo,enable[,input]
+    // parsed.data[0] = cmd (1)
+    // parsed.data[1] = spnHi
+    // parsed.data[2] = spnLo
+    // parsed.data[3] = enable
+    // parsed.data[4] = input (optional)
 
-    if (spnStr == nullptr || enableStr == nullptr) {
-        Serial.println("ERR,2,Usage: 1,spn,enable[,input]");
+    if (parsed.count < 4) {
+        Serial.println("ERR,2,Usage: 1,spnHi,spnLo,enable[,input]");
         return;
     }
 
-    uint16_t spn = atoi(spnStr);
-    bool enable = (atoi(enableStr) != 0);
-    uint8_t input = inputStr ? atoi(inputStr) : 0;
+    uint16_t spn = (static_cast<uint16_t>(parsed.data[1]) << 8) | parsed.data[2];
+    bool enable = (parsed.data[3] != 0);
+    uint8_t input = (parsed.count > 4) ? parsed.data[4] : 0;
 
     // Find SPN category
     ESpnCategory category = SPN_CAT_UNKNOWN;
@@ -205,75 +208,20 @@ void SerialCommandHandler::handleEnableSpn() {
     }
 }
 
-void SerialCommandHandler::handleSetNtcParam() {
-    // Format: 2,input,param,value
-    char* inputStr = strtok(nullptr, ",");
-    char* paramStr = strtok(nullptr, ",");
-    char* valueStr = strtok(nullptr, ",");
-
-    if (inputStr == nullptr || paramStr == nullptr || valueStr == nullptr) {
-        Serial.println("ERR,2,Usage: 2,input,param,value");
-        return;
-    }
-
-    uint8_t input = atoi(inputStr);
-    uint8_t param = atoi(paramStr);
-    float value = atof(valueStr);
-
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
-        Serial.println("ERR,4,Input must be 1-8");
-        return;
-    }
-
-    TTempInputConfig& cfg = config->tempInputs[input - 1];
-
-    switch (param) {
-        case 0:
-            cfg.coeffA = value;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.print(" A=");
-            Serial.println(value, 10);
-            break;
-        case 1:
-            cfg.coeffB = value;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.print(" B=");
-            Serial.println(value, 10);
-            break;
-        case 2:
-            cfg.coeffC = value;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.print(" C=");
-            Serial.println(value, 10);
-            break;
-        case 3:
-            cfg.resistorValue = value;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.print(" R=");
-            Serial.println(value, 2);
-            break;
-        default:
-            Serial.println("ERR,6,Param must be 0-3 (A,B,C,R)");
-            break;
-    }
-}
-
 void SerialCommandHandler::handleSetPressureRange() {
-    // Format: 3,input,max_psi
-    char* inputStr = strtok(nullptr, ",");
-    char* psiStr = strtok(nullptr, ",");
+    // Format: 3,input,psiHi,psiLo
+    // parsed.data[0] = cmd (3)
+    // parsed.data[1] = input
+    // parsed.data[2] = psiHi
+    // parsed.data[3] = psiLo
 
-    if (inputStr == nullptr || psiStr == nullptr) {
-        Serial.println("ERR,2,Usage: 3,input,max_psi");
+    if (parsed.count < 4) {
+        Serial.println("ERR,2,Usage: 3,input,psiHi,psiLo");
         return;
     }
 
-    uint8_t input = atoi(inputStr);
-    uint16_t maxPsi = atoi(psiStr);
+    uint8_t input = parsed.data[1];
+    uint16_t maxPsi = (static_cast<uint16_t>(parsed.data[2]) << 8) | parsed.data[3];
 
     if (input < 1 || input > PRESSURE_INPUT_COUNT) {
         Serial.println("ERR,5,Input must be 1-7");
@@ -289,14 +237,15 @@ void SerialCommandHandler::handleSetPressureRange() {
 
 void SerialCommandHandler::handleSetTcType() {
     // Format: 4,type
-    char* typeStr = strtok(nullptr, ",");
+    // parsed.data[0] = cmd (4)
+    // parsed.data[1] = type
 
-    if (typeStr == nullptr) {
+    if (parsed.count < 2) {
         Serial.println("ERR,2,Usage: 4,type (0-7)");
         return;
     }
 
-    uint8_t type = atoi(typeStr);
+    uint8_t type = parsed.data[1];
     if (type > 7) {
         Serial.println("ERR,7,Type must be 0-7");
         return;
@@ -308,9 +257,11 @@ void SerialCommandHandler::handleSetTcType() {
 }
 
 void SerialCommandHandler::handleQuery() {
-    // Format: 5,query_type
-    char* queryStr = strtok(nullptr, ",");
-    uint8_t queryType = queryStr ? atoi(queryStr) : 0;
+    // Format: 5[,queryType]
+    // parsed.data[0] = cmd (5)
+    // parsed.data[1] = queryType (optional, default 0)
+
+    uint8_t queryType = (parsed.count > 1) ? parsed.data[1] : 0;
 
     switch (queryType) {
         case 0:  // Enabled SPNs
@@ -350,7 +301,8 @@ void SerialCommandHandler::handleQuery() {
             Serial.print("BME280 Enabled: ");
             Serial.println(config->bme280Enabled ? "Yes" : "No");
             // Fall through to show SPNs
-            handleQuery();  // Recursively call with type 0
+            parsed.data[1] = 0;  // Set queryType to 0 for recursive call
+            handleQuery();
             break;
 
         default:
@@ -376,16 +328,17 @@ void SerialCommandHandler::handleReset() {
 
 void SerialCommandHandler::handleNtcPreset() {
     // Format: 8,input,preset
-    char* inputStr = strtok(nullptr, ",");
-    char* presetStr = strtok(nullptr, ",");
+    // parsed.data[0] = cmd (8)
+    // parsed.data[1] = input
+    // parsed.data[2] = preset
 
-    if (inputStr == nullptr || presetStr == nullptr) {
+    if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 8,input,preset (0=AEM,1=Bosch,2=GM)");
         return;
     }
 
-    uint8_t input = atoi(inputStr);
-    uint8_t preset = atoi(presetStr);
+    uint8_t input = parsed.data[1];
+    uint8_t preset = parsed.data[2];
 
     if (input < 1 || input > TEMP_INPUT_COUNT) {
         Serial.println("ERR,4,Input must be 1-8");
@@ -430,16 +383,17 @@ void SerialCommandHandler::handleNtcPreset() {
 
 void SerialCommandHandler::handlePressurePreset() {
     // Format: 9,input,preset
-    char* inputStr = strtok(nullptr, ",");
-    char* presetStr = strtok(nullptr, ",");
+    // parsed.data[0] = cmd (9)
+    // parsed.data[1] = input
+    // parsed.data[2] = preset
 
-    if (inputStr == nullptr || presetStr == nullptr) {
+    if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 9,input,preset (0=100,1=150,2=200)");
         return;
     }
 
-    uint8_t input = atoi(inputStr);
-    uint8_t preset = atoi(presetStr);
+    uint8_t input = parsed.data[1];
+    uint8_t preset = parsed.data[2];
 
     if (input < 1 || input > PRESSURE_INPUT_COUNT) {
         Serial.println("ERR,5,Input must be 1-7");

@@ -3,6 +3,7 @@
 
 #include "AppConfig.h"
 #include "AppData.h"
+#include <SeaDash.hpp>
 
 class SerialCommandHandler {
    public:
@@ -17,20 +18,21 @@ class SerialCommandHandler {
     static AppData* appData;
     static char cmdBuffer[128];
     static uint8_t cmdIndex;
+    static SeaDash::Parse::ParseResult parsed;
 
     // Process a complete command string
     static void processCommand(const char* cmd);
 
-    // Command handlers (CSV format)
-    static void handleEnableSpn();       // Cmd 1: Enable/Disable SPN
-    static void handleSetNtcParam();     // Cmd 2: Set NTC calibration param
-    static void handleSetPressureRange();// Cmd 3: Set pressure range
-    static void handleSetTcType();       // Cmd 4: Set thermocouple type
-    static void handleQuery();           // Cmd 5: Query configuration
-    static void handleSave();            // Cmd 6: Save to EEPROM
-    static void handleReset();           // Cmd 7: Reset to defaults
-    static void handleNtcPreset();       // Cmd 8: Apply NTC preset
-    static void handlePressurePreset();  // Cmd 9: Apply pressure preset
+    // Command handlers (byte format: all params are uint8_t, max 8 bytes total)
+    // Format: cmd,param1,param2,... where 16-bit values use highByte,lowByte
+    static void handleEnableSpn();       // Cmd 1: spnHi,spnLo,enable,input
+    static void handleSetPressureRange();// Cmd 3: input,psiHi,psiLo
+    static void handleSetTcType();       // Cmd 4: type
+    static void handleQuery();           // Cmd 5: queryType
+    static void handleSave();            // Cmd 6: (no params)
+    static void handleReset();           // Cmd 7: (no params)
+    static void handleNtcPreset();       // Cmd 8: input,preset
+    static void handlePressurePreset();  // Cmd 9: input,preset
 };
 
 #endif  // OSSM_SERIALCOMMANDHANDLER_H
