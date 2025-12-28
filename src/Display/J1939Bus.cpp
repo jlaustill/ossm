@@ -720,7 +720,7 @@ void J1939Bus::handleJ1939PressurePreset(const uint8_t *data) {
         return;
     }
 
-    uint16_t psiValues[] = {100, 150, 200};
+    const uint16_t psiValues[] = {100, 150, 200};
     if (preset > 2) {
         sendConfigResponse(9, 10, nullptr, 0);  // Error: Invalid preset
         return;

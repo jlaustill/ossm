@@ -43,8 +43,8 @@ bool ConfigStorage::validateConfig(const AppConfig* config) {
 }
 
 void ConfigStorage::loadDefaults(AppConfig* config) {
-    // Clear structure
-    memset(config, 0, sizeof(AppConfig));
+    // Clear structure using value initialization (portable for floats)
+    *config = AppConfig{};
 
     // Header
     config->magic = CONFIG_MAGIC;
