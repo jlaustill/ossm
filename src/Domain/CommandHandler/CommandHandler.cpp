@@ -34,6 +34,12 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                 if (input < 1 || input > TEMP_INPUT_COUNT) {
                     return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
                 }
+                // Clear any existing assignment of this SPN (move, not duplicate)
+                for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
+                    if (config->tempInputs[i].assignedSpn == spn) {
+                        config->tempInputs[i].assignedSpn = 0;
+                    }
+                }
                 config->tempInputs[input - 1].assignedSpn = spn;
                 // Initialize hardware immediately so it works without reboot
                 ADS1115Manager::initialize(config);
@@ -42,6 +48,12 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
             case SPN_CAT_PRESSURE:
                 if (input < 1 || input > PRESSURE_INPUT_COUNT) {
                     return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
+                }
+                // Clear any existing assignment of this SPN (move, not duplicate)
+                for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
+                    if (config->pressureInputs[i].assignedSpn == spn) {
+                        config->pressureInputs[i].assignedSpn = 0;
+                    }
                 }
                 config->pressureInputs[input - 1].assignedSpn = spn;
                 // Initialize hardware immediately so it works without reboot

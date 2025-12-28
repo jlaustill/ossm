@@ -109,8 +109,8 @@ struct THardwareMapping {
 // Temperature input hardware mappings (fixed)
 // Index 0 = temp1, Index 7 = temp8
 static const THardwareMapping TEMP_HARDWARE_MAP[TEMP_INPUT_COUNT] = {
-    {0, 0},  // temp1 -> ADS 0x48, channel 0
-    {0, 1},  // temp2 -> ADS 0x48, channel 1
+    {0, 0},  // temp1 -> ADS 0x48, channel 0 (A0)
+    {0, 2},  // temp2 -> ADS 0x48, channel 2 (A2)
     {1, 0},  // temp3 -> ADS 0x49, channel 0
     {1, 1},  // temp4 -> ADS 0x49, channel 1
     {2, 1},  // temp5 -> ADS 0x4A, channel 1
@@ -122,7 +122,7 @@ static const THardwareMapping TEMP_HARDWARE_MAP[TEMP_INPUT_COUNT] = {
 // Pressure input hardware mappings (fixed)
 // Index 0 = pres1, Index 6 = pres7
 static const THardwareMapping PRESSURE_HARDWARE_MAP[PRESSURE_INPUT_COUNT] = {
-    {0, 2},  // pres1 -> ADS 0x48, channel 2
+    {0, 1},  // pres1 -> ADS 0x48, channel 1 (A1)
     {0, 3},  // pres2 -> ADS 0x48, channel 3
     {2, 0},  // pres3 -> ADS 0x4A, channel 0
     {2, 3},  // pres4 -> ADS 0x4A, channel 3
