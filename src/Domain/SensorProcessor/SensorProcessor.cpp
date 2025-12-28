@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <math.h>
 #include "Data/ADS1115Manager/ADS1115Manager.h"
+#include "Data/MAX31856Manager/MAX31856Manager.h"
+#include "Data/BME280Manager/BME280Manager.h"
 
 // Static member initialization
 const AppConfig* SensorProcessor::config = nullptr;
@@ -19,6 +21,8 @@ void SensorProcessor::processAllInputs() {
 
     processTempInputs();
     processPressureInputs();
+    processEgt();
+    processBme280();
 }
 
 void SensorProcessor::processTempInputs() {
@@ -173,4 +177,18 @@ void SensorProcessor::updateAppDataForSpn(uint16_t spn, float value) {
 
 float SensorProcessor::clampPositive(float x) {
     return x < 0.0f ? 0.0f : x;
+}
+
+void SensorProcessor::processEgt() {
+    if (config->egtEnabled && MAX31856Manager::isEnabled()) {
+        appData->egtTemperatureC = MAX31856Manager::getTemperatureC();
+    }
+}
+
+void SensorProcessor::processBme280() {
+    if (config->bme280Enabled && BME280Manager::isEnabled()) {
+        appData->ambientTemperatureC = BME280Manager::getTemperatureC();
+        appData->humidity = BME280Manager::getHumidity();
+        appData->absoluteBarometricpressurekPa = BME280Manager::getPressurekPa();
+    }
 }

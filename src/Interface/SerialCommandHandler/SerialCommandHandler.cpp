@@ -1,6 +1,8 @@
 #include "SerialCommandHandler.h"
 #include <Arduino.h>
 #include "Data/ConfigStorage/ConfigStorage.h"
+#include "Data/MAX31856Manager/MAX31856Manager.h"
+#include "Data/BME280Manager/BME280Manager.h"
 
 // Static member initialization
 AppConfig* SerialCommandHandler::config = nullptr;
@@ -80,10 +82,16 @@ void SerialCommandHandler::processCommand(const char* cmd) {
         case 9:  // Pressure Preset
             handlePressurePreset();
             break;
+        case 10:  // Read Live Sensors
+            handleReadSensors();
+            break;
         default:
             Serial.println("ERR,1,Unknown command");
             break;
     }
+
+    // Report any active faults after command output
+    reportFaults();
 }
 
 void SerialCommandHandler::handleEnableSpn() {
@@ -412,4 +420,191 @@ void SerialCommandHandler::handlePressurePreset() {
     Serial.print(" set to ");
     Serial.print(psiValues[preset]);
     Serial.println(" PSI");
+}
+
+void SerialCommandHandler::handleReadSensors() {
+    // Format: 10[,sensorType]
+    // parsed.data[0] = cmd (10)
+    // parsed.data[1] = sensorType (optional, default 0)
+    //   0 = all active sensors
+    //   1 = EGT only
+    //   2 = temperatures
+    //   3 = pressures
+    //   4 = BME280
+
+    uint8_t sensorType = (parsed.count > 1) ? parsed.data[1] : 0;
+
+    switch (sensorType) {
+        case 0:  // All active sensors
+            Serial.println("=== Live Sensor Values ===");
+            // EGT
+            if (config->egtEnabled) {
+                Serial.print("EGT: ");
+                if (MAX31856Manager::getFaultStatus() == 0) {
+                    Serial.print(appData->egtTemperatureC, 1);
+                    Serial.println(" C");
+                } else {
+                    Serial.println("FAULT");
+                }
+            }
+            // Temperatures
+            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
+                if (config->tempInputs[i].assignedSpn != 0) {
+                    Serial.print("temp");
+                    Serial.print(i + 1);
+                    Serial.print(" (SPN ");
+                    Serial.print(config->tempInputs[i].assignedSpn);
+                    Serial.print("): ");
+                    printTempValueForSpn(config->tempInputs[i].assignedSpn);
+                }
+            }
+            // Pressures
+            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
+                if (config->pressureInputs[i].assignedSpn != 0) {
+                    Serial.print("pres");
+                    Serial.print(i + 1);
+                    Serial.print(" (SPN ");
+                    Serial.print(config->pressureInputs[i].assignedSpn);
+                    Serial.print("): ");
+                    printPressureValueForSpn(config->pressureInputs[i].assignedSpn);
+                }
+            }
+            // BME280
+            if (config->bme280Enabled) {
+                Serial.print("Ambient Temp: ");
+                Serial.print(appData->ambientTemperatureC, 1);
+                Serial.println(" C");
+                Serial.print("Humidity: ");
+                Serial.print(appData->humidity, 1);
+                Serial.println(" %");
+                Serial.print("Barometric: ");
+                Serial.print(appData->absoluteBarometricpressurekPa, 2);
+                Serial.println(" kPa");
+            }
+            break;
+
+        case 1:  // EGT only
+            if (!config->egtEnabled) {
+                Serial.println("ERR,11,EGT not enabled");
+                return;
+            }
+            Serial.print("EGT: ");
+            if (MAX31856Manager::getFaultStatus() == 0) {
+                Serial.print(appData->egtTemperatureC, 1);
+                Serial.println(" C");
+            } else {
+                Serial.print("FAULT (0x");
+                Serial.print(MAX31856Manager::getFaultStatus(), HEX);
+                Serial.println(")");
+            }
+            break;
+
+        case 2:  // Temperatures
+            Serial.println("=== Temperature Sensors ===");
+            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
+                if (config->tempInputs[i].assignedSpn != 0) {
+                    Serial.print("temp");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    printTempValueForSpn(config->tempInputs[i].assignedSpn);
+                }
+            }
+            break;
+
+        case 3:  // Pressures
+            Serial.println("=== Pressure Sensors ===");
+            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
+                if (config->pressureInputs[i].assignedSpn != 0) {
+                    Serial.print("pres");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    printPressureValueForSpn(config->pressureInputs[i].assignedSpn);
+                }
+            }
+            break;
+
+        case 4:  // BME280
+            if (!config->bme280Enabled) {
+                Serial.println("ERR,12,BME280 not enabled");
+                return;
+            }
+            Serial.println("=== BME280 Ambient ===");
+            Serial.print("Temperature: ");
+            Serial.print(appData->ambientTemperatureC, 1);
+            Serial.println(" C");
+            Serial.print("Humidity: ");
+            Serial.print(appData->humidity, 1);
+            Serial.println(" %");
+            Serial.print("Pressure: ");
+            Serial.print(appData->absoluteBarometricpressurekPa, 2);
+            Serial.println(" kPa");
+            break;
+
+        default:
+            Serial.println("ERR,11,Sensor type 0-4");
+            break;
+    }
+}
+
+void SerialCommandHandler::reportFaults() {
+    // Check for any active faults
+    uint8_t egtFault = MAX31856Manager::getFaultStatus();
+
+    // Only show fault section if there are faults
+    if (egtFault != 0) {
+        Serial.println("--- FAULTS ---");
+        Serial.print("EGT: 0x");
+        Serial.print(egtFault, HEX);
+        Serial.print(" (");
+
+        // Decode fault bits
+        if (egtFault & 0x01) Serial.print("OPEN ");
+        if (egtFault & 0x02) Serial.print("OVUV ");
+        if (egtFault & 0x04) Serial.print("TC_LOW ");
+        if (egtFault & 0x08) Serial.print("TC_HIGH ");
+        if (egtFault & 0x10) Serial.print("CJ_LOW ");
+        if (egtFault & 0x20) Serial.print("CJ_HIGH ");
+        if (egtFault & 0x40) Serial.print("TC_RANGE ");
+        if (egtFault & 0x80) Serial.print("CJ_RANGE ");
+
+        Serial.println(")");
+    }
+}
+
+void SerialCommandHandler::printTempValueForSpn(uint16_t spn) {
+    float value = -273.15f;  // Error value
+    switch (spn) {
+        case 175: value = appData->oilTemperatureC; break;
+        case 110:
+        case 1637: value = appData->coolantTemperatureC; break;
+        case 174: value = appData->fuelTemperatureC; break;
+        case 105:
+        case 1363: value = appData->boostTemperatureC; break;
+        case 1131: value = appData->cacInletTemperatureC; break;
+        case 1132: value = appData->transferPipeTemperatureC; break;
+        case 1133:
+        case 172: value = appData->airInletTemperatureC; break;
+        case 441: value = appData->engineBayTemperatureC; break;
+    }
+    if (value < -200.0f) {
+        Serial.println("ERROR");
+    } else {
+        Serial.print(value, 1);
+        Serial.println(" C");
+    }
+}
+
+void SerialCommandHandler::printPressureValueForSpn(uint16_t spn) {
+    float value = 0.0f;
+    switch (spn) {
+        case 100: value = appData->oilPressurekPa; break;
+        case 109: value = appData->coolantPressurekPa; break;
+        case 94: value = appData->fuelPressurekPa; break;
+        case 102: value = appData->boostPressurekPa; break;
+        case 106: value = appData->airInletPressurekPa; break;
+        case 1127: value = appData->cacInletPressurekPa; break;
+        case 1128: value = appData->transferPipePressurekPa; break;
+    }
+    Serial.print(value, 2);
+    Serial.println(" kPa");
 }

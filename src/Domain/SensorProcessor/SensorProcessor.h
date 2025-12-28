@@ -22,6 +22,12 @@ class SensorProcessor {
     // Process pressure inputs
     static void processPressureInputs();
 
+    // Process EGT from MAX31856
+    static void processEgt();
+
+    // Process BME280 ambient sensors
+    static void processBme280();
+
     // Conversion functions
     static float convertPressure(float voltage, uint16_t maxPsi);
     static float convertNtcTemperature(float voltage, const TTempInputConfig& cfg);

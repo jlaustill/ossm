@@ -33,6 +33,14 @@ class SerialCommandHandler {
     static void handleReset();           // Cmd 7: (no params)
     static void handleNtcPreset();       // Cmd 8: input,preset
     static void handlePressurePreset();  // Cmd 9: input,preset
+    static void handleReadSensors();     // Cmd 10: sensorType (0=all,1=EGT,2=temps,3=pres,4=BME)
+
+    // Report any active faults (called after all commands)
+    static void reportFaults();
+
+    // Helper functions for reading sensor values
+    static void printTempValueForSpn(uint16_t spn);
+    static void printPressureValueForSpn(uint16_t spn);
 };
 
 #endif  // OSSM_SERIALCOMMANDHANDLER_H

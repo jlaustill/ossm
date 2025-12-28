@@ -134,35 +134,8 @@ void MAX31856Manager::readResult() {
     faultCode = thermocouple->readFault();
 
     if (faultCode != 0) {
-        // Log fault details
-        Serial.print("MAX31856 fault: 0x");
-        Serial.println(faultCode, HEX);
-
-        if (faultCode & MAX31856_FAULT_CJRANGE) {
-            Serial.println("  Cold Junction Range Fault");
-        }
-        if (faultCode & MAX31856_FAULT_TCRANGE) {
-            Serial.println("  Thermocouple Range Fault");
-        }
-        if (faultCode & MAX31856_FAULT_CJHIGH) {
-            Serial.println("  Cold Junction High Fault");
-        }
-        if (faultCode & MAX31856_FAULT_CJLOW) {
-            Serial.println("  Cold Junction Low Fault");
-        }
-        if (faultCode & MAX31856_FAULT_TCHIGH) {
-            Serial.println("  Thermocouple High Fault");
-        }
-        if (faultCode & MAX31856_FAULT_TCLOW) {
-            Serial.println("  Thermocouple Low Fault");
-        }
-        if (faultCode & MAX31856_FAULT_OVUV) {
-            Serial.println("  Over/Under Voltage Fault");
-        }
-        if (faultCode & MAX31856_FAULT_OPEN) {
-            Serial.println("  Thermocouple Open Fault");
-        }
-
+        // Fault detected - reading invalid
+        // Fault details available via getFaultStatus()
         readingValid = false;
     } else {
         // Read temperatures

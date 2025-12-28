@@ -105,6 +105,7 @@ Connect via USB serial at 115200 baud. Commands use **byte format** - all values
 | 7 | Reset | `7` | Reset to factory defaults |
 | 8 | NTC Preset | `8,input,preset` | Apply NTC sensor preset |
 | 9 | Pressure Preset | `9,input,preset` | Apply pressure sensor preset |
+| 10 | Read Sensors | `10,type` | Read live sensor values |
 
 > **Note:** Command 2 (Set NTC Param) was removed. Use Command 8 (NTC Preset) instead.
 
@@ -173,6 +174,31 @@ Connect via USB serial at 115200 baud. Commands use **byte format** - all values
 | 2 | 200 PSI |
 
 **Example:** `9,6,1` - Set pres6 to 150 PSI
+
+### Command 10: Read Live Sensors
+
+```
+10[,sensorType]
+```
+
+| Type | Description |
+|------|-------------|
+| 0 | All active sensors (default) |
+| 1 | EGT only |
+| 2 | Temperature sensors |
+| 3 | Pressure sensors |
+| 4 | BME280 ambient |
+
+**Examples:**
+```
+10        # Read all active sensors
+10,1      # Read EGT temperature
+10,2      # Read all temperature sensors
+10,3      # Read all pressure sensors
+10,4      # Read BME280 (ambient temp, humidity, barometric)
+```
+
+**Note:** Any sensor faults are displayed at the end of ALL command responses.
 
 ### Thermocouple Types (Command 4)
 
