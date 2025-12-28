@@ -1,5 +1,6 @@
 #include "CommandHandler.h"
 #include "Data/ConfigStorage/ConfigStorage.h"
+#include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 
@@ -34,6 +35,8 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                     return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
                 }
                 config->tempInputs[input - 1].assignedSpn = spn;
+                // Initialize hardware immediately so it works without reboot
+                ADS1115Manager::initialize(config);
                 break;
 
             case SPN_CAT_PRESSURE:
@@ -41,6 +44,8 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                     return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
                 }
                 config->pressureInputs[input - 1].assignedSpn = spn;
+                // Initialize hardware immediately so it works without reboot
+                ADS1115Manager::initialize(config);
                 break;
 
             case SPN_CAT_EGT:
