@@ -23,7 +23,7 @@ void SerialCommandHandler::initialize(AppConfig* cfg, AppData* data) {
 
 void SerialCommandHandler::update() {
     while (Serial.available()) {
-        char c = Serial.read();
+        char c = static_cast<char>(Serial.read());
 
         if (c == '\n' || c == '\r') {
             if (cmdIndex > 0) {

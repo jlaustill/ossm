@@ -83,7 +83,7 @@ void J1939Bus::sniffDataCumminsBus(const CAN_message_t &msg) {
     switch (message.canId) {
         case 256:
             if (warmedUp) {
-                rpms = ((uint16_t)message.data[7] << 8) + (uint16_t)message.data[6];
+                rpms = static_cast<uint16_t>(((uint16_t)message.data[7] << 8) + (uint16_t)message.data[6]);
                 rpms /= 4;
                 float timing = (float)((uint16_t)message.data[5] << 8) + (uint16_t)message.data[4];
                 timing /= 128.0f;
@@ -91,7 +91,7 @@ void J1939Bus::sniffDataCumminsBus(const CAN_message_t &msg) {
                 fuel /= 40.95f;
                 CAN_message_t copyMsg = msg;
                 UpdateMaxTiming(timing);
-                maxOfThrottleAndLoad = max(throttlePercent, load);
+                maxOfThrottleAndLoad = static_cast<uint16_t>(max(throttlePercent, load));
                 newTiming = SeaDash::Floats::mapf<float>((float)maxOfThrottleAndLoad, 0.0f, 100.0f, timing, maxTiming);
                 newTiming *= 128.0f;
                 shortTimingValue = (unsigned short)newTiming;
@@ -184,10 +184,10 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0;
-    intakeTempOffset /= 0.03125;
-    float coolantTempOffset = engineCoolantTemperatureC + 273.0;
-    coolantTempOffset /= 0.03125;
+    float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0f;
+    intakeTempOffset /= 0.03125f;
+    float coolantTempOffset = engineCoolantTemperatureC + 273.0f;
+    coolantTempOffset /= 0.03125f;
 
     if (isSpnEnabled(config, 1363)) {
         msg.buf[0] = highByte(static_cast<uint16_t>(intakeTempOffset));
@@ -217,7 +217,7 @@ void J1939Bus::sendPgn65164() {
         msg.buf[0] = static_cast<uint8_t>(appData->engineBayTemperatureC + 40);
     }
     if (isSpnEnabled(config, 354)) {
-        msg.buf[6] = static_cast<uint8_t>(appData->humidity / 0.4);
+        msg.buf[6] = static_cast<uint8_t>(appData->humidity / 0.4f);
     }
 
     CanPrivate.write(msg);
@@ -263,8 +263,8 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float boost1Offset = engineTurbocharger1BoostPressurekPa / 0.125;
-    float boost2Offset = engineTurbocharger2BoostPressurekPa / 0.125;
+    float boost1Offset = engineTurbocharger1BoostPressurekPa / 0.125f;
+    float boost2Offset = engineTurbocharger2BoostPressurekPa / 0.125f;
 
     if (isSpnEnabled(config, 1127)) {
         msg.buf[0] = highByte(static_cast<uint16_t>(boost1Offset));
@@ -292,8 +292,8 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float oilTempOffset = engineOilTemperatureC + 273.0;
-    oilTempOffset /= 0.03125;
+    float oilTempOffset = engineOilTemperatureC + 273.0f;
+    oilTempOffset /= 0.03125f;
 
     if (isSpnEnabled(config, 110)) {
         msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperatureC + 40);
@@ -350,8 +350,8 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float ambientAirTempOffset = ambientTemperatureC + 273.0;
-    ambientAirTempOffset /= 0.03125;
+    float ambientAirTempOffset = ambientTemperatureC + 273.0f;
+    ambientAirTempOffset /= 0.03125f;
 
     if (isSpnEnabled(config, 108)) {
         msg.buf[0] = static_cast<uint8_t>(barometricPressurekPa * 2);
@@ -381,8 +381,8 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float egtOffset = egtTemperatureC + 273.0;
-    egtOffset /= 0.03125;
+    float egtOffset = egtTemperatureC + 273.0f;
+    egtOffset /= 0.03125f;
 
     if (isSpnEnabled(config, 102)) {
         msg.buf[1] = static_cast<uint8_t>(boostPressurekPa / 2);

@@ -24,7 +24,7 @@ struct AppData {
   float fuelPressurekPa = 0.0f;
   float fuelTemperatureC = 0.0f;
   float engineBayTemperatureC = 0.0f;
-  double egtTemperatureC = 0.0f;
+  float egtTemperatureC = 0.0f;
 };
 
 #endif  // OSSM_APPDATA_H
