@@ -111,8 +111,8 @@ struct THardwareMapping {
 static const THardwareMapping TEMP_HARDWARE_MAP[TEMP_INPUT_COUNT] = {
     {0, 0},  // temp1 -> ADS 0x48, channel 0 (A0)
     {0, 2},  // temp2 -> ADS 0x48, channel 2 (A2)
-    {1, 0},  // temp3 -> ADS 0x49, channel 0
-    {1, 1},  // temp4 -> ADS 0x49, channel 1
+    {1, 0},  // temp3 -> ADS 0x49, channel 0 (A0)
+    {1, 3},  // temp4 -> ADS 0x49, channel 3 (A3)
     {2, 1},  // temp5 -> ADS 0x4A, channel 1
     {2, 2},  // temp6 -> ADS 0x4A, channel 2
     {3, 1},  // temp7 -> ADS 0x4B, channel 1
@@ -126,8 +126,8 @@ static const THardwareMapping PRESSURE_HARDWARE_MAP[PRESSURE_INPUT_COUNT] = {
     {0, 3},  // pres2 -> ADS 0x48, channel 3
     {2, 0},  // pres3 -> ADS 0x4A, channel 0
     {2, 3},  // pres4 -> ADS 0x4A, channel 3
-    {1, 2},  // pres5 -> ADS 0x49, channel 2
-    {1, 3},  // pres6 -> ADS 0x49, channel 3
+    {1, 1},  // pres5 -> ADS 0x49, channel 1 (A1)
+    {1, 2},  // pres6 -> ADS 0x49, channel 2 (A2)
     {3, 0},  // pres7 -> ADS 0x4B, channel 0
 };
 
