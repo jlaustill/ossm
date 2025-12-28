@@ -9,6 +9,7 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/SensorProcessor/SensorProcessor.h"
+#include "Domain/CommandHandler/CommandHandler.h"
 #include "Display/J1939Bus.h"
 #include "Interface/SerialCommandHandler/SerialCommandHandler.h"
 
@@ -43,6 +44,7 @@ void ossm::setup() {
     MAX31856Manager::initialize(&appConfig);
     BME280Manager::initialize(&appConfig);
     SensorProcessor::initialize(&appConfig, &appData);
+    CommandHandler::initialize(&appConfig, &appData);
 
     // Initialize J1939 bus
     J1939Bus::initialize(&appData, &appConfig);

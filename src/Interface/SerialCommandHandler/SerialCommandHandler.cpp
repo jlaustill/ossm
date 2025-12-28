@@ -3,6 +3,7 @@
 #include "Data/ConfigStorage/ConfigStorage.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
+#include "Domain/CommandHandler/CommandHandler.h"
 
 // Static member initialization
 AppConfig* SerialCommandHandler::config = nullptr;
@@ -96,12 +97,6 @@ void SerialCommandHandler::processCommand(const char* cmd) {
 
 void SerialCommandHandler::handleEnableSpn() {
     // Format: 1,spnHi,spnLo,enable[,input]
-    // parsed.data[0] = cmd (1)
-    // parsed.data[1] = spnHi
-    // parsed.data[2] = spnLo
-    // parsed.data[3] = enable
-    // parsed.data[4] = input (optional)
-
     if (parsed.count < 4) {
         Serial.println("ERR,2,Usage: 1,spnHi,spnLo,enable[,input]");
         return;
@@ -111,7 +106,30 @@ void SerialCommandHandler::handleEnableSpn() {
     bool enable = (parsed.data[3] != 0);
     uint8_t input = (parsed.count > 4) ? parsed.data[4] : 0;
 
-    // Find SPN category
+    TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
+
+    if (result.errorCode != ECommandError::OK) {
+        Serial.print("ERR,");
+        Serial.print(result.errorCode);
+        switch (result.errorCode) {
+            case ECommandError::UNKNOWN_SPN:
+                Serial.print(",Unknown SPN: ");
+                Serial.println(spn);
+                break;
+            case ECommandError::INVALID_TEMP_INPUT:
+                Serial.println(",Input 1-8 required for temp SPN");
+                break;
+            case ECommandError::INVALID_PRESSURE_INPUT:
+                Serial.println(",Input 1-7 required for pressure SPN");
+                break;
+            default:
+                Serial.println();
+                break;
+        }
+        return;
+    }
+
+    // Find category for success message
     ESpnCategory category = SPN_CAT_UNKNOWN;
     for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
         if (KNOWN_SPNS[i].spn == spn) {
@@ -120,97 +138,42 @@ void SerialCommandHandler::handleEnableSpn() {
         }
     }
 
-    if (category == SPN_CAT_UNKNOWN) {
-        Serial.print("ERR,3,Unknown SPN: ");
-        Serial.println(spn);
-        return;
-    }
-
     if (enable) {
-        // Enable SPN
         switch (category) {
             case SPN_CAT_TEMPERATURE:
-                if (input < 1 || input > TEMP_INPUT_COUNT) {
-                    Serial.println("ERR,4,Input 1-8 required for temp SPN");
-                    return;
-                }
-                config->tempInputs[input - 1].assignedSpn = spn;
                 Serial.print("OK,SPN ");
                 Serial.print(spn);
                 Serial.print(" enabled on temp");
                 Serial.println(input);
                 break;
-
             case SPN_CAT_PRESSURE:
-                if (input < 1 || input > PRESSURE_INPUT_COUNT) {
-                    Serial.println("ERR,5,Input 1-7 required for pressure SPN");
-                    return;
-                }
-                config->pressureInputs[input - 1].assignedSpn = spn;
                 Serial.print("OK,SPN ");
                 Serial.print(spn);
                 Serial.print(" enabled on pres");
                 Serial.println(input);
                 break;
-
             case SPN_CAT_EGT:
-                config->egtEnabled = true;
                 Serial.println("OK,EGT enabled");
                 break;
-
             case SPN_CAT_BME280:
-                config->bme280Enabled = true;
                 Serial.println("OK,BME280 enabled (SPNs 171, 108, 354)");
                 break;
-
             default:
+                Serial.println("OK");
                 break;
         }
     } else {
-        // Disable SPN
         switch (category) {
-            case SPN_CAT_TEMPERATURE:
-                // Find which input has this SPN
-                for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
-                    if (config->tempInputs[i].assignedSpn == spn) {
-                        config->tempInputs[i].assignedSpn = 0;
-                        Serial.print("OK,SPN ");
-                        Serial.print(spn);
-                        Serial.print(" disabled (was temp");
-                        Serial.print(i + 1);
-                        Serial.println(")");
-                        return;
-                    }
-                }
-                Serial.println("OK,SPN was not enabled");
-                break;
-
-            case SPN_CAT_PRESSURE:
-                for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
-                    if (config->pressureInputs[i].assignedSpn == spn) {
-                        config->pressureInputs[i].assignedSpn = 0;
-                        Serial.print("OK,SPN ");
-                        Serial.print(spn);
-                        Serial.print(" disabled (was pres");
-                        Serial.print(i + 1);
-                        Serial.println(")");
-                        return;
-                    }
-                }
-                Serial.println("OK,SPN was not enabled");
-                break;
-
             case SPN_CAT_EGT:
-                config->egtEnabled = false;
                 Serial.println("OK,EGT disabled");
                 break;
-
             case SPN_CAT_BME280:
-                config->bme280Enabled = false;
                 Serial.println("OK,BME280 disabled");
                 break;
-
             default:
+                Serial.print("OK,SPN ");
+                Serial.print(spn);
+                Serial.println(" disabled");
                 break;
         }
     }
@@ -218,11 +181,6 @@ void SerialCommandHandler::handleEnableSpn() {
 
 void SerialCommandHandler::handleSetPressureRange() {
     // Format: 3,input,psiHi,psiLo
-    // parsed.data[0] = cmd (3)
-    // parsed.data[1] = input
-    // parsed.data[2] = psiHi
-    // parsed.data[3] = psiLo
-
     if (parsed.count < 4) {
         Serial.println("ERR,2,Usage: 3,input,psiHi,psiLo");
         return;
@@ -231,12 +189,13 @@ void SerialCommandHandler::handleSetPressureRange() {
     uint8_t input = parsed.data[1];
     uint16_t maxPsi = (static_cast<uint16_t>(parsed.data[2]) << 8) | parsed.data[3];
 
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+    TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
+
+    if (result.errorCode != ECommandError::OK) {
         Serial.println("ERR,5,Input must be 1-7");
         return;
     }
 
-    config->pressureInputs[input - 1].maxPsi = maxPsi;
     Serial.print("OK,pres");
     Serial.print(input);
     Serial.print(" maxPsi=");
@@ -245,21 +204,19 @@ void SerialCommandHandler::handleSetPressureRange() {
 
 void SerialCommandHandler::handleSetTcType() {
     // Format: 4,type
-    // parsed.data[0] = cmd (4)
-    // parsed.data[1] = type
-
     if (parsed.count < 2) {
         Serial.println("ERR,2,Usage: 4,type (0-7)");
         return;
     }
 
     uint8_t type = parsed.data[1];
-    if (type > 7) {
+    TCommandResult result = CommandHandler::setTcType(type);
+
+    if (result.errorCode != ECommandError::OK) {
         Serial.println("ERR,7,Type must be 0-7");
         return;
     }
 
-    config->thermocoupleType = static_cast<EThermocoupleType>(type);
     Serial.print("OK,Thermocouple type=");
     Serial.println(type);
 }
@@ -321,7 +278,8 @@ void SerialCommandHandler::handleQuery() {
 
 void SerialCommandHandler::handleSave() {
     Serial.print("Saving configuration... ");
-    if (ConfigStorage::saveConfig(config)) {
+    TCommandResult result = CommandHandler::save();
+    if (result.errorCode == ECommandError::OK) {
         Serial.println("OK");
     } else {
         Serial.println("ERR,9,Save failed");
@@ -330,16 +288,12 @@ void SerialCommandHandler::handleSave() {
 
 void SerialCommandHandler::handleReset() {
     Serial.println("Resetting to defaults...");
-    ConfigStorage::loadDefaults(config);
+    CommandHandler::reset();
     Serial.println("OK,Use '6' to save");
 }
 
 void SerialCommandHandler::handleNtcPreset() {
     // Format: 8,input,preset
-    // parsed.data[0] = cmd (8)
-    // parsed.data[1] = input
-    // parsed.data[2] = preset
-
     if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 8,input,preset (0=AEM,1=Bosch,2=GM)");
         return;
@@ -348,53 +302,27 @@ void SerialCommandHandler::handleNtcPreset() {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
 
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
-        Serial.println("ERR,4,Input must be 1-8");
+    TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
+
+    if (result.errorCode != ECommandError::OK) {
+        if (result.errorCode == ECommandError::INVALID_TEMP_INPUT) {
+            Serial.println("ERR,4,Input must be 1-8");
+        } else {
+            Serial.println("ERR,10,Preset must be 0-2");
+        }
         return;
     }
 
-    TTempInputConfig& cfg = config->tempInputs[input - 1];
-
-    switch (preset) {
-        case 0:  // AEM
-            cfg.coeffA = AEM_TEMP_COEFF_A;
-            cfg.coeffB = AEM_TEMP_COEFF_B;
-            cfg.coeffC = AEM_TEMP_COEFF_C;
-            cfg.resistorValue = AEM_TEMP_RESISTOR;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.println(" set to AEM preset");
-            break;
-        case 1:  // Bosch
-            cfg.coeffA = BOSCH_TEMP_COEFF_A;
-            cfg.coeffB = BOSCH_TEMP_COEFF_B;
-            cfg.coeffC = BOSCH_TEMP_COEFF_C;
-            cfg.resistorValue = BOSCH_TEMP_RESISTOR;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.println(" set to Bosch preset");
-            break;
-        case 2:  // GM
-            cfg.coeffA = GM_TEMP_COEFF_A;
-            cfg.coeffB = GM_TEMP_COEFF_B;
-            cfg.coeffC = GM_TEMP_COEFF_C;
-            cfg.resistorValue = GM_TEMP_RESISTOR;
-            Serial.print("OK,temp");
-            Serial.print(input);
-            Serial.println(" set to GM preset");
-            break;
-        default:
-            Serial.println("ERR,10,Preset must be 0-2");
-            break;
-    }
+    const char* presetNames[] = {"AEM", "Bosch", "GM"};
+    Serial.print("OK,temp");
+    Serial.print(input);
+    Serial.print(" set to ");
+    Serial.print(presetNames[preset]);
+    Serial.println(" preset");
 }
 
 void SerialCommandHandler::handlePressurePreset() {
     // Format: 9,input,preset
-    // parsed.data[0] = cmd (9)
-    // parsed.data[1] = input
-    // parsed.data[2] = preset
-
     if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 9,input,preset (0=100,1=150,2=200)");
         return;
@@ -403,18 +331,18 @@ void SerialCommandHandler::handlePressurePreset() {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
 
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
-        Serial.println("ERR,5,Input must be 1-7");
+    TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
+
+    if (result.errorCode != ECommandError::OK) {
+        if (result.errorCode == ECommandError::INVALID_PRESSURE_INPUT) {
+            Serial.println("ERR,5,Input must be 1-7");
+        } else {
+            Serial.println("ERR,10,Preset must be 0-2");
+        }
         return;
     }
 
-    uint16_t psiValues[] = {100, 150, 200};
-    if (preset > 2) {
-        Serial.println("ERR,10,Preset must be 0-2");
-        return;
-    }
-
-    config->pressureInputs[input - 1].maxPsi = psiValues[preset];
+    const uint16_t psiValues[] = {100, 150, 200};
     Serial.print("OK,pres");
     Serial.print(input);
     Serial.print(" set to ");

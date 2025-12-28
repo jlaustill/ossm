@@ -8,6 +8,7 @@
 #include <FlexCAN_T4.h>
 
 #include <SeaDash.hpp>
+#include "Domain/CommandHandler/CommandHandler.h"
 
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> CanCumminsBus;
 FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CanPrivate;
@@ -474,95 +475,14 @@ void J1939Bus::handleJ1939EnableSpn(const uint8_t *data) {
     bool enable = (data[3] != 0);
     uint8_t input = data[4];
 
-    // Find SPN category
-    ESpnCategory category = SPN_CAT_UNKNOWN;
-    for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
-        if (KNOWN_SPNS[i].spn == spn) {
-            category = KNOWN_SPNS[i].category;
-            break;
-        }
-    }
-
-    if (category == SPN_CAT_UNKNOWN) {
-        sendConfigResponse(1, 3, nullptr, 0);  // Error: Unknown SPN
-        return;
-    }
-
-    if (enable) {
-        switch (category) {
-            case SPN_CAT_TEMPERATURE:
-                if (input < 1 || input > TEMP_INPUT_COUNT) {
-                    sendConfigResponse(1, 4, nullptr, 0);  // Error: Invalid input
-                    return;
-                }
-                config->tempInputs[input - 1].assignedSpn = spn;
-                break;
-
-            case SPN_CAT_PRESSURE:
-                if (input < 1 || input > PRESSURE_INPUT_COUNT) {
-                    sendConfigResponse(1, 5, nullptr, 0);  // Error: Invalid input
-                    return;
-                }
-                config->pressureInputs[input - 1].assignedSpn = spn;
-                break;
-
-            case SPN_CAT_EGT:
-                config->egtEnabled = true;
-                break;
-
-            case SPN_CAT_BME280:
-                config->bme280Enabled = true;
-                break;
-
-            default:
-                break;
-        }
-    } else {
-        // Disable
-        switch (category) {
-            case SPN_CAT_TEMPERATURE:
-                for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
-                    if (config->tempInputs[i].assignedSpn == spn) {
-                        config->tempInputs[i].assignedSpn = 0;
-                        break;
-                    }
-                }
-                break;
-
-            case SPN_CAT_PRESSURE:
-                for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
-                    if (config->pressureInputs[i].assignedSpn == spn) {
-                        config->pressureInputs[i].assignedSpn = 0;
-                        break;
-                    }
-                }
-                break;
-
-            case SPN_CAT_EGT:
-                config->egtEnabled = false;
-                break;
-
-            case SPN_CAT_BME280:
-                config->bme280Enabled = false;
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    sendConfigResponse(1, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
+    sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
     // Format: [2, input, param, b0, b1, b2, b3] - IEEE 754 float
     uint8_t input = data[1];
     uint8_t param = data[2];
-
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
-        sendConfigResponse(2, 4, nullptr, 0);  // Error: Invalid input
-        return;
-    }
 
     // Reconstruct float from bytes (little endian)
     union {
@@ -574,27 +494,8 @@ void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
     converter.bytes[2] = data[5];
     converter.bytes[3] = data[6];
 
-    TTempInputConfig& cfg = config->tempInputs[input - 1];
-
-    switch (param) {
-        case 0:
-            cfg.coeffA = converter.f;
-            break;
-        case 1:
-            cfg.coeffB = converter.f;
-            break;
-        case 2:
-            cfg.coeffC = converter.f;
-            break;
-        case 3:
-            cfg.resistorValue = converter.f;
-            break;
-        default:
-            sendConfigResponse(2, 6, nullptr, 0);  // Error: Invalid param
-            return;
-    }
-
-    sendConfigResponse(2, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::setNtcParam(input, param, converter.f);
+    sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939SetPressureRange(const uint8_t *data) {
@@ -602,73 +503,45 @@ void J1939Bus::handleJ1939SetPressureRange(const uint8_t *data) {
     uint8_t input = data[1];
     uint16_t maxPsi = (static_cast<uint16_t>(data[2]) << 8) | data[3];
 
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
-        sendConfigResponse(3, 5, nullptr, 0);  // Error: Invalid input
-        return;
-    }
-
-    config->pressureInputs[input - 1].maxPsi = maxPsi;
-    sendConfigResponse(3, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
+    sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939SetTcType(const uint8_t *data) {
     // Format: [4, type]
     uint8_t type = data[1];
 
-    if (type > 7) {
-        sendConfigResponse(4, 7, nullptr, 0);  // Error: Invalid type
-        return;
-    }
-
-    config->thermocoupleType = static_cast<EThermocoupleType>(type);
-    sendConfigResponse(4, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::setTcType(type);
+    sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939Query(const uint8_t *data) {
     // Format: [5, query_type]
-    // For now, just send OK - full query response would need multi-frame
     uint8_t queryType = data[1];
 
-    // Simple response with count of enabled items
-    uint8_t responseData[6] = {0};
-
+    TCommandResult result;
     switch (queryType) {
-        case 0:  // Count enabled SPNs
-            {
-                uint8_t tempCount = 0, presCount = 0;
-                for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
-                    if (config->tempInputs[i].assignedSpn != 0) tempCount++;
-                }
-                for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
-                    if (config->pressureInputs[i].assignedSpn != 0) presCount++;
-                }
-                responseData[0] = tempCount;
-                responseData[1] = presCount;
-                responseData[2] = config->egtEnabled ? 1 : 0;
-                responseData[3] = config->bme280Enabled ? 1 : 0;
-                sendConfigResponse(5, 0, responseData, 4);
-            }
+        case 0:
+            result = CommandHandler::querySpnCounts();
             break;
-        case 4:  // Full config info
-            responseData[0] = config->j1939SourceAddress;
-            responseData[1] = static_cast<uint8_t>(config->thermocoupleType);
-            sendConfigResponse(5, 0, responseData, 2);
+        case 4:
+            result = CommandHandler::queryFullConfig();
             break;
         default:
-            sendConfigResponse(5, 8, nullptr, 0);  // Error: Invalid query type
+            result = TCommandResult::error(ECommandError::INVALID_QUERY_TYPE);
             break;
     }
+    sendConfigResponse(5, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939Save() {
-    // Use ConfigStorage to save
-    // Note: Need to include ConfigStorage.h for this
-    sendConfigResponse(6, 0, nullptr, 0);  // OK (actual save handled elsewhere)
+    TCommandResult result = CommandHandler::save();
+    sendConfigResponse(6, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939Reset() {
-    // Reset is handled by ConfigStorage
-    sendConfigResponse(7, 0, nullptr, 0);  // OK (actual reset handled elsewhere)
+    TCommandResult result = CommandHandler::reset();
+    sendConfigResponse(7, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939NtcPreset(const uint8_t *data) {
@@ -676,38 +549,8 @@ void J1939Bus::handleJ1939NtcPreset(const uint8_t *data) {
     uint8_t input = data[1];
     uint8_t preset = data[2];
 
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
-        sendConfigResponse(8, 4, nullptr, 0);  // Error: Invalid input
-        return;
-    }
-
-    TTempInputConfig& cfg = config->tempInputs[input - 1];
-
-    switch (preset) {
-        case 0:  // AEM
-            cfg.coeffA = AEM_TEMP_COEFF_A;
-            cfg.coeffB = AEM_TEMP_COEFF_B;
-            cfg.coeffC = AEM_TEMP_COEFF_C;
-            cfg.resistorValue = AEM_TEMP_RESISTOR;
-            break;
-        case 1:  // Bosch
-            cfg.coeffA = BOSCH_TEMP_COEFF_A;
-            cfg.coeffB = BOSCH_TEMP_COEFF_B;
-            cfg.coeffC = BOSCH_TEMP_COEFF_C;
-            cfg.resistorValue = BOSCH_TEMP_RESISTOR;
-            break;
-        case 2:  // GM
-            cfg.coeffA = GM_TEMP_COEFF_A;
-            cfg.coeffB = GM_TEMP_COEFF_B;
-            cfg.coeffC = GM_TEMP_COEFF_C;
-            cfg.resistorValue = GM_TEMP_RESISTOR;
-            break;
-        default:
-            sendConfigResponse(8, 10, nullptr, 0);  // Error: Invalid preset
-            return;
-    }
-
-    sendConfigResponse(8, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
+    sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939PressurePreset(const uint8_t *data) {
@@ -715,19 +558,8 @@ void J1939Bus::handleJ1939PressurePreset(const uint8_t *data) {
     uint8_t input = data[1];
     uint8_t preset = data[2];
 
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
-        sendConfigResponse(9, 5, nullptr, 0);  // Error: Invalid input
-        return;
-    }
-
-    const uint16_t psiValues[] = {100, 150, 200};
-    if (preset > 2) {
-        sendConfigResponse(9, 10, nullptr, 0);  // Error: Invalid preset
-        return;
-    }
-
-    config->pressureInputs[input - 1].maxPsi = psiValues[preset];
-    sendConfigResponse(9, 0, nullptr, 0);  // OK
+    TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
+    sendConfigResponse(9, result.errorCode, result.data, result.dataLen);
 }
 
 #endif
