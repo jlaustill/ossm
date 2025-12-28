@@ -87,7 +87,7 @@ bool MAX31856Manager::update() {
 
     // Check for timeout
     if (millis() - conversionStartTime > CONVERSION_TIMEOUT_MS) {
-        Serial.println("MAX31856 conversion timeout");
+        // Timeout - reading invalid, will retry
         readingValid = false;
         conversionStarted = false;
 
