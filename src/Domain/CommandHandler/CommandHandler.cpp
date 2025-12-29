@@ -285,3 +285,45 @@ TCommandResult CommandHandler::queryFullConfig() {
 
     return TCommandResult::withData(responseData, 2);
 }
+
+TCommandResult CommandHandler::queryTempSpns(uint8_t subQuery) {
+    // Return 3 temp SPN assignments per sub-query (6 bytes = 3 x 16-bit SPNs)
+    // subQuery 0: temp1-3, subQuery 1: temp4-6, subQuery 2: temp7-8
+    uint8_t responseData[6];
+    uint8_t startIdx = subQuery * 3;
+
+    for (uint8_t i = 0; i < 3; i++) {
+        uint8_t idx = startIdx + i;
+        if (idx < TEMP_INPUT_COUNT) {
+            uint16_t spn = config->tempInputs[idx].assignedSpn;
+            responseData[i * 2] = (spn >> 8) & 0xFF;      // high byte
+            responseData[i * 2 + 1] = spn & 0xFF;          // low byte
+        } else {
+            responseData[i * 2] = 0xFF;
+            responseData[i * 2 + 1] = 0xFF;
+        }
+    }
+
+    return TCommandResult::withData(responseData, 6);
+}
+
+TCommandResult CommandHandler::queryPresSpns(uint8_t subQuery) {
+    // Return 3 pres SPN assignments per sub-query (6 bytes = 3 x 16-bit SPNs)
+    // subQuery 0: pres1-3, subQuery 1: pres4-6, subQuery 2: pres7
+    uint8_t responseData[6];
+    uint8_t startIdx = subQuery * 3;
+
+    for (uint8_t i = 0; i < 3; i++) {
+        uint8_t idx = startIdx + i;
+        if (idx < PRESSURE_INPUT_COUNT) {
+            uint16_t spn = config->pressureInputs[idx].assignedSpn;
+            responseData[i * 2] = (spn >> 8) & 0xFF;      // high byte
+            responseData[i * 2 + 1] = spn & 0xFF;          // low byte
+        } else {
+            responseData[i * 2] = 0xFF;
+            responseData[i * 2 + 1] = 0xFF;
+        }
+    }
+
+    return TCommandResult::withData(responseData, 6);
+}

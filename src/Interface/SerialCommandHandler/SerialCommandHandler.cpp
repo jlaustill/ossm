@@ -5,6 +5,37 @@
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
 
+// Human-readable names for SPNs - format: "Name(SPN XXX)"
+static const char* getSpnLabel(uint16_t spn) {
+    switch (spn) {
+        // Temperature SPNs
+        case 175:  return "Oil Temp(SPN 175)";
+        case 110:  return "Coolant Temp(SPN 110)";
+        case 174:  return "Fuel Temp(SPN 174)";
+        case 105:  return "Boost Temp(SPN 105)";
+        case 1131: return "CAC Inlet Temp(SPN 1131)";
+        case 1132: return "Xfer Pipe Temp(SPN 1132)";
+        case 1133: return "Air Inlet Temp 4(SPN 1133)";
+        case 172:  return "Air Inlet Temp(SPN 172)";
+        case 441:  return "Eng Bay Temp(SPN 441)";
+        // Pressure SPNs
+        case 100:  return "Oil Pres(SPN 100)";
+        case 109:  return "Coolant Pres(SPN 109)";
+        case 94:   return "Fuel Pres(SPN 94)";
+        case 102:  return "Boost Pres(SPN 102)";
+        case 106:  return "Air Inlet Pres(SPN 106)";
+        case 1127: return "CAC Inlet Pres(SPN 1127)";
+        case 1128: return "Xfer Pipe Pres(SPN 1128)";
+        // EGT
+        case 173:  return "EGT(SPN 173)";
+        // BME280
+        case 171:  return "Ambient Temp(SPN 171)";
+        case 108:  return "Baro Pres(SPN 108)";
+        case 354:  return "Humidity(SPN 354)";
+        default:   return "Unknown";
+    }
+}
+
 // Static member initialization
 AppConfig* SerialCommandHandler::config = nullptr;
 AppData* SerialCommandHandler::appData = nullptr;
@@ -239,23 +270,27 @@ void SerialCommandHandler::handleQuery() {
                 if (config->tempInputs[i].assignedSpn != 0) {
                     Serial.print("temp");
                     Serial.print(i + 1);
-                    Serial.print(": SPN ");
-                    Serial.println(config->tempInputs[i].assignedSpn);
+                    Serial.print(": ");
+                    Serial.println(getSpnLabel(config->tempInputs[i].assignedSpn));
                 }
             }
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
                 if (config->pressureInputs[i].assignedSpn != 0) {
                     Serial.print("pres");
                     Serial.print(i + 1);
-                    Serial.print(": SPN ");
-                    Serial.println(config->pressureInputs[i].assignedSpn);
+                    Serial.print(": ");
+                    Serial.println(getSpnLabel(config->pressureInputs[i].assignedSpn));
                 }
             }
             if (config->egtEnabled) {
-                Serial.println("EGT: SPN 173");
+                Serial.println(getSpnLabel(173));
             }
             if (config->bme280Enabled) {
-                Serial.println("BME280: SPNs 171, 108, 354");
+                Serial.print(getSpnLabel(171));
+                Serial.print(", ");
+                Serial.print(getSpnLabel(108));
+                Serial.print(", ");
+                Serial.println(getSpnLabel(354));
             }
             break;
 
@@ -398,34 +433,31 @@ void SerialCommandHandler::handleReadSensors() {
             // Temperatures
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
                 if (config->tempInputs[i].assignedSpn != 0) {
-                    Serial.print("temp");
-                    Serial.print(i + 1);
-                    Serial.print(" (SPN ");
-                    Serial.print(config->tempInputs[i].assignedSpn);
-                    Serial.print("): ");
+                    Serial.print(getSpnLabel(config->tempInputs[i].assignedSpn));
+                    Serial.print(": ");
                     printTempValueForSpn(config->tempInputs[i].assignedSpn);
                 }
             }
             // Pressures
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
                 if (config->pressureInputs[i].assignedSpn != 0) {
-                    Serial.print("pres");
-                    Serial.print(i + 1);
-                    Serial.print(" (SPN ");
-                    Serial.print(config->pressureInputs[i].assignedSpn);
-                    Serial.print("): ");
+                    Serial.print(getSpnLabel(config->pressureInputs[i].assignedSpn));
+                    Serial.print(": ");
                     printPressureValueForSpn(config->pressureInputs[i].assignedSpn);
                 }
             }
             // BME280
             if (config->bme280Enabled) {
-                Serial.print("Ambient Temp: ");
+                Serial.print(getSpnLabel(171));
+                Serial.print(": ");
                 Serial.print(appData->ambientTemperatureC, 1);
                 Serial.println(" C");
-                Serial.print("Humidity: ");
+                Serial.print(getSpnLabel(354));
+                Serial.print(": ");
                 Serial.print(appData->humidity, 1);
                 Serial.println(" %");
-                Serial.print("Barometric: ");
+                Serial.print(getSpnLabel(108));
+                Serial.print(": ");
                 Serial.print(appData->absoluteBarometricpressurekPa, 2);
                 Serial.println(" kPa");
             }
@@ -451,8 +483,7 @@ void SerialCommandHandler::handleReadSensors() {
             Serial.println("=== Temperature Sensors ===");
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
                 if (config->tempInputs[i].assignedSpn != 0) {
-                    Serial.print("temp");
-                    Serial.print(i + 1);
+                    Serial.print(getSpnLabel(config->tempInputs[i].assignedSpn));
                     Serial.print(": ");
                     printTempValueForSpn(config->tempInputs[i].assignedSpn);
                 }
@@ -463,8 +494,7 @@ void SerialCommandHandler::handleReadSensors() {
             Serial.println("=== Pressure Sensors ===");
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
                 if (config->pressureInputs[i].assignedSpn != 0) {
-                    Serial.print("pres");
-                    Serial.print(i + 1);
+                    Serial.print(getSpnLabel(config->pressureInputs[i].assignedSpn));
                     Serial.print(": ");
                     printPressureValueForSpn(config->pressureInputs[i].assignedSpn);
                 }
@@ -477,13 +507,16 @@ void SerialCommandHandler::handleReadSensors() {
                 return;
             }
             Serial.println("=== BME280 Ambient ===");
-            Serial.print("Temperature: ");
+            Serial.print(getSpnLabel(171));
+            Serial.print(": ");
             Serial.print(appData->ambientTemperatureC, 1);
             Serial.println(" C");
-            Serial.print("Humidity: ");
+            Serial.print(getSpnLabel(354));
+            Serial.print(": ");
             Serial.print(appData->humidity, 1);
             Serial.println(" %");
-            Serial.print("Pressure: ");
+            Serial.print(getSpnLabel(108));
+            Serial.print(": ");
             Serial.print(appData->absoluteBarometricpressurekPa, 2);
             Serial.println(" kPa");
             break;

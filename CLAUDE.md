@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Open Source Sensor Module (OSSM) - An embedded firmware for Teensy 4.1 that reads automotive sensors and transmits data over CAN bus using J1939 protocol. The module emulates a secondary PCM/ECM and supports up to 19 sensors (temperatures, pressures, humidity, etc.).
 
+## J1939 Standards Compliance
+
+**IMPORTANT**: All J1939 protocol implementation MUST follow the SAE J1939 standard exactly. Do not make assumptions about byte order, scaling factors, offsets, or message formats. Key rules:
+
+- **Byte order**: J1939 uses little-endian (LSB first) for multi-byte values
+- **Scaling/offsets**: Use the exact values defined in J1939-71 for each SPN
+- **PGN formats**: Follow the standard byte positions for each Parameter Group
+
+If you are unsure about any J1939 specification detail (byte order, scaling, offset, PGN format, etc.), **ask the user** rather than guessing. Deviating from the standard will cause interoperability issues with other J1939 devices on the bus.
+
 ## Build Commands
 
 ```bash
@@ -46,13 +56,13 @@ include/
 ### Key Patterns
 
 - **Sensor Configuration**: Sensors are enabled/disabled via preprocessor defines in `configuration.h`. Only defined SPNs will be transmitted.
-- **Dual CAN Bus**: Uses FlexCAN_T4 with CAN2 (Cummins bus) and CAN3 (Private bus). Messages are sniffed from Cummins bus and repeated to private bus with optional modifications.
+- **CAN Bus**: OSSM v0.0.2 uses CAN1 (pins D22/D23) via FlexCAN_T4 for J1939 transmission at 250kbps.
 - **Timed Transmission**: Sensor data sent at fixed intervals (500ms for pressure PGNs, 1000ms for temperature PGNs).
 - **J1939 Protocol**: All sensor data encoded per SAE J1939 SPNs with appropriate scaling/offsets.
 
 ### Hardware Dependencies
 
-- **Teensy 4.1** with dual CAN transceivers
+- **Teensy 4.0** with CAN transceiver (CAN1 on D22/D23)
 - **ADS1115** ADCs (I2C addresses 0x4B, etc.) for analog sensor inputs
 - **BME280** for ambient conditions
-- **MAX31855** for thermocouple (EGT)
+- **MAX31856** for thermocouple (EGT)

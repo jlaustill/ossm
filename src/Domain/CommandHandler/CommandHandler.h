@@ -67,6 +67,8 @@ public:
     static TCommandResult reset();
     static TCommandResult querySpnCounts();
     static TCommandResult queryFullConfig();
+    static TCommandResult queryTempSpns(uint8_t subQuery);
+    static TCommandResult queryPresSpns(uint8_t subQuery);
 
     // Getters for config/data (for handlers that need direct access)
     static AppConfig* getConfig() { return config; }
