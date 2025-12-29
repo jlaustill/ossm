@@ -87,12 +87,12 @@ uint32_t ConfigStorage::calculateChecksum(const AppConfig* config) {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(config);
     size_t length = sizeof(AppConfig) - sizeof(config->checksum);
 
-    uint32_t crc = 0xFFFFFFFF;
+    uint32_t crc = 0xFFFFFFFFU;
     for (size_t i = 0; i < length; i++) {
         crc ^= data[i];
         for (int j = 0; j < 8; j++) {
-            if (crc & 1) {
-                crc = (crc >> 1) ^ 0xEDB88320;
+            if (crc & 1U) {
+                crc = (crc >> 1) ^ 0xEDB88320U;
             } else {
                 crc >>= 1;
             }

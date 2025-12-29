@@ -33,7 +33,6 @@ class J1939Bus {
  private:
   static AppData *appData;
   static AppConfig *config;  // Non-const to allow command handler to modify
-  static void sniffDataCumminsBus(const CAN_message_t &msg);
   static void sniffDataPrivate(const CAN_message_t &msg);
 
   // J1939 Command Interface (PGN 65280/65281)

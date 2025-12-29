@@ -7,7 +7,6 @@
 #include <AppConfig.h>
 #include <FlexCAN_T4.h>
 
-#include <SeaDash.hpp>
 #include "Domain/CommandHandler/CommandHandler.h"
 
 // OSSM v0.0.2 uses CAN1 (D22/D23) - single bus for J1939 transmission
@@ -15,17 +14,6 @@ FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> CanBus;
 
 AppData *J1939Bus::appData;
 AppConfig *J1939Bus::config;
-volatile bool warmedUp = false;
-volatile uint16_t rpms = 0;
-volatile float maxTiming = 12.0f;
-volatile float maxFuel = 40.95f;
-volatile float throttlePercent = 0.0f;
-volatile float load = 0.0f;
-volatile float newTiming = 0.0f;
-volatile float newFuel = 0.0f;
-volatile uint32_t shortFuelValue = 0;
-volatile unsigned short shortTimingValue = 0;
-volatile uint16_t maxOfThrottleAndLoad = 0;
 
 // Helper: Check if a temperature SPN is enabled (assigned to any input)
 static bool isTempSpnEnabled(const AppConfig* cfg, uint16_t spn) {
@@ -66,68 +54,6 @@ static bool isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
     if (spn == 1363 && isTempSpnEnabled(cfg, 105)) return true;  // Hi-res intake
 
     return false;
-}
-
-void UpdateMaxTiming(float timing) {
-    if (rpms < 1200) {
-        maxTiming = timing;
-    } else {
-        maxTiming = 30.0f;
-    }
-}
-
-void J1939Bus::sniffDataCumminsBus(const CAN_message_t &msg) {
-    J1939Message message = J1939Message();
-    message.setCanId(msg.id);
-    message.setData(msg.buf);
-
-    switch (message.canId) {
-        case 256:
-            if (warmedUp) {
-                rpms = static_cast<uint16_t>(((uint16_t)message.data[7] << 8) + (uint16_t)message.data[6]);
-                rpms /= 4;
-                float timing = (float)((uint16_t)message.data[5] << 8) + (uint16_t)message.data[4];
-                timing /= 128.0f;
-                float fuel = (float)((uint16_t)message.data[1] << 8) + (uint16_t)message.data[0];
-                fuel /= 40.95f;
-                CAN_message_t copyMsg = msg;
-                UpdateMaxTiming(timing);
-                maxOfThrottleAndLoad = static_cast<uint16_t>(max(throttlePercent, load));
-                newTiming = SeaDash::Floats::mapf<float>((float)maxOfThrottleAndLoad, 0.0f, 100.0f, timing, maxTiming);
-                newTiming *= 128.0f;
-                shortTimingValue = (unsigned short)newTiming;
-                copyMsg.buf[4] = lowByte(shortTimingValue);
-                copyMsg.buf[5] = highByte(shortTimingValue);
-                newFuel = SeaDash::Floats::mapf<float>(maxOfThrottleAndLoad, 0.0f, 100.0f, fuel, maxFuel);
-                newFuel *= 40.95f;
-                shortFuelValue = (uint32_t)newFuel;
-                copyMsg.buf[0] = lowByte(shortFuelValue);
-                copyMsg.buf[1] = highByte(shortFuelValue);
-                CanBus.write(copyMsg);
-            }
-            break;
-    }
-
-    if (message.pgn == 65262) {
-        int16_t waterTemp = (int16_t)message.data[0] - 40;
-        if (waterTemp >= 65) {
-            warmedUp = true;
-        }
-    }
-
-    if (message.pgn == 59904) {
-        uint32_t requestedPgn = message.data[0];
-        requestedPgn |= message.data[1] << 8;
-        requestedPgn |= message.data[2] << 16;
-
-        if (requestedPgn == 65164) {
-            sendPgn65164();
-        } else {
-            CanBus.write(msg);
-        }
-    } else {
-        CanBus.write(msg);
-    }
 }
 
 void J1939Bus::sniffDataPrivate(const CAN_message_t &msg) {
