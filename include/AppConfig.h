@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define CONFIG_MAGIC 0x4F53534D  // "OSSM" in ASCII
-#define CONFIG_VERSION 2         // Bumped for new structure
+#define CONFIG_VERSION 3         // Bumped for pressure type support
 
 // Number of user-facing inputs
 #define TEMP_INPUT_COUNT 8
@@ -32,11 +32,46 @@ enum ENtcPreset : uint8_t {
     NTC_PRESET_GM = 2
 };
 
+// Pressure Type (PSIA = absolute, PSIG = gauge)
+enum EPressureType : uint8_t {
+    PRESSURE_TYPE_PSIA = 0,  // Absolute pressure (bar presets)
+    PRESSURE_TYPE_PSIG = 1   // Gauge pressure (PSI presets, uses BME280 atm)
+};
+
 // Pressure Presets
+// Bar presets (0-15) are PSIA, PSI presets (20-30) are PSIG
 enum EPressurePreset : uint8_t {
-    PRESSURE_PRESET_100PSI = 0,
-    PRESSURE_PRESET_150PSI = 1,
-    PRESSURE_PRESET_200PSI = 2
+    // Bar presets (PSIA - Absolute)
+    PRESSURE_PRESET_1_BAR = 0,
+    PRESSURE_PRESET_1_5_BAR = 1,
+    PRESSURE_PRESET_2_BAR = 2,
+    PRESSURE_PRESET_2_5_BAR = 3,
+    PRESSURE_PRESET_3_BAR = 4,
+    PRESSURE_PRESET_4_BAR = 5,
+    PRESSURE_PRESET_5_BAR = 6,
+    PRESSURE_PRESET_7_BAR = 7,
+    PRESSURE_PRESET_10_BAR = 8,
+    PRESSURE_PRESET_50_BAR = 9,
+    PRESSURE_PRESET_100_BAR = 10,
+    PRESSURE_PRESET_150_BAR = 11,
+    PRESSURE_PRESET_200_BAR = 12,
+    PRESSURE_PRESET_1000_BAR = 13,
+    PRESSURE_PRESET_2000_BAR = 14,
+    PRESSURE_PRESET_3000_BAR = 15,
+    // Reserved: 16-19 for future bar presets
+
+    // PSI presets (PSIG - Gauge)
+    PRESSURE_PRESET_15_PSIG = 20,
+    PRESSURE_PRESET_30_PSIG = 21,
+    PRESSURE_PRESET_50_PSIG = 22,
+    PRESSURE_PRESET_100_PSIG = 23,
+    PRESSURE_PRESET_150_PSIG = 24,
+    PRESSURE_PRESET_200_PSIG = 25,
+    PRESSURE_PRESET_250_PSIG = 26,
+    PRESSURE_PRESET_300_PSIG = 27,
+    PRESSURE_PRESET_350_PSIG = 28,
+    PRESSURE_PRESET_400_PSIG = 29,
+    PRESSURE_PRESET_500_PSIG = 30
 };
 
 // Temperature input configuration (temp1-temp8)
@@ -50,8 +85,10 @@ struct TTempInputConfig {
 
 // Pressure input configuration (pres1-pres7)
 struct TPressureInputConfig {
-    uint16_t assignedSpn;     // Which SPN this input feeds (0 = disabled)
-    uint16_t maxPsi;          // Maximum pressure in PSI
+    uint16_t assignedSpn;       // Which SPN this input feeds (0 = disabled)
+    uint16_t maxPressure;       // Max value: bar for PSIA, PSI for PSIG
+    EPressureType pressureType; // PSIA (bar) or PSIG (PSI)
+    uint8_t reserved;           // Padding for alignment
 };
 
 // Main configuration structure (stored in EEPROM)

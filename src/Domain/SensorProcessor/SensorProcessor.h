@@ -29,8 +29,11 @@ class SensorProcessor {
     static void processBme280();
 
     // Conversion functions
-    static float convertPressure(float voltage, uint16_t maxPsi);
+    static float convertPressure(float voltage, const TPressureInputConfig& cfg);
     static float convertNtcTemperature(float voltage, const TTempInputConfig& cfg);
+
+    // Get atmospheric pressure for PSIG conversion (from BME280 or default)
+    static float getAtmosphericPressurekPa();
 
     // Update AppData based on SPN
     static void updateAppDataForSpn(uint16_t spn, float value);
@@ -38,8 +41,10 @@ class SensorProcessor {
     // Helper: clamp value to non-negative
     static float clampPositive(float x);
 
-    // PSI to kPa conversion factor
+    // Pressure conversion factors
     static constexpr float PSI_TO_KPA = 6.894757f;
+    static constexpr float BAR_TO_KPA = 100.0f;
+    static constexpr float STANDARD_ATMOSPHERE_KPA = 101.325f;
 
     // Reference voltage for voltage divider (5V supply)
     static constexpr float VREF = 5.0f;

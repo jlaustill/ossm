@@ -180,16 +180,20 @@ void SerialCommandHandler::handleEnableSpn() {
 }
 
 void SerialCommandHandler::handleSetPressureRange() {
-    // Format: 3,input,psiHi,psiLo
+    // Format: 3,input,valueHi,valueLo
+    // Value meaning depends on pressure type:
+    //   PSIA: centibar (100 = 1 bar), or bar + 20000 for large values
+    //   PSIG: PSI directly
+    // Use presets (cmd 9) for common values
     if (parsed.count < 4) {
-        Serial.println("ERR,2,Usage: 3,input,psiHi,psiLo");
+        Serial.println("ERR,2,Usage: 3,input,valueHi,valueLo (use preset cmd 9)");
         return;
     }
 
     uint8_t input = parsed.data[1];
-    uint16_t maxPsi = (static_cast<uint16_t>(parsed.data[2]) << 8) | parsed.data[3];
+    uint16_t maxPressure = (static_cast<uint16_t>(parsed.data[2]) << 8) | parsed.data[3];
 
-    TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
+    TCommandResult result = CommandHandler::setPressureRange(input, maxPressure);
 
     if (result.errorCode != ECommandError::OK) {
         Serial.println("ERR,5,Input must be 1-7");
@@ -198,8 +202,8 @@ void SerialCommandHandler::handleSetPressureRange() {
 
     Serial.print("OK,pres");
     Serial.print(input);
-    Serial.print(" maxPsi=");
-    Serial.println(maxPsi);
+    Serial.print(" maxPressure=");
+    Serial.println(maxPressure);
 }
 
 void SerialCommandHandler::handleSetTcType() {
@@ -323,8 +327,10 @@ void SerialCommandHandler::handleNtcPreset() {
 
 void SerialCommandHandler::handlePressurePreset() {
     // Format: 9,input,preset
+    // Bar presets (0-15): PSIA absolute
+    // PSI presets (20-30): PSIG gauge
     if (parsed.count < 3) {
-        Serial.println("ERR,2,Usage: 9,input,preset (0=100,1=150,2=200)");
+        Serial.println("ERR,2,Usage: 9,input,preset (0-15=bar, 20-30=PSIG)");
         return;
     }
 
@@ -337,17 +343,31 @@ void SerialCommandHandler::handlePressurePreset() {
         if (result.errorCode == ECommandError::INVALID_PRESSURE_INPUT) {
             Serial.println("ERR,5,Input must be 1-7");
         } else {
-            Serial.println("ERR,10,Preset must be 0-2");
+            Serial.println("ERR,10,Preset must be 0-15 (bar) or 20-30 (PSIG)");
         }
         return;
     }
 
-    const uint16_t psiValues[] = {100, 150, 200};
     Serial.print("OK,pres");
     Serial.print(input);
     Serial.print(" set to ");
-    Serial.print(psiValues[preset]);
-    Serial.println(" PSI");
+
+    if (preset <= 15) {
+        // Bar presets
+        static const char* barNames[] = {
+            "1", "1.5", "2", "2.5", "3", "4", "5", "7",
+            "10", "50", "100", "150", "200", "1000", "2000", "3000"
+        };
+        Serial.print(barNames[preset]);
+        Serial.println(" bar (PSIA)");
+    } else if (preset >= 20 && preset <= 30) {
+        // PSI presets
+        static const uint16_t psiValues[] = {
+            15, 30, 50, 100, 150, 200, 250, 300, 350, 400, 500
+        };
+        Serial.print(psiValues[preset - 20]);
+        Serial.println(" PSIG");
+    }
 }
 
 void SerialCommandHandler::handleReadSensors() {

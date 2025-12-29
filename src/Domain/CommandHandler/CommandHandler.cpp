@@ -112,12 +112,12 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
     return TCommandResult::ok();
 }
 
-TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPsi) {
+TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPressure) {
     if (input < 1 || input > PRESSURE_INPUT_COUNT) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
-    config->pressureInputs[input - 1].maxPsi = maxPsi;
+    config->pressureInputs[input - 1].maxPressure = maxPressure;
     return TCommandResult::ok();
 }
 
@@ -168,12 +168,54 @@ TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
-    const uint16_t psiValues[] = {100, 150, 200};
-    if (preset > 2) {
+    TPressureInputConfig& cfg = config->pressureInputs[input - 1];
+
+    // Bar presets (0-15): PSIA absolute, value in centibar (1 bar = 100)
+    // PSI presets (20-30): PSIG gauge, value in PSI
+    if (preset <= 15) {
+        // Bar presets (PSIA) - stored in centibar for 0.5 bar precision
+        // Note: presets 13-15 are large values stored in bar (flagged by value > 20000)
+        static const uint16_t centibarValues[] = {
+            100,   // 0: 1 bar
+            150,   // 1: 1.5 bar
+            200,   // 2: 2 bar
+            250,   // 3: 2.5 bar
+            300,   // 4: 3 bar
+            400,   // 5: 4 bar
+            500,   // 6: 5 bar
+            700,   // 7: 7 bar
+            1000,  // 8: 10 bar
+            5000,  // 9: 50 bar
+            10000, // 10: 100 bar
+            15000, // 11: 150 bar
+            20000, // 12: 200 bar
+            21000, // 13: 1000 bar (stored as 21000 = flag + bar value)
+            22000, // 14: 2000 bar (stored as 22000 = flag + bar value)
+            23000  // 15: 3000 bar (stored as 23000 = flag + bar value)
+        };
+        cfg.maxPressure = centibarValues[preset];
+        cfg.pressureType = PRESSURE_TYPE_PSIA;
+    } else if (preset >= 20 && preset <= 30) {
+        // PSI presets (PSIG)
+        static const uint16_t psiValues[] = {
+            15,   // 20: 15 PSIG
+            30,   // 21: 30 PSIG
+            50,   // 22: 50 PSIG
+            100,  // 23: 100 PSIG
+            150,  // 24: 150 PSIG
+            200,  // 25: 200 PSIG
+            250,  // 26: 250 PSIG
+            300,  // 27: 300 PSIG
+            350,  // 28: 350 PSIG
+            400,  // 29: 400 PSIG
+            500   // 30: 500 PSIG
+        };
+        cfg.maxPressure = psiValues[preset - 20];
+        cfg.pressureType = PRESSURE_TYPE_PSIG;
+    } else {
         return TCommandResult::error(ECommandError::INVALID_PRESET);
     }
 
-    config->pressureInputs[input - 1].maxPsi = psiValues[preset];
     return TCommandResult::ok();
 }
 

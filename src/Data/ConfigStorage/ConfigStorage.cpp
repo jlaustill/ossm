@@ -62,10 +62,12 @@ void ConfigStorage::loadDefaults(AppConfig* config) {
     }
 
     // All pressure inputs disabled by default
-    // Pre-load with 100 PSI range
+    // Pre-load with 100 PSIG range (gauge pressure)
     for (int i = 0; i < PRESSURE_INPUT_COUNT; i++) {
         config->pressureInputs[i].assignedSpn = 0;  // Disabled
-        config->pressureInputs[i].maxPsi = 100;
+        config->pressureInputs[i].maxPressure = 100;
+        config->pressureInputs[i].pressureType = PRESSURE_TYPE_PSIG;
+        config->pressureInputs[i].reserved = 0;
     }
 
     // EGT disabled by default

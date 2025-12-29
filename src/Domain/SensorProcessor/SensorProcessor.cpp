@@ -66,15 +66,15 @@ void SensorProcessor::processPressureInputs() {
         float voltage = ADS1115Manager::getVoltage(device, channel);
 
         // Convert to pressure in kPa
-        float pressurekPa = convertPressure(voltage, inputCfg.maxPsi);
+        float pressurekPa = convertPressure(voltage, inputCfg);
 
         // Update AppData based on assigned SPN
         updateAppDataForSpn(inputCfg.assignedSpn, pressurekPa);
     }
 }
 
-float SensorProcessor::convertPressure(float voltage, uint16_t maxPsi) {
-    // Voltage divider: 0.5V = 0 PSI, 4.5V = max PSI
+float SensorProcessor::convertPressure(float voltage, const TPressureInputConfig& cfg) {
+    // Voltage range: 0.5V = 0, 4.5V = max
     if (voltage < PRESSURE_VOLTAGE_MIN) {
         return 0.0f;
     }
@@ -82,12 +82,41 @@ float SensorProcessor::convertPressure(float voltage, uint16_t maxPsi) {
         voltage = PRESSURE_VOLTAGE_MAX;
     }
 
-    // Linear interpolation
-    float psi = (voltage - PRESSURE_VOLTAGE_MIN) /
-                (PRESSURE_VOLTAGE_MAX - PRESSURE_VOLTAGE_MIN) * maxPsi;
+    // Calculate voltage ratio (0.0 to 1.0)
+    float ratio = (voltage - PRESSURE_VOLTAGE_MIN) /
+                  (PRESSURE_VOLTAGE_MAX - PRESSURE_VOLTAGE_MIN);
 
-    // Convert PSI to kPa
-    return clampPositive(psi * PSI_TO_KPA);
+    // Convert to kPa based on pressure type
+    if (cfg.pressureType == PRESSURE_TYPE_PSIA) {
+        // Bar sensor (absolute)
+        // maxPressure storage: <= 20000 = centibar, > 20000 = 20000 + bar
+        if (cfg.maxPressure > 20000) {
+            // Large bar values: stored as 20000 + bar_value
+            float maxBar = static_cast<float>(cfg.maxPressure - 20000);
+            float bar = ratio * maxBar;
+            return clampPositive(bar * BAR_TO_KPA);
+        } else {
+            // Normal values stored in centibar (0.01 bar per unit)
+            // 1 centibar = 1 kPa, so maxPressure in centibar = max kPa
+            float maxkPa = static_cast<float>(cfg.maxPressure);
+            return clampPositive(ratio * maxkPa);
+        }
+    } else {
+        // PSI sensor (gauge): maxPressure is in PSI
+        float maxPsi = static_cast<float>(cfg.maxPressure);
+        float psi = ratio * maxPsi;
+        float gaugekPa = psi * PSI_TO_KPA;
+        float atmkPa = getAtmosphericPressurekPa();
+        return clampPositive(gaugekPa + atmkPa);
+    }
+}
+
+float SensorProcessor::getAtmosphericPressurekPa() {
+    // Use BME280 reading if available, otherwise standard atmosphere
+    if (appData != nullptr && appData->absoluteBarometricpressurekPa > 0.0f) {
+        return appData->absoluteBarometricpressurekPa;
+    }
+    return STANDARD_ATMOSPHERE_KPA;
 }
 
 float SensorProcessor::convertNtcTemperature(float voltage, const TTempInputConfig& cfg) {
