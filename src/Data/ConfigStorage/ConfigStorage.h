@@ -21,9 +21,6 @@ class ConfigStorage {
     // Validate configuration structure
     static bool validateConfig(const AppConfig* config);
 
-   private:
-    // Calculate CRC32 checksum for config (excluding checksum field)
-    static uint32_t calculateChecksum(const AppConfig* config);
 };
 
 #endif  // OSSM_CONFIGSTORAGE_H

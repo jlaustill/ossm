@@ -14,7 +14,7 @@
 #define ADS_DEVICE_COUNT 4
 
 // Thermocouple types (MAX31856)
-enum EThermocoupleType : uint8_t {
+enum EThermocoupleType: uint8_t {
     TC_TYPE_B = 0,
     TC_TYPE_E = 1,
     TC_TYPE_J = 2,
