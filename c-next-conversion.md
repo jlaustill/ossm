@@ -36,7 +36,7 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 | Tool | Warnings | Errors | Notes |
 |------|----------|--------|-------|
-| cppcheck | 9 | 0 | +4 style in generated code |
+| cppcheck | 15 | 0 | +10 style in generated code |
 | flawfinder | 5 | 0 | Unchanged (non-converted) |
 | MISRA C:2012 | 2 | 0 | Unchanged (non-converted) |
 | rats | 3 | 0 | Unchanged (non-converted) |
@@ -44,8 +44,9 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | C-Next | 0 | 0 | 27 safety checks pass |
 
 **cppcheck breakdown:**
-- 5x `unusedFunction` (unchanged)
-- 4x `constParameterPointer` (generated code style)
+- 5x `unusedFunction` (unchanged - API surface)
+- 4x `cstyleCast` (generated code - issue #267)
+- 6x `constParameterPointer` (generated code - issue #268)
 
 **Notes:**
 - New cppcheck warnings are style issues in C-Next generated code, not safety issues
@@ -57,10 +58,10 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | Module | Lines | Status | Purpose |
 |--------|-------|--------|---------|
 | `crc32.cnx` | 76 | ✅ Done | CRC32 checksum calculation |
-| `j1939_encode.cnx` | 122 | ✅ Done | J1939 SPN encoding |
-| `sensor_convert.cnx` | 114 | ✅ Done | Sensor physics (Steinhart-Hart, pressure) |
-| `spn_check.cnx` | 95 | ✅ Done | SPN enable checking |
-| **Total Converted** | **407** | | |
+| `j1939_encode.cnx` | 71 | ✅ Done | J1939 SPN encoding (temp, pressure, humidity) |
+| `sensor_convert.cnx` | 93 | ✅ Done | Sensor physics (Steinhart-Hart, pressure) |
+| `spn_check.cnx` | 83 | ✅ Done | SPN enable checking (MISRA 13.5 compliant) |
+| **Total Converted** | **323** | | |
 
 ## Files Modified
 
@@ -80,9 +81,9 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 47KB | 47KB | 0 |
-| RAM1 variables | 23KB | 23KB | 0 |
-| RAM2 variables | 12KB | 12KB | 0 |
+| FLASH code | 46.5KB | 46.9KB | +384 bytes |
+| RAM1 variables | 22.9KB | 22.9KB | 0 |
+| RAM2 variables | 12.4KB | 12.4KB | 0 |
 
 ---
 
