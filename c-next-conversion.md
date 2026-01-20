@@ -13,6 +13,8 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | cppcheck | 5 | 0 | Style only |
 | flawfinder | 5 | 0 | CWE-119/120/126 |
 | MISRA C:2012 | 2 | 0 | Rules 12.3, 17.2 |
+| rats | 3 | 0 | 2 high, 1 medium |
+| scan-build | 0 | 0 | ✅ Clean |
 | clang-tidy | — | — | Requires Arduino headers |
 
 **cppcheck breakdown:**
@@ -26,6 +28,10 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 - Rule 12.3: Comma operator in FlexCAN template (J1939Bus.cpp:13)
 - Rule 17.2: Recursive call in `handleQuery()` (SerialCommandHandler.cpp:309)
 
+**rats breakdown:**
+- 2x High: Fixed size local buffers (SerialCommandHandler.cpp:79, crc32.cpp:28)
+- 1x Medium: `read` in loop (SerialCommandHandler.cpp:58)
+
 ### AFTER (C-Next conversion)
 
 | Tool | Warnings | Errors | Notes |
@@ -33,6 +39,8 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | cppcheck | 9 | 0 | +4 style in generated code |
 | flawfinder | 5 | 0 | Unchanged (non-converted) |
 | MISRA C:2012 | 2 | 0 | Unchanged (non-converted) |
+| rats | 3 | 0 | Unchanged (non-converted) |
+| scan-build | 0 | 0 | ✅ Clean |
 | C-Next | 0 | 0 | 27 safety checks pass |
 
 **cppcheck breakdown:**

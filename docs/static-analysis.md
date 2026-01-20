@@ -81,6 +81,34 @@ LLVM-based linter (requires platform headers).
 
 **Note:** Not runnable on embedded targets without Arduino toolchain headers.
 
+### scan-build
+
+Clang static analyzer that runs during compilation.
+
+**Command:**
+```bash
+scan-build --status-bugs pio run
+```
+
+**Result on OSSM:** 0 bugs found ✅
+
+### rats (Rough Auditing Tool for Security)
+
+Security scanner with C/C++ vulnerability database.
+
+**Command:**
+```bash
+rats src/
+```
+
+**Findings on OSSM:**
+
+| Severity | Location | Issue |
+|----------|----------|-------|
+| High | SerialCommandHandler.cpp:79 | Fixed size local buffer |
+| High | crc32.cpp:28 | Fixed size local buffer |
+| Medium | SerialCommandHandler.cpp:58 | `read` in loop |
+
 ## Analysis Comparison
 
 | What external tools catch | What C-Next prevents (compile-time) |
