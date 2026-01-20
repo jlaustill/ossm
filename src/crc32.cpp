@@ -3,85 +3,80 @@
  * A safer C for embedded systems
  */
 
-// crc32.cnx - Memory-safe CRC32 using c-next's bounded strings
-// Ported from ConfigStorage.cpp with safer serialization
 #include "crc32.h"
+
+// crc32.cnx - Memory-safe CRC32 checksum calculation
+// Requires C-Next v0.1.12+ for full C++ mode support
 #include "AppConfig.h"
 
 #include <stdint.h>
 #include <string.h>
 
-// ADR-044: Overflow helper functions
-#include <limits.h>
-
-static inline uint32_t cnx_clamp_add_u32(uint32_t a, uint64_t b) {
-    if (b > UINT32_MAX - a) return UINT32_MAX;
-    return a + (uint32_t)b;
-}
-
 /* Scope: crc32 */
-uint32_t crc32_offset = 0;
-uint8_t crc32_length = 0;
 
-uint32_t crc32_calculateChecksum(const AppConfig* config) {
-    crc32_offset = 0;
-    char buffer[513] = "";
-    crc32_length = 32 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->magic, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    crc32_length = 8 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->version, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    crc32_length = 8 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->j1939SourceAddress, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        crc32_length = 16 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->tempInputs[i].assignedSpn, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 32 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->tempInputs[i].coeffA, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 32 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->tempInputs[i].coeffB, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 32 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->tempInputs[i].coeffC, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 32 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->tempInputs[i].resistorValue, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    }
-    for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        crc32_length = 16 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->pressureInputs[i].assignedSpn, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 16 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->pressureInputs[i].maxPressure, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-        crc32_length = 8 / 8;
-        if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->pressureInputs[i].pressureType, crc32_length); }
-        crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    }
-    crc32_length = 8 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->egtEnabled, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    crc32_length = 8 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->thermocoupleType, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    crc32_length = 8 / 8;
-    if (crc32_offset + crc32_length <= sizeof(buffer)) { memcpy(&buffer[crc32_offset], &config->bme280Enabled, crc32_length); }
-    crc32_offset = cnx_clamp_add_u32(crc32_offset, crc32_length);
-    uint32_t crc = 0xFFFFFFFF;
-    for (uint32_t i = 0; i < crc32_offset; i += 1) {
-        crc = crc ^ buffer[i];
-        for (int32_t j = 0; j < 8; j += 1) {
-            if (crc & 1) {
-                crc = (crc >> 1) ^ 0xEDB88320;
-            } else {
-                crc = crc >> 1;
-            }
+static uint32_t crc32_crcByte(uint32_t* crc, uint8_t* byte) {
+    uint32_t c = (*crc) ^ (*byte);
+    for (int32_t j = 0; j < 8; j += 1) {
+        if (c & 1) {
+            c = (c >> 1) ^ 0xEDB88320;
+        } else {
+            c = c >> 1;
         }
     }
+    return c;
+}
+
+static uint32_t crc32_crcFloat(uint32_t* crc, float value) {
+    char buf[5] = "";
+    memcpy(&buf[0], &value, 4);
+    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[0]);
+    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[1]);
+    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[2]);
+    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[3]);
+    return (*crc);
+}
+
+uint32_t crc32_calculateChecksum(const AppConfig* config) {
+    uint32_t crc = 0xFFFFFFFF;
+    uint8_t _cnx_tmp_0 = config->magic & 0xFF;
+    crc = crc32_crcByte(&crc, &_cnx_tmp_0);
+    uint8_t _cnx_tmp_1 = (config->magic >> 8) & 0xFF;
+    crc = crc32_crcByte(&crc, &_cnx_tmp_1);
+    uint8_t _cnx_tmp_2 = (config->magic >> 16) & 0xFF;
+    crc = crc32_crcByte(&crc, &_cnx_tmp_2);
+    uint8_t _cnx_tmp_3 = (config->magic >> 24) & 0xFF;
+    crc = crc32_crcByte(&crc, &_cnx_tmp_3);
+    uint8_t _cnx_tmp_4 = static_cast<uint8_t>(config->version);
+    crc = crc32_crcByte(&crc, &_cnx_tmp_4);
+    uint8_t _cnx_tmp_5 = static_cast<uint8_t>(config->j1939SourceAddress);
+    crc = crc32_crcByte(&crc, &_cnx_tmp_5);
+    for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
+        uint8_t _cnx_tmp_6 = config->tempInputs[i].assignedSpn & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_6);
+        uint8_t _cnx_tmp_7 = (config->tempInputs[i].assignedSpn >> 8) & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_7);
+        crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffA);
+        crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffB);
+        crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffC);
+        crc = crc32_crcFloat(&crc, config->tempInputs[i].resistorValue);
+    }
+    for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
+        uint8_t _cnx_tmp_8 = config->pressureInputs[i].assignedSpn & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_8);
+        uint8_t _cnx_tmp_9 = (config->pressureInputs[i].assignedSpn >> 8) & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_9);
+        uint8_t _cnx_tmp_10 = config->pressureInputs[i].maxPressure & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_10);
+        uint8_t _cnx_tmp_11 = (config->pressureInputs[i].maxPressure >> 8) & 0xFF;
+        crc = crc32_crcByte(&crc, &_cnx_tmp_11);
+        uint8_t _cnx_tmp_12 = static_cast<uint8_t>(config->pressureInputs[i].pressureType);
+        crc = crc32_crcByte(&crc, &_cnx_tmp_12);
+    }
+    uint8_t _cnx_tmp_13 = static_cast<uint8_t>(config->egtEnabled);
+    crc = crc32_crcByte(&crc, &_cnx_tmp_13);
+    uint8_t _cnx_tmp_14 = static_cast<uint8_t>(config->thermocoupleType);
+    crc = crc32_crcByte(&crc, &_cnx_tmp_14);
+    uint8_t _cnx_tmp_15 = static_cast<uint8_t>(config->bme280Enabled);
+    crc = crc32_crcByte(&crc, &_cnx_tmp_15);
     return ~crc;
 }

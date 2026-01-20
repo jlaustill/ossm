@@ -8,6 +8,8 @@
 #include <FlexCAN_T4.h>
 
 #include "Domain/CommandHandler/CommandHandler.h"
+#include "j1939_encode.h"
+#include "spn_check.h"
 
 // OSSM v0.0.2 uses CAN1 (D22/D23) - single bus for J1939 transmission
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> CanBus;
@@ -15,45 +17,9 @@ FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> CanBus;
 AppData *J1939Bus::appData;
 AppConfig *J1939Bus::config;
 
-// Helper: Check if a temperature SPN is enabled (assigned to any input)
-static bool isTempSpnEnabled(const AppConfig* cfg, uint16_t spn) {
-    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
-        if (cfg->tempInputs[i].assignedSpn == spn) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Helper: Check if a pressure SPN is enabled (assigned to any input)
-static bool isPressureSpnEnabled(const AppConfig* cfg, uint16_t spn) {
-    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
-        if (cfg->pressureInputs[i].assignedSpn == spn) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Helper: Check if any SPN is enabled
-static bool isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
-    // Check temperature SPNs
-    if (isTempSpnEnabled(cfg, spn)) return true;
-
-    // Check pressure SPNs
-    if (isPressureSpnEnabled(cfg, spn)) return true;
-
-    // Check EGT
-    if (spn == 173 && cfg->egtEnabled) return true;
-
-    // Check BME280 SPNs
-    if ((spn == 171 || spn == 108 || spn == 354) && cfg->bme280Enabled) return true;
-
-    // Check hi-res SPNs (auto-enabled with their standard counterparts)
-    if (spn == 1637 && isTempSpnEnabled(cfg, 110)) return true;  // Hi-res coolant
-    if (spn == 1363 && isTempSpnEnabled(cfg, 105)) return true;  // Hi-res intake
-
-    return false;
+// Thin wrapper for C-Next spn_check functions (adapts pointer interface to value)
+static inline bool isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
+    return spn_check_isSpnEnabled(cfg, &spn);
 }
 
 void J1939Bus::sniffDataPrivate(const CAN_message_t &msg) {
@@ -104,18 +70,15 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float intakeTempOffset = engineIntakeManifold1AirTemperatureC + 273.0f;
-    intakeTempOffset /= 0.03125f;
-    float coolantTempOffset = engineCoolantTemperatureC + 273.0f;
-    coolantTempOffset /= 0.03125f;
-
     if (isSpnEnabled(config, 1363)) {
-        msg.buf[0] = lowByte(static_cast<uint16_t>(intakeTempOffset));
-        msg.buf[1] = highByte(static_cast<uint16_t>(intakeTempOffset));
+        uint16_t intakeTemp = j1939_encode_temp16bit(engineIntakeManifold1AirTemperatureC);
+        msg.buf[0] = j1939_encode_lowByte(&intakeTemp);
+        msg.buf[1] = j1939_encode_highByte(&intakeTemp);
     }
     if (isSpnEnabled(config, 1637)) {
-        msg.buf[2] = lowByte(static_cast<uint16_t>(coolantTempOffset));
-        msg.buf[3] = highByte(static_cast<uint16_t>(coolantTempOffset));
+        uint16_t coolantTemp = j1939_encode_temp16bit(engineCoolantTemperatureC);
+        msg.buf[2] = j1939_encode_lowByte(&coolantTemp);
+        msg.buf[3] = j1939_encode_highByte(&coolantTemp);
     }
 
     CanBus.write(msg);
@@ -135,10 +98,10 @@ void J1939Bus::sendPgn65164() {
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 441)) {
-        msg.buf[0] = static_cast<uint8_t>(appData->engineBayTemperatureC + 40);
+        msg.buf[0] = j1939_encode_temp8bit(appData->engineBayTemperatureC);
     }
     if (isSpnEnabled(config, 354)) {
-        msg.buf[6] = static_cast<uint8_t>(appData->humidity / 0.4f);
+        msg.buf[6] = j1939_encode_humidity(appData->humidity);
     }
 
     CanBus.write(msg);
@@ -160,13 +123,13 @@ void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 1131)) {
-        msg.buf[0] = static_cast<uint8_t>(engineIntakeManifold2TemperatureC + 40);
+        msg.buf[0] = j1939_encode_temp8bit(engineIntakeManifold2TemperatureC);
     }
     if (isSpnEnabled(config, 1132)) {
-        msg.buf[1] = static_cast<uint8_t>(engineIntakeManifold3TemperatureC + 40);
+        msg.buf[1] = j1939_encode_temp8bit(engineIntakeManifold3TemperatureC);
     }
     if (isSpnEnabled(config, 1133)) {
-        msg.buf[2] = static_cast<uint8_t>(engineIntakeManifold4TemperatureC + 40);
+        msg.buf[2] = j1939_encode_temp8bit(engineIntakeManifold4TemperatureC);
     }
 
     CanBus.write(msg);
@@ -186,16 +149,15 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float boost1Offset = engineTurbocharger1BoostPressurekPa / 0.125f;
-    float boost2Offset = engineTurbocharger2BoostPressurekPa / 0.125f;
-
     if (isSpnEnabled(config, 1127)) {
-        msg.buf[0] = lowByte(static_cast<uint16_t>(boost1Offset));
-        msg.buf[1] = highByte(static_cast<uint16_t>(boost1Offset));
+        uint16_t boost1 = j1939_encode_boost16bit(engineTurbocharger1BoostPressurekPa);
+        msg.buf[0] = j1939_encode_lowByte(&boost1);
+        msg.buf[1] = j1939_encode_highByte(&boost1);
     }
     if (isSpnEnabled(config, 1128)) {
-        msg.buf[2] = lowByte(static_cast<uint16_t>(boost2Offset));
-        msg.buf[3] = highByte(static_cast<uint16_t>(boost2Offset));
+        uint16_t boost2 = j1939_encode_boost16bit(engineTurbocharger2BoostPressurekPa);
+        msg.buf[2] = j1939_encode_lowByte(&boost2);
+        msg.buf[3] = j1939_encode_highByte(&boost2);
     }
 
     CanBus.write(msg);
@@ -216,18 +178,16 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float oilTempOffset = engineOilTemperatureC + 273.0f;
-    oilTempOffset /= 0.03125f;
-
     if (isSpnEnabled(config, 110)) {
-        msg.buf[0] = static_cast<uint8_t>(engineCoolantTemperatureC + 40);
+        msg.buf[0] = j1939_encode_temp8bit(engineCoolantTemperatureC);
     }
     if (isSpnEnabled(config, 174)) {
-        msg.buf[1] = static_cast<uint8_t>(engineFuelTemperatureC + 40);
+        msg.buf[1] = j1939_encode_temp8bit(engineFuelTemperatureC);
     }
     if (isSpnEnabled(config, 175)) {
-        msg.buf[2] = lowByte(static_cast<uint16_t>(oilTempOffset));
-        msg.buf[3] = highByte(static_cast<uint16_t>(oilTempOffset));
+        uint16_t oilTemp = j1939_encode_temp16bit(engineOilTemperatureC);
+        msg.buf[2] = j1939_encode_lowByte(&oilTemp);
+        msg.buf[3] = j1939_encode_highByte(&oilTemp);
     }
 
     CanBus.write(msg);
@@ -249,13 +209,13 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 94)) {
-        msg.buf[0] = static_cast<uint8_t>(engineFuelDeliveryPressurekPa / 4);
+        msg.buf[0] = j1939_encode_pressure4kPa(engineFuelDeliveryPressurekPa);
     }
     if (isSpnEnabled(config, 100)) {
-        msg.buf[3] = static_cast<uint8_t>(engineOilPressurekPa / 4);
+        msg.buf[3] = j1939_encode_pressure4kPa(engineOilPressurekPa);
     }
     if (isSpnEnabled(config, 109)) {
-        msg.buf[6] = static_cast<uint8_t>(engineCoolantPressurekPa / 2);
+        msg.buf[6] = j1939_encode_pressure2kPa(engineCoolantPressurekPa);
     }
 
     CanBus.write(msg);
@@ -276,18 +236,16 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float ambientAirTempOffset = ambientTemperatureC + 273.0f;
-    ambientAirTempOffset /= 0.03125f;
-
     if (isSpnEnabled(config, 108)) {
-        msg.buf[0] = static_cast<uint8_t>(barometricPressurekPa * 2);
+        msg.buf[0] = j1939_encode_barometric(barometricPressurekPa);
     }
     if (isSpnEnabled(config, 171)) {
-        msg.buf[3] = lowByte(static_cast<uint16_t>(ambientAirTempOffset));
-        msg.buf[4] = highByte(static_cast<uint16_t>(ambientAirTempOffset));
+        uint16_t ambientTemp = j1939_encode_temp16bit(ambientTemperatureC);
+        msg.buf[3] = j1939_encode_lowByte(&ambientTemp);
+        msg.buf[4] = j1939_encode_highByte(&ambientTemp);
     }
     if (isSpnEnabled(config, 172)) {
-        msg.buf[5] = static_cast<uint8_t>(airInletTemperatureC + 40);
+        msg.buf[5] = j1939_encode_temp8bit(airInletTemperatureC);
     }
 
     CanBus.write(msg);
@@ -308,21 +266,19 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
 
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
-    float egtOffset = egtTemperatureC + 273.0f;
-    egtOffset /= 0.03125f;
-
     if (isSpnEnabled(config, 102)) {
-        msg.buf[1] = static_cast<uint8_t>(boostPressurekPa / 2);
+        msg.buf[1] = j1939_encode_pressure2kPa(boostPressurekPa);
     }
     if (isSpnEnabled(config, 105)) {
-        msg.buf[2] = static_cast<uint8_t>(airInletTemperatureC + 40);
+        msg.buf[2] = j1939_encode_temp8bit(airInletTemperatureC);
     }
     if (isSpnEnabled(config, 106)) {
-        msg.buf[3] = static_cast<uint8_t>(airInletPressurekPa / 2);
+        msg.buf[3] = j1939_encode_pressure2kPa(airInletPressurekPa);
     }
     if (isSpnEnabled(config, 173)) {
-        msg.buf[5] = lowByte(static_cast<uint16_t>(egtOffset));
-        msg.buf[6] = highByte(static_cast<uint16_t>(egtOffset));
+        uint16_t egtTemp = j1939_encode_temp16bit(egtTemperatureC);
+        msg.buf[5] = j1939_encode_lowByte(&egtTemp);
+        msg.buf[6] = j1939_encode_highByte(&egtTemp);
     }
 
     CanBus.write(msg);

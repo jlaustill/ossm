@@ -1,9 +1,9 @@
 #include "SensorProcessor.h"
 #include <Arduino.h>
-#include <math.h>
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
+#include "sensor_convert.h"
 
 // Static member initialization
 const AppConfig* SensorProcessor::config = nullptr;
@@ -42,7 +42,7 @@ void SensorProcessor::processTempInputs() {
         float voltage = ADS1115Manager::getVoltage(device, channel);
 
         // Convert to temperature
-        float tempC = convertNtcTemperature(voltage, inputCfg);
+        float tempC = sensor_convert_ntcTemperature(voltage, &inputCfg);
 
         // Update AppData based on assigned SPN
         updateAppDataForSpn(inputCfg.assignedSpn, tempC);
@@ -66,48 +66,10 @@ void SensorProcessor::processPressureInputs() {
         float voltage = ADS1115Manager::getVoltage(device, channel);
 
         // Convert to pressure in kPa
-        float pressurekPa = convertPressure(voltage, inputCfg);
+        float pressurekPa = sensor_convert_pressure(voltage, &inputCfg, getAtmosphericPressurekPa());
 
         // Update AppData based on assigned SPN
         updateAppDataForSpn(inputCfg.assignedSpn, pressurekPa);
-    }
-}
-
-float SensorProcessor::convertPressure(float voltage, const TPressureInputConfig& cfg) {
-    // Voltage range: 0.5V = 0, 4.5V = max
-    if (voltage < PRESSURE_VOLTAGE_MIN) {
-        return 0.0f;
-    }
-    if (voltage > PRESSURE_VOLTAGE_MAX) {
-        voltage = PRESSURE_VOLTAGE_MAX;
-    }
-
-    // Calculate voltage ratio (0.0 to 1.0)
-    float ratio = (voltage - PRESSURE_VOLTAGE_MIN) /
-                  (PRESSURE_VOLTAGE_MAX - PRESSURE_VOLTAGE_MIN);
-
-    // Convert to kPa based on pressure type
-    if (cfg.pressureType == PRESSURE_TYPE_PSIA) {
-        // Bar sensor (absolute)
-        // maxPressure storage: <= 20000 = centibar, > 20000 = 20000 + bar
-        if (cfg.maxPressure > 20000) {
-            // Large bar values: stored as 20000 + bar_value
-            float maxBar = static_cast<float>(cfg.maxPressure - 20000);
-            float bar = ratio * maxBar;
-            return clampPositive(bar * BAR_TO_KPA);
-        } else {
-            // Normal values stored in centibar (0.01 bar per unit)
-            // 1 centibar = 1 kPa, so maxPressure in centibar = max kPa
-            float maxkPa = static_cast<float>(cfg.maxPressure);
-            return clampPositive(ratio * maxkPa);
-        }
-    } else {
-        // PSI sensor (gauge): maxPressure is in PSI
-        float maxPsi = static_cast<float>(cfg.maxPressure);
-        float psi = ratio * maxPsi;
-        float gaugekPa = psi * PSI_TO_KPA;
-        float atmkPa = getAtmosphericPressurekPa();
-        return clampPositive(gaugekPa + atmkPa);
     }
 }
 
@@ -116,29 +78,7 @@ float SensorProcessor::getAtmosphericPressurekPa() {
     if (appData != nullptr && appData->absoluteBarometricpressurekPa > 0.0f) {
         return appData->absoluteBarometricpressurekPa;
     }
-    return STANDARD_ATMOSPHERE_KPA;
-}
-
-float SensorProcessor::convertNtcTemperature(float voltage, const TTempInputConfig& cfg) {
-    // NTC thermistor in voltage divider with known resistor to VREF
-    // V = VREF * R_ntc / (R_known + R_ntc)
-    // R_ntc = R_known * V / (VREF - V)
-
-    if (voltage <= 0.0f || voltage >= VREF) {
-        return -273.15f;  // Error value
-    }
-
-    float r_ntc = cfg.resistorValue * voltage / (VREF - voltage);
-
-    // Steinhart-Hart equation: 1/T = A + B*ln(R) + C*(ln(R))^3
-    float lnR = log(r_ntc);
-    float lnR3 = lnR * lnR * lnR;
-
-    float invT = cfg.coeffA + cfg.coeffB * lnR + cfg.coeffC * lnR3;
-
-    // Convert from Kelvin to Celsius
-    float tempK = 1.0f / invT;
-    return tempK - 273.15f;
+    return sensor_convert_defaultAtmosphericPressure();
 }
 
 void SensorProcessor::updateAppDataForSpn(uint16_t spn, float value) {
@@ -202,10 +142,6 @@ void SensorProcessor::updateAppDataForSpn(uint16_t spn, float value) {
             // Unknown SPN, ignore
             break;
     }
-}
-
-float SensorProcessor::clampPositive(float x) {
-    return x < 0.0f ? 0.0f : x;
 }
 
 void SensorProcessor::processEgt() {
