@@ -67,7 +67,8 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `presets.cnx` | 119 | ✅ Done | NTC and pressure sensor preset lookups |
 | `spn_category.cnx` | 90 | ✅ Done | SPN category lookup (replaces KNOWN_SPNS loops) |
 | `hardware_map.cnx` | 110 | ✅ Done | ADS1115 device/channel mapping for sensors |
-| **Total Converted** | **760** | | |
+| `byte_utils.cnx` | 120 | ✅ Done | Byte manipulation utilities (endian conversion, bit ops) |
+| **Total Converted** | **880** | | |
 
 ## Files Modified
 
@@ -94,7 +95,7 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | RAM1 variables | 22.9KB | 21.9KB | -1KB |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*8 C-Next modules now provide memory-safe implementations of core functionality*
+*9 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 
