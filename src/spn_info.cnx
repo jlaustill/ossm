@@ -1,0 +1,110 @@
+// SPN Information Lookup
+// Provides SPN metadata without string handling
+// String labels are kept in C++ code, this module returns indices
+
+#include <stdint.h>
+
+scope spn_info {
+    // SPN indices (for string table lookup in C++ code)
+    // Temperature SPNs (0-8)
+    public const u8 IDX_OIL_TEMP <- 0;
+    public const u8 IDX_COOLANT_TEMP <- 1;
+    public const u8 IDX_FUEL_TEMP <- 2;
+    public const u8 IDX_BOOST_TEMP <- 3;
+    public const u8 IDX_CAC_INLET_TEMP <- 4;
+    public const u8 IDX_XFER_PIPE_TEMP <- 5;
+    public const u8 IDX_AIR_INLET_TEMP4 <- 6;
+    public const u8 IDX_AIR_INLET_TEMP <- 7;
+    public const u8 IDX_ENG_BAY_TEMP <- 8;
+
+    // Pressure SPNs (9-15)
+    public const u8 IDX_OIL_PRES <- 9;
+    public const u8 IDX_COOLANT_PRES <- 10;
+    public const u8 IDX_FUEL_PRES <- 11;
+    public const u8 IDX_BOOST_PRES <- 12;
+    public const u8 IDX_AIR_INLET_PRES <- 13;
+    public const u8 IDX_CAC_INLET_PRES <- 14;
+    public const u8 IDX_XFER_PIPE_PRES <- 15;
+
+    // Special SPNs (16-19)
+    public const u8 IDX_EGT <- 16;
+    public const u8 IDX_AMBIENT_TEMP <- 17;
+    public const u8 IDX_BARO_PRES <- 18;
+    public const u8 IDX_HUMIDITY <- 19;
+
+    // Unknown/invalid
+    public const u8 IDX_UNKNOWN <- 255;
+
+    // Get index for SPN (for string table lookup)
+    public u8 getIndex(u16 spn) {
+        // Temperature SPNs
+        if (spn = 175) { return this.IDX_OIL_TEMP; }
+        if (spn = 110) { return this.IDX_COOLANT_TEMP; }
+        if (spn = 1637) { return this.IDX_COOLANT_TEMP; }  // Hi-res variant
+        if (spn = 174) { return this.IDX_FUEL_TEMP; }
+        if (spn = 105) { return this.IDX_BOOST_TEMP; }
+        if (spn = 1363) { return this.IDX_BOOST_TEMP; }    // Hi-res variant
+        if (spn = 1131) { return this.IDX_CAC_INLET_TEMP; }
+        if (spn = 1132) { return this.IDX_XFER_PIPE_TEMP; }
+        if (spn = 1133) { return this.IDX_AIR_INLET_TEMP4; }
+        if (spn = 172) { return this.IDX_AIR_INLET_TEMP; }
+        if (spn = 441) { return this.IDX_ENG_BAY_TEMP; }
+
+        // Pressure SPNs
+        if (spn = 100) { return this.IDX_OIL_PRES; }
+        if (spn = 109) { return this.IDX_COOLANT_PRES; }
+        if (spn = 94) { return this.IDX_FUEL_PRES; }
+        if (spn = 102) { return this.IDX_BOOST_PRES; }
+        if (spn = 106) { return this.IDX_AIR_INLET_PRES; }
+        if (spn = 1127) { return this.IDX_CAC_INLET_PRES; }
+        if (spn = 1128) { return this.IDX_XFER_PIPE_PRES; }
+
+        // Special SPNs
+        if (spn = 173) { return this.IDX_EGT; }
+        if (spn = 171) { return this.IDX_AMBIENT_TEMP; }
+        if (spn = 108) { return this.IDX_BARO_PRES; }
+        if (spn = 354) { return this.IDX_HUMIDITY; }
+
+        return this.IDX_UNKNOWN;
+    }
+
+    // Check if SPN is known
+    public bool isKnown(u16 spn) {
+        u8 idx <- this.getIndex(spn);
+        if (idx = this.IDX_UNKNOWN) { return false; }
+        return true;
+    }
+
+    // Get hi-res SPN for a base SPN (returns 0 if none)
+    public u16 getHiResSpn(u16 spn) {
+        if (spn = 110) { return 1637; }  // Coolant temp -> hi-res
+        if (spn = 105) { return 1363; }  // Boost temp -> hi-res
+        return 0;
+    }
+
+    // Check if SPN has a hi-res variant
+    public bool hasHiRes(u16 spn) {
+        u16 hiRes <- this.getHiResSpn(spn);
+        if (hiRes = 0) { return false; }
+        return true;
+    }
+
+    // Check if SPN is a hi-res variant
+    public bool isHiRes(u16 spn) {
+        if (spn = 1637) { return true; }  // Hi-res coolant temp
+        if (spn = 1363) { return true; }  // Hi-res boost temp
+        return false;
+    }
+
+    // Get base SPN for a hi-res SPN (returns same SPN if not hi-res)
+    public u16 getBaseSpn(u16 spn) {
+        if (spn = 1637) { return 110; }   // Hi-res coolant -> base
+        if (spn = 1363) { return 105; }   // Hi-res boost -> base
+        return spn;
+    }
+
+    // Total count of known SPNs (for iteration)
+    public u8 knownCount() {
+        return 20;
+    }
+}

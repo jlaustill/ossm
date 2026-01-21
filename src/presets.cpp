@@ -188,3 +188,11 @@ bool presets_isValidPressurePreset(uint8_t preset) {
     bool isPsi = presets_isPsiPreset(preset);
     return isPsi;
 }
+
+bool presets_isValidTcType(uint8_t tcType) {
+    return tcType <= 7;
+}
+
+uint8_t presets_defaultTcType(void) {
+    return 3;
+}

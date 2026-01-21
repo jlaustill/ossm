@@ -5,36 +5,39 @@
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
 #include "spn_category.h"
+#include "spn_info.h"
 
-// Human-readable names for SPNs - format: "Name(SPN XXX)"
+// SPN labels indexed by spn_info_getIndex() - must match spn_info.cnx IDX_* order
+static const char* const SPN_LABELS[] = {
+    "Oil Temp(SPN 175)",       // IDX_OIL_TEMP = 0
+    "Coolant Temp(SPN 110)",   // IDX_COOLANT_TEMP = 1
+    "Fuel Temp(SPN 174)",      // IDX_FUEL_TEMP = 2
+    "Boost Temp(SPN 105)",     // IDX_BOOST_TEMP = 3
+    "CAC Inlet Temp(SPN 1131)",    // IDX_CAC_INLET_TEMP = 4
+    "Xfer Pipe Temp(SPN 1132)",    // IDX_XFER_PIPE_TEMP = 5
+    "Air Inlet Temp 4(SPN 1133)",  // IDX_AIR_INLET_TEMP4 = 6
+    "Air Inlet Temp(SPN 172)", // IDX_AIR_INLET_TEMP = 7
+    "Eng Bay Temp(SPN 441)",   // IDX_ENG_BAY_TEMP = 8
+    "Oil Pres(SPN 100)",       // IDX_OIL_PRES = 9
+    "Coolant Pres(SPN 109)",   // IDX_COOLANT_PRES = 10
+    "Fuel Pres(SPN 94)",       // IDX_FUEL_PRES = 11
+    "Boost Pres(SPN 102)",     // IDX_BOOST_PRES = 12
+    "Air Inlet Pres(SPN 106)", // IDX_AIR_INLET_PRES = 13
+    "CAC Inlet Pres(SPN 1127)",    // IDX_CAC_INLET_PRES = 14
+    "Xfer Pipe Pres(SPN 1128)",    // IDX_XFER_PIPE_PRES = 15
+    "EGT(SPN 173)",            // IDX_EGT = 16
+    "Ambient Temp(SPN 171)",   // IDX_AMBIENT_TEMP = 17
+    "Baro Pres(SPN 108)",      // IDX_BARO_PRES = 18
+    "Humidity(SPN 354)"        // IDX_HUMIDITY = 19
+};
+
+// Get human-readable label for SPN using C-Next index lookup
 static const char* getSpnLabel(uint16_t spn) {
-    switch (spn) {
-        // Temperature SPNs
-        case 175:  return "Oil Temp(SPN 175)";
-        case 110:  return "Coolant Temp(SPN 110)";
-        case 174:  return "Fuel Temp(SPN 174)";
-        case 105:  return "Boost Temp(SPN 105)";
-        case 1131: return "CAC Inlet Temp(SPN 1131)";
-        case 1132: return "Xfer Pipe Temp(SPN 1132)";
-        case 1133: return "Air Inlet Temp 4(SPN 1133)";
-        case 172:  return "Air Inlet Temp(SPN 172)";
-        case 441:  return "Eng Bay Temp(SPN 441)";
-        // Pressure SPNs
-        case 100:  return "Oil Pres(SPN 100)";
-        case 109:  return "Coolant Pres(SPN 109)";
-        case 94:   return "Fuel Pres(SPN 94)";
-        case 102:  return "Boost Pres(SPN 102)";
-        case 106:  return "Air Inlet Pres(SPN 106)";
-        case 1127: return "CAC Inlet Pres(SPN 1127)";
-        case 1128: return "Xfer Pipe Pres(SPN 1128)";
-        // EGT
-        case 173:  return "EGT(SPN 173)";
-        // BME280
-        case 171:  return "Ambient Temp(SPN 171)";
-        case 108:  return "Baro Pres(SPN 108)";
-        case 354:  return "Humidity(SPN 354)";
-        default:   return "Unknown";
+    uint8_t idx = spn_info_getIndex(spn);
+    if (idx == spn_info_IDX_UNKNOWN) {
+        return "Unknown";
     }
+    return SPN_LABELS[idx];
 }
 
 // Static member initialization

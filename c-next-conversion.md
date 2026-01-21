@@ -67,12 +67,14 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `j1939_decode.cnx` | 118 | ✅ Done | J1939 command message parsing |
 | `sensor_convert.cnx` | 93 | ✅ Done | Sensor physics (Steinhart-Hart, pressure) |
 | `spn_check.cnx` | 83 | ✅ Done | SPN enable checking (MISRA 13.5 compliant) |
-| `presets.cnx` | 119 | ✅ Done | NTC and pressure sensor preset lookups |
+| `presets.cnx` | 142 | ✅ Done | NTC/pressure presets, TC type validation |
 | `spn_category.cnx` | 90 | ✅ Done | SPN category lookup (replaces KNOWN_SPNS loops) |
 | `hardware_map.cnx` | 110 | ✅ Done | ADS1115 device/channel mapping for sensors |
 | `byte_utils.cnx` | 120 | ✅ Done | Byte manipulation utilities (endian conversion, bit ops) |
 | `float_bytes.cnx` | 96 | ✅ Done | IEEE 754 float byte reconstruction (replaces union punning) |
-| **Total Converted** | **976** | | |
+| `spn_info.cnx` | 110 | ✅ Done | SPN metadata lookup (index for string table, hi-res mapping) |
+| `input_valid.cnx` | 107 | ✅ Done | Input validation (temp/pressure/TC/query bounds checking) |
+| **Total Converted** | **1216** | | |
 
 ## Files Modified
 
@@ -82,24 +84,23 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` and `hardware_map_*` |
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
 | `src/Data/ADS1115Manager/ADS1115Manager.cpp` | Uses `hardware_map_*` for device lookup |
-| `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*` and `spn_category_*` |
-| `src/Interface/SerialCommandHandler/SerialCommandHandler.cpp` | Uses `spn_category_*` for SPN category lookup |
+| `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*`, `spn_category_*`, and `input_valid_*` |
+| `src/Interface/SerialCommandHandler/SerialCommandHandler.cpp` | Uses `spn_category_*` and `spn_info_*` for label lookup |
 
 ## Next Candidates
 
-1. `updateAppDataForSpn()` - SPN-to-AppData field mapping
-2. SPN label lookup (human-readable names)
-3. Float byte reconstruction (IEEE 754)
+1. `updateAppDataForSpn()` - SPN-to-AppData field mapping (requires global state refactor)
+2. `printTempValueForSpn()` / `printPressureValueForSpn()` - SPN-to-AppData field reads
 
 ## Firmware Size
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 46.5KB | 47.5KB | +896 bytes |
-| RAM1 variables | 22.9KB | 21.9KB | -1KB |
+| FLASH code | 46.5KB | 48.2KB | +1.7KB |
+| RAM1 variables | 22.9KB | 22.9KB | 0 |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*10 C-Next modules now provide memory-safe implementations of core functionality*
+*12 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 

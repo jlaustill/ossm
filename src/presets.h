@@ -24,6 +24,8 @@ uint16_t presets_psiPresetValue(uint8_t preset);
 bool presets_isBarPreset(uint8_t preset);
 bool presets_isPsiPreset(uint8_t preset);
 bool presets_isValidPressurePreset(uint8_t preset);
+bool presets_isValidTcType(uint8_t tcType);
+uint8_t presets_defaultTcType(void);
 
 #ifdef __cplusplus
 }

@@ -126,4 +126,17 @@ scope presets {
         bool isPsi <- this.isPsiPreset(preset);
         return isPsi;
     }
+
+    // Thermocouple Type Validation
+    // MAX31856 supports types 0-7 (B, E, J, K, N, R, S, T)
+
+    // Check if thermocouple type is valid
+    public bool isValidTcType(u8 tcType) {
+        return tcType <= 7;
+    }
+
+    // Get default thermocouple type (K-type)
+    public u8 defaultTcType() {
+        return 3;
+    }
 }

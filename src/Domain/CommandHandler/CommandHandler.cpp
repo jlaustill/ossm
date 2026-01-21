@@ -5,6 +5,7 @@
 #include "Data/BME280Manager/BME280Manager.h"
 #include "presets.h"
 #include "spn_category.h"
+#include "input_valid.h"
 
 // Static member initialization
 AppConfig* CommandHandler::config = nullptr;
@@ -27,7 +28,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
         // Enable SPN
         switch (category) {
             case SPN_CAT_TEMPERATURE:
-                if (input < 1 || input > TEMP_INPUT_COUNT) {
+                if (!input_valid_isValidTempInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -42,7 +43,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                 break;
 
             case SPN_CAT_PRESSURE:
-                if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+                if (!input_valid_isValidPressureInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -109,7 +110,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
 }
 
 TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPressure) {
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+    if (!input_valid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
@@ -118,7 +119,7 @@ TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPress
 }
 
 TCommandResult CommandHandler::setTcType(uint8_t type) {
-    if (type > 7) {
+    if (!presets_isValidTcType(type)) {
         return TCommandResult::error(ECommandError::INVALID_TC_TYPE);
     }
 
@@ -127,7 +128,7 @@ TCommandResult CommandHandler::setTcType(uint8_t type) {
 }
 
 TCommandResult CommandHandler::applyNtcPreset(uint8_t input, uint8_t preset) {
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
+    if (!input_valid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 
@@ -145,7 +146,7 @@ TCommandResult CommandHandler::applyNtcPreset(uint8_t input, uint8_t preset) {
 }
 
 TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset) {
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+    if (!input_valid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
@@ -169,7 +170,7 @@ TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset
 }
 
 TCommandResult CommandHandler::setNtcParam(uint8_t input, uint8_t param, float value) {
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
+    if (!input_valid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 
