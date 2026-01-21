@@ -57,15 +57,15 @@ float sensor_convert_pressure(float voltage, const TPressureInputConfig* cfg, fl
     float ratio = (clampedVoltage - sensor_convert_PRESSURE_VOLTAGE_MIN) / (sensor_convert_PRESSURE_VOLTAGE_MAX - sensor_convert_PRESSURE_VOLTAGE_MIN);
     if (cfg->pressureType == PRESSURE_TYPE_PSIA) {
         if (cfg->maxPressure > 20000) {
-            float maxBar = (float)(cfg->maxPressure - 20000);
+            float maxBar = static_cast<float>((cfg->maxPressure - 20000));
             float bar = ratio * maxBar;
             return sensor_convert_clampPositive(bar * sensor_convert_BAR_TO_KPA);
         } else {
-            float maxkPa = (float)cfg->maxPressure;
+            float maxkPa = static_cast<float>(cfg->maxPressure);
             return sensor_convert_clampPositive(ratio * maxkPa);
         }
     } else {
-        float maxPsi = (float)cfg->maxPressure;
+        float maxPsi = static_cast<float>(cfg->maxPressure);
         float psi = ratio * maxPsi;
         float gaugekPa = psi * sensor_convert_PSI_TO_KPA;
         return sensor_convert_clampPositive(gaugekPa + atmosphericPressurekPa);

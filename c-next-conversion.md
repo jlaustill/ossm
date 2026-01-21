@@ -2,7 +2,7 @@
 
 C-Next transpiles to standard C/C++, providing memory safety while generating code compatible with existing toolchains.
 
-**C-Next Version:** 0.1.12+
+**C-Next Version:** 0.1.13
 
 ## Static Analysis Results
 
@@ -32,11 +32,11 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 - 2x High: Fixed size local buffers (SerialCommandHandler.cpp:79, crc32.cpp:28)
 - 1x Medium: `read` in loop (SerialCommandHandler.cpp:58)
 
-### AFTER (C-Next conversion)
+### AFTER (C-Next v0.1.13 conversion)
 
 | Tool | Warnings | Errors | Notes |
 |------|----------|--------|-------|
-| cppcheck | 15 | 0 | +10 style in generated code |
+| cppcheck | 5 | 0 | Same as main! |
 | flawfinder | 5 | 0 | Unchanged (non-converted) |
 | MISRA C:2012 | 2 | 0 | Unchanged (non-converted) |
 | rats | 3 | 0 | Unchanged (non-converted) |
@@ -45,8 +45,10 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 **cppcheck breakdown:**
 - 5x `unusedFunction` (unchanged - API surface)
-- 4x `cstyleCast` (generated code - issue #267)
-- 6x `constParameterPointer` (generated code - issue #268)
+
+**v0.1.13 improvements (issues fixed):**
+- ✅ `cstyleCast` - Now generates `static_cast<>()` (#267 FIXED)
+- ✅ `constParameterPointer` - Now uses pass-by-value for small types (#269 FIXED)
 
 **Notes:**
 - New cppcheck warnings are style issues in C-Next generated code, not safety issues
@@ -81,9 +83,11 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 46.5KB | 46.9KB | +384 bytes |
+| FLASH code | 46.5KB | 46.8KB | +256 bytes |
 | RAM1 variables | 22.9KB | 22.9KB | 0 |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
+
+*Note: v0.1.13 reduced code size by ~128 bytes compared to v0.1.12 due to pass-by-value optimization*
 
 ---
 

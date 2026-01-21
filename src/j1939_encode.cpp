@@ -14,48 +14,48 @@
 uint16_t j1939_encode_temp16bit(float temperatureC) {
     float offset = temperatureC + 273.0;
     float scaled = offset / 0.03125;
-    return (uint16_t)scaled;
+    return static_cast<uint16_t>(scaled);
 }
 
 uint8_t j1939_encode_temp8bit(float temperatureC) {
     float offset = temperatureC + 40.0;
-    return (uint8_t)offset;
+    return static_cast<uint8_t>(offset);
 }
 
 uint8_t j1939_encode_humidity(float humidityPercent) {
     float scaled = humidityPercent / 0.4;
-    return (uint8_t)scaled;
+    return static_cast<uint8_t>(scaled);
 }
 
 uint16_t j1939_encode_boost16bit(float pressurekPa) {
     float scaled = pressurekPa / 0.125;
-    return (uint16_t)scaled;
+    return static_cast<uint16_t>(scaled);
 }
 
 uint8_t j1939_encode_pressure4kPa(float pressurekPa) {
     float scaled = pressurekPa / 4.0;
-    return (uint8_t)scaled;
+    return static_cast<uint8_t>(scaled);
 }
 
 uint8_t j1939_encode_pressure2kPa(float pressurekPa) {
     float scaled = pressurekPa / 2.0;
-    return (uint8_t)scaled;
+    return static_cast<uint8_t>(scaled);
 }
 
 uint16_t j1939_encode_pressure16bit(float pressurekPa) {
     float scaled = pressurekPa / 0.5;
-    return (uint16_t)scaled;
+    return static_cast<uint16_t>(scaled);
 }
 
 uint8_t j1939_encode_barometric(float pressurekPa) {
     float scaled = pressurekPa / 0.5;
-    return (uint8_t)scaled;
+    return static_cast<uint8_t>(scaled);
 }
 
-uint8_t j1939_encode_lowByte(uint16_t* value) {
-    return (uint8_t)((*value) & 0xFF);
+uint8_t j1939_encode_lowByte(uint16_t value) {
+    return static_cast<uint8_t>((value & 0xFF));
 }
 
-uint8_t j1939_encode_highByte(uint16_t* value) {
-    return (uint8_t)(((*value) >> 8) & 0xFF);
+uint8_t j1939_encode_highByte(uint16_t value) {
+    return static_cast<uint8_t>(((value >> 8) & 0xFF));
 }

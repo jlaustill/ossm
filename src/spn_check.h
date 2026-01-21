@@ -17,9 +17,9 @@ extern "C" {
 struct AppConfig;
 
 /* Function prototypes */
-bool spn_check_isTempSpnEnabled(const AppConfig* cfg, uint16_t* spn);
-bool spn_check_isPressureSpnEnabled(const AppConfig* cfg, uint16_t* spn);
-bool spn_check_isSpnEnabled(const AppConfig* cfg, uint16_t* spn);
+bool spn_check_isTempSpnEnabled(const AppConfig* cfg, uint16_t spn);
+bool spn_check_isPressureSpnEnabled(const AppConfig* cfg, uint16_t spn);
+bool spn_check_isSpnEnabled(const AppConfig* cfg, uint16_t spn);
 
 #ifdef __cplusplus
 }

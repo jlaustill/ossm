@@ -14,8 +14,8 @@
 
 /* Scope: crc32 */
 
-static uint32_t crc32_crcByte(uint32_t* crc, uint8_t* byte) {
-    uint32_t c = (*crc) ^ (*byte);
+static uint32_t crc32_crcByte(uint32_t crc, uint8_t byte) {
+    uint32_t c = crc ^ byte;
     for (int32_t j = 0; j < 8; j += 1) {
         if (c & 1) {
             c = (c >> 1) ^ 0xEDB88320;
@@ -29,54 +29,38 @@ static uint32_t crc32_crcByte(uint32_t* crc, uint8_t* byte) {
 static uint32_t crc32_crcFloat(uint32_t* crc, float value) {
     char buf[5] = "";
     memcpy(&buf[0], &value, 4);
-    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[0]);
-    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[1]);
-    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[2]);
-    (*crc) = crc32_crcByte(crc, (uint8_t*)&buf[3]);
+    (*crc) = crc32_crcByte((*crc), buf[0]);
+    (*crc) = crc32_crcByte((*crc), buf[1]);
+    (*crc) = crc32_crcByte((*crc), buf[2]);
+    (*crc) = crc32_crcByte((*crc), buf[3]);
     return (*crc);
 }
 
 uint32_t crc32_calculateChecksum(const AppConfig* config) {
     uint32_t crc = 0xFFFFFFFF;
-    uint8_t _cnx_tmp_0 = config->magic & 0xFF;
-    crc = crc32_crcByte(&crc, &_cnx_tmp_0);
-    uint8_t _cnx_tmp_1 = (config->magic >> 8) & 0xFF;
-    crc = crc32_crcByte(&crc, &_cnx_tmp_1);
-    uint8_t _cnx_tmp_2 = (config->magic >> 16) & 0xFF;
-    crc = crc32_crcByte(&crc, &_cnx_tmp_2);
-    uint8_t _cnx_tmp_3 = (config->magic >> 24) & 0xFF;
-    crc = crc32_crcByte(&crc, &_cnx_tmp_3);
-    uint8_t _cnx_tmp_4 = static_cast<uint8_t>(config->version);
-    crc = crc32_crcByte(&crc, &_cnx_tmp_4);
-    uint8_t _cnx_tmp_5 = static_cast<uint8_t>(config->j1939SourceAddress);
-    crc = crc32_crcByte(&crc, &_cnx_tmp_5);
+    crc = crc32_crcByte(crc, config->magic & 0xFF);
+    crc = crc32_crcByte(crc, (config->magic >> 8) & 0xFF);
+    crc = crc32_crcByte(crc, (config->magic >> 16) & 0xFF);
+    crc = crc32_crcByte(crc, (config->magic >> 24) & 0xFF);
+    crc = crc32_crcByte(crc, config->version);
+    crc = crc32_crcByte(crc, config->j1939SourceAddress);
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        uint8_t _cnx_tmp_6 = config->tempInputs[i].assignedSpn & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_6);
-        uint8_t _cnx_tmp_7 = (config->tempInputs[i].assignedSpn >> 8) & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_7);
+        crc = crc32_crcByte(crc, config->tempInputs[i].assignedSpn & 0xFF);
+        crc = crc32_crcByte(crc, (config->tempInputs[i].assignedSpn >> 8) & 0xFF);
         crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffA);
         crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffB);
         crc = crc32_crcFloat(&crc, config->tempInputs[i].coeffC);
         crc = crc32_crcFloat(&crc, config->tempInputs[i].resistorValue);
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        uint8_t _cnx_tmp_8 = config->pressureInputs[i].assignedSpn & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_8);
-        uint8_t _cnx_tmp_9 = (config->pressureInputs[i].assignedSpn >> 8) & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_9);
-        uint8_t _cnx_tmp_10 = config->pressureInputs[i].maxPressure & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_10);
-        uint8_t _cnx_tmp_11 = (config->pressureInputs[i].maxPressure >> 8) & 0xFF;
-        crc = crc32_crcByte(&crc, &_cnx_tmp_11);
-        uint8_t _cnx_tmp_12 = static_cast<uint8_t>(config->pressureInputs[i].pressureType);
-        crc = crc32_crcByte(&crc, &_cnx_tmp_12);
+        crc = crc32_crcByte(crc, config->pressureInputs[i].assignedSpn & 0xFF);
+        crc = crc32_crcByte(crc, (config->pressureInputs[i].assignedSpn >> 8) & 0xFF);
+        crc = crc32_crcByte(crc, config->pressureInputs[i].maxPressure & 0xFF);
+        crc = crc32_crcByte(crc, (config->pressureInputs[i].maxPressure >> 8) & 0xFF);
+        crc = crc32_crcByte(crc, config->pressureInputs[i].pressureType);
     }
-    uint8_t _cnx_tmp_13 = static_cast<uint8_t>(config->egtEnabled);
-    crc = crc32_crcByte(&crc, &_cnx_tmp_13);
-    uint8_t _cnx_tmp_14 = static_cast<uint8_t>(config->thermocoupleType);
-    crc = crc32_crcByte(&crc, &_cnx_tmp_14);
-    uint8_t _cnx_tmp_15 = static_cast<uint8_t>(config->bme280Enabled);
-    crc = crc32_crcByte(&crc, &_cnx_tmp_15);
+    crc = crc32_crcByte(crc, config->egtEnabled);
+    crc = crc32_crcByte(crc, config->thermocoupleType);
+    crc = crc32_crcByte(crc, config->bme280Enabled);
     return ~crc;
 }

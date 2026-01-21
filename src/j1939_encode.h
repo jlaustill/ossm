@@ -22,8 +22,8 @@ uint8_t j1939_encode_pressure4kPa(float pressurekPa);
 uint8_t j1939_encode_pressure2kPa(float pressurekPa);
 uint16_t j1939_encode_pressure16bit(float pressurekPa);
 uint8_t j1939_encode_barometric(float pressurekPa);
-uint8_t j1939_encode_lowByte(uint16_t* value);
-uint8_t j1939_encode_highByte(uint16_t* value);
+uint8_t j1939_encode_lowByte(uint16_t value);
+uint8_t j1939_encode_highByte(uint16_t value);
 
 #ifdef __cplusplus
 }

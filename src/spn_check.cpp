@@ -14,25 +14,25 @@
 
 /* Scope: spn_check */
 
-bool spn_check_isTempSpnEnabled(const AppConfig* cfg, uint16_t* spn) {
+bool spn_check_isTempSpnEnabled(const AppConfig* cfg, uint16_t spn) {
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        if (cfg->tempInputs[i].assignedSpn == (*spn)) {
+        if (cfg->tempInputs[i].assignedSpn == spn) {
             return true;
         }
     }
     return false;
 }
 
-bool spn_check_isPressureSpnEnabled(const AppConfig* cfg, uint16_t* spn) {
+bool spn_check_isPressureSpnEnabled(const AppConfig* cfg, uint16_t spn) {
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        if (cfg->pressureInputs[i].assignedSpn == (*spn)) {
+        if (cfg->pressureInputs[i].assignedSpn == spn) {
             return true;
         }
     }
     return false;
 }
 
-bool spn_check_isSpnEnabled(const AppConfig* cfg, uint16_t* spn) {
+bool spn_check_isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
     bool tempEnabled = spn_check_isTempSpnEnabled(cfg, spn);
     if (tempEnabled) {
         return true;
@@ -41,36 +41,34 @@ bool spn_check_isSpnEnabled(const AppConfig* cfg, uint16_t* spn) {
     if (pressureEnabled) {
         return true;
     }
-    if ((*spn) == 173) {
+    if (spn == 173) {
         if (cfg->egtEnabled) {
             return true;
         }
     }
-    if ((*spn) == 171) {
+    if (spn == 171) {
         if (cfg->bme280Enabled) {
             return true;
         }
     }
-    if ((*spn) == 108) {
+    if (spn == 108) {
         if (cfg->bme280Enabled) {
             return true;
         }
     }
-    if ((*spn) == 354) {
+    if (spn == 354) {
         if (cfg->bme280Enabled) {
             return true;
         }
     }
-    if ((*spn) == 1637) {
-        uint16_t _cnx_tmp_0 = 110;
-        bool coolantEnabled = spn_check_isTempSpnEnabled(cfg, &_cnx_tmp_0);
+    if (spn == 1637) {
+        bool coolantEnabled = spn_check_isTempSpnEnabled(cfg, 110);
         if (coolantEnabled) {
             return true;
         }
     }
-    if ((*spn) == 1363) {
-        uint16_t _cnx_tmp_1 = 105;
-        bool intakeEnabled = spn_check_isTempSpnEnabled(cfg, &_cnx_tmp_1);
+    if (spn == 1363) {
+        bool intakeEnabled = spn_check_isTempSpnEnabled(cfg, 105);
         if (intakeEnabled) {
             return true;
         }
