@@ -74,7 +74,8 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `float_bytes.cnx` | 96 | ✅ Done | IEEE 754 float byte reconstruction (replaces union punning) |
 | `spn_info.cnx` | 110 | ✅ Done | SPN metadata lookup (index for string table, hi-res mapping) |
 | `input_valid.cnx` | 107 | ✅ Done | Input validation (temp/pressure/TC/query bounds checking) |
-| **Total Converted** | **1216** | | |
+| `fault_decode.cnx` | 118 | ✅ Done | MAX31856 fault bit decoding (critical fault detection) |
+| **Total Converted** | **1334** | | |
 
 ## Files Modified
 
@@ -85,7 +86,7 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
 | `src/Data/ADS1115Manager/ADS1115Manager.cpp` | Uses `hardware_map_*` for device lookup |
 | `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*`, `spn_category_*`, and `input_valid_*` |
-| `src/Interface/SerialCommandHandler/SerialCommandHandler.cpp` | Uses `spn_category_*` and `spn_info_*` for label lookup |
+| `src/Interface/SerialCommandHandler/SerialCommandHandler.cpp` | Uses `spn_category_*`, `spn_info_*`, and `fault_decode_*` |
 
 ## Next Candidates
 
@@ -96,11 +97,11 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 46.5KB | 48.2KB | +1.7KB |
+| FLASH code | 46.5KB | 48.4KB | +1.9KB |
 | RAM1 variables | 22.9KB | 22.9KB | 0 |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*12 C-Next modules now provide memory-safe implementations of core functionality*
+*13 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 

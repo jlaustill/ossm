@@ -6,6 +6,7 @@
 #include "Domain/CommandHandler/CommandHandler.h"
 #include "spn_category.h"
 #include "spn_info.h"
+#include "fault_decode.h"
 
 // SPN labels indexed by spn_info_getIndex() - must match spn_info.cnx IDX_* order
 static const char* const SPN_LABELS[] = {
@@ -525,28 +526,44 @@ void SerialCommandHandler::handleReadSensors() {
     }
 }
 
+// Fault labels indexed by fault_decode IDX_* constants
+static const char* const FAULT_LABELS[] = {
+    "OPEN",      // IDX_OPEN = 0
+    "OVUV",      // IDX_OVUV = 1
+    "TC_LOW",    // IDX_TC_LOW = 2
+    "TC_HIGH",   // IDX_TC_HIGH = 3
+    "CJ_LOW",    // IDX_CJ_LOW = 4
+    "CJ_HIGH",   // IDX_CJ_HIGH = 5
+    "TC_RANGE",  // IDX_TC_RANGE = 6
+    "CJ_RANGE"   // IDX_CJ_RANGE = 7
+};
+
 void SerialCommandHandler::reportFaults() {
-    // Check for any active faults
+    // Check for any active faults using C-Next module
     uint8_t egtFault = MAX31856Manager::getFaultStatus();
 
-    // Only show fault section if there are faults
-    if (egtFault != 0) {
+    if (fault_decode_hasFault(egtFault)) {
         Serial.println("--- FAULTS ---");
         Serial.print("EGT: 0x");
         Serial.print(egtFault, HEX);
         Serial.print(" (");
 
-        // Decode fault bits
-        if (egtFault & 0x01) Serial.print("OPEN ");
-        if (egtFault & 0x02) Serial.print("OVUV ");
-        if (egtFault & 0x04) Serial.print("TC_LOW ");
-        if (egtFault & 0x08) Serial.print("TC_HIGH ");
-        if (egtFault & 0x10) Serial.print("CJ_LOW ");
-        if (egtFault & 0x20) Serial.print("CJ_HIGH ");
-        if (egtFault & 0x40) Serial.print("TC_RANGE ");
-        if (egtFault & 0x80) Serial.print("CJ_RANGE ");
+        // Decode fault bits using C-Next module
+        if (fault_decode_isOpen(egtFault)) Serial.print("OPEN ");
+        if (fault_decode_isOvuv(egtFault)) Serial.print("OVUV ");
+        if (fault_decode_isTcLow(egtFault)) Serial.print("TC_LOW ");
+        if (fault_decode_isTcHigh(egtFault)) Serial.print("TC_HIGH ");
+        if (fault_decode_isCjLow(egtFault)) Serial.print("CJ_LOW ");
+        if (fault_decode_isCjHigh(egtFault)) Serial.print("CJ_HIGH ");
+        if (fault_decode_isTcRange(egtFault)) Serial.print("TC_RANGE ");
+        if (fault_decode_isCjRange(egtFault)) Serial.print("CJ_RANGE ");
 
         Serial.println(")");
+
+        // Show critical warning if applicable
+        if (fault_decode_isCritical(egtFault)) {
+            Serial.println("WARNING: Critical fault - check sensor connection");
+        }
     }
 }
 
