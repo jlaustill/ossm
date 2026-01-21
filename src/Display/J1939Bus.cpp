@@ -11,6 +11,7 @@
 #include "j1939_encode.h"
 #include "j1939_decode.h"
 #include "spn_check.h"
+#include "float_bytes.h"
 
 // OSSM v0.0.2 uses CAN1 (D22/D23) - single bus for J1939 transmission
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> CanBus;
@@ -368,17 +369,10 @@ void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
     uint8_t input = j1939_decode_getNtcInput(data);
     uint8_t param = j1939_decode_getNtcParam(data);
 
-    // Reconstruct float from bytes (little endian)
-    union {
-        float f;
-        uint8_t bytes[4];
-    } converter;
-    converter.bytes[0] = data[3];
-    converter.bytes[1] = data[4];
-    converter.bytes[2] = data[5];
-    converter.bytes[3] = data[6];
+    // Reconstruct float from bytes using C-Next module (little endian)
+    float value = float_bytes_fromBytesLE(data[3], data[4], data[5], data[6]);
 
-    TCommandResult result = CommandHandler::setNtcParam(input, param, converter.f);
+    TCommandResult result = CommandHandler::setNtcParam(input, param, value);
     sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
 }
 

@@ -68,13 +68,14 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `spn_category.cnx` | 90 | ✅ Done | SPN category lookup (replaces KNOWN_SPNS loops) |
 | `hardware_map.cnx` | 110 | ✅ Done | ADS1115 device/channel mapping for sensors |
 | `byte_utils.cnx` | 120 | ✅ Done | Byte manipulation utilities (endian conversion, bit ops) |
-| **Total Converted** | **880** | | |
+| `float_bytes.cnx` | 96 | ✅ Done | IEEE 754 float byte reconstruction (replaces union punning) |
+| **Total Converted** | **976** | | |
 
 ## Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*`, `j1939_decode_*`, and `spn_check_*` |
+| `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*`, `j1939_decode_*`, `spn_check_*`, and `float_bytes_*` |
 | `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` and `hardware_map_*` |
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
 | `src/Data/ADS1115Manager/ADS1115Manager.cpp` | Uses `hardware_map_*` for device lookup |
@@ -95,7 +96,7 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | RAM1 variables | 22.9KB | 21.9KB | -1KB |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*9 C-Next modules now provide memory-safe implementations of core functionality*
+*10 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 
