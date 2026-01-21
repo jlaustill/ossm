@@ -63,7 +63,8 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `j1939_encode.cnx` | 71 | ✅ Done | J1939 SPN encoding (temp, pressure, humidity) |
 | `sensor_convert.cnx` | 93 | ✅ Done | Sensor physics (Steinhart-Hart, pressure) |
 | `spn_check.cnx` | 83 | ✅ Done | SPN enable checking (MISRA 13.5 compliant) |
-| **Total Converted** | **323** | | |
+| `presets.cnx` | 119 | ✅ Done | NTC and pressure sensor preset lookups |
+| **Total Converted** | **442** | | |
 
 ## Files Modified
 
@@ -72,6 +73,7 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*` and `spn_check_*` |
 | `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` |
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
+| `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*` for NTC and pressure presets |
 
 ## Next Candidates
 
