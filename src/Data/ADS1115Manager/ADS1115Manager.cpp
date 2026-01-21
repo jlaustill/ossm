@@ -1,5 +1,6 @@
 #include "ADS1115Manager.h"
 #include <Arduino.h>
+#include "hardware_map.h"
 
 // Static member initialization
 Adafruit_ADS1115 ADS1115Manager::ads[ADS_DEVICE_COUNT];
@@ -31,18 +32,18 @@ void ADS1115Manager::initialize(const AppConfig* config) {
     }
 
     // Determine which ADS devices need to be enabled based on input usage
-    // Check temp inputs
+    // Check temp inputs using C-Next hardware_map
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i++) {
         if (config->tempInputs[i].assignedSpn != 0) {
-            uint8_t dev = TEMP_HARDWARE_MAP[i].adsDevice;
+            uint8_t dev = hardware_map_tempDevice(i);
             deviceEnabled[dev] = true;
         }
     }
 
-    // Check pressure inputs
+    // Check pressure inputs using C-Next hardware_map
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i++) {
         if (config->pressureInputs[i].assignedSpn != 0) {
-            uint8_t dev = PRESSURE_HARDWARE_MAP[i].adsDevice;
+            uint8_t dev = hardware_map_pressureDevice(i);
             deviceEnabled[dev] = true;
         }
     }

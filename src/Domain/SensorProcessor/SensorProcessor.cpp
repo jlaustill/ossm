@@ -4,6 +4,7 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "sensor_convert.h"
+#include "hardware_map.h"
 
 // Static member initialization
 const AppConfig* SensorProcessor::config = nullptr;
@@ -34,9 +35,9 @@ void SensorProcessor::processTempInputs() {
             continue;
         }
 
-        // Get hardware mapping for this input
-        uint8_t device = TEMP_HARDWARE_MAP[i].adsDevice;
-        uint8_t channel = TEMP_HARDWARE_MAP[i].adsChannel;
+        // Get hardware mapping using C-Next module
+        uint8_t device = hardware_map_tempDevice(i);
+        uint8_t channel = hardware_map_tempChannel(i);
 
         // Get voltage from ADS1115
         float voltage = ADS1115Manager::getVoltage(device, channel);
@@ -58,9 +59,9 @@ void SensorProcessor::processPressureInputs() {
             continue;
         }
 
-        // Get hardware mapping for this input
-        uint8_t device = PRESSURE_HARDWARE_MAP[i].adsDevice;
-        uint8_t channel = PRESSURE_HARDWARE_MAP[i].adsChannel;
+        // Get hardware mapping using C-Next module
+        uint8_t device = hardware_map_pressureDevice(i);
+        uint8_t channel = hardware_map_pressureChannel(i);
 
         // Get voltage from ADS1115
         float voltage = ADS1115Manager::getVoltage(device, channel);

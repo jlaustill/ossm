@@ -66,15 +66,17 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 | `spn_check.cnx` | 83 | ✅ Done | SPN enable checking (MISRA 13.5 compliant) |
 | `presets.cnx` | 119 | ✅ Done | NTC and pressure sensor preset lookups |
 | `spn_category.cnx` | 90 | ✅ Done | SPN category lookup (replaces KNOWN_SPNS loops) |
-| **Total Converted** | **650** | | |
+| `hardware_map.cnx` | 110 | ✅ Done | ADS1115 device/channel mapping for sensors |
+| **Total Converted** | **760** | | |
 
 ## Files Modified
 
 | File | Changes |
 |------|---------|
 | `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*`, `j1939_decode_*`, and `spn_check_*` |
-| `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` |
+| `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` and `hardware_map_*` |
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
+| `src/Data/ADS1115Manager/ADS1115Manager.cpp` | Uses `hardware_map_*` for device lookup |
 | `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*` and `spn_category_*` |
 | `src/Interface/SerialCommandHandler/SerialCommandHandler.cpp` | Uses `spn_category_*` for SPN category lookup |
 
@@ -88,11 +90,11 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 46.5KB | 47.3KB | +768 bytes |
+| FLASH code | 46.5KB | 47.5KB | +896 bytes |
 | RAM1 variables | 22.9KB | 21.9KB | -1KB |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*7 C-Next modules now provide memory-safe implementations of core functionality*
+*8 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 
