@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "AppConfig.h"
-#include "AppData.h"
+#include "app_data.h"
 
 // Result struct for command operations
 struct TCommandResult {

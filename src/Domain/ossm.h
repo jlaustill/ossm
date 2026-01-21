@@ -2,7 +2,7 @@
 #define OSSM_H
 
 #include <Arduino.h>
-#include <AppData.h>
+#include "app_data.h"
 #include <AppConfig.h>
 
 class ossm {
