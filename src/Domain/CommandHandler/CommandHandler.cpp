@@ -4,6 +4,7 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "presets.h"
+#include "spn_category.h"
 
 // Static member initialization
 AppConfig* CommandHandler::config = nullptr;
@@ -15,14 +16,8 @@ void CommandHandler::initialize(AppConfig* cfg, AppData* data) {
 }
 
 TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t input) {
-    // Find SPN category
-    ESpnCategory category = SPN_CAT_UNKNOWN;
-    for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
-        if (KNOWN_SPNS[i].spn == spn) {
-            category = KNOWN_SPNS[i].category;
-            break;
-        }
-    }
+    // Get SPN category using C-Next module
+    ESpnCategory category = static_cast<ESpnCategory>(spn_category_getCategory(spn));
 
     if (category == SPN_CAT_UNKNOWN) {
         return TCommandResult::error(ECommandError::UNKNOWN_SPN);

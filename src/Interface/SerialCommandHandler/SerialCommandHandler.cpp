@@ -4,6 +4,7 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
+#include "spn_category.h"
 
 // Human-readable names for SPNs - format: "Name(SPN XXX)"
 static const char* getSpnLabel(uint16_t spn) {
@@ -160,14 +161,8 @@ void SerialCommandHandler::handleEnableSpn() {
         return;
     }
 
-    // Find category for success message
-    ESpnCategory category = SPN_CAT_UNKNOWN;
-    for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
-        if (KNOWN_SPNS[i].spn == spn) {
-            category = KNOWN_SPNS[i].category;
-            break;
-        }
-    }
+    // Get category for success message using C-Next module
+    ESpnCategory category = static_cast<ESpnCategory>(spn_category_getCategory(spn));
 
     if (enable) {
         switch (category) {
