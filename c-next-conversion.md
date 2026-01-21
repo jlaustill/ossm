@@ -61,17 +61,18 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 |--------|-------|--------|---------|
 | `crc32.cnx` | 76 | ✅ Done | CRC32 checksum calculation |
 | `j1939_encode.cnx` | 71 | ✅ Done | J1939 SPN encoding (temp, pressure, humidity) |
+| `j1939_decode.cnx` | 118 | ✅ Done | J1939 command message parsing |
 | `sensor_convert.cnx` | 93 | ✅ Done | Sensor physics (Steinhart-Hart, pressure) |
 | `spn_check.cnx` | 83 | ✅ Done | SPN enable checking (MISRA 13.5 compliant) |
 | `presets.cnx` | 119 | ✅ Done | NTC and pressure sensor preset lookups |
 | `spn_category.cnx` | 90 | ✅ Done | SPN category lookup (replaces KNOWN_SPNS loops) |
-| **Total Converted** | **532** | | |
+| **Total Converted** | **650** | | |
 
 ## Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*` and `spn_check_*` |
+| `src/Display/J1939Bus.cpp` | Uses `j1939_encode_*`, `j1939_decode_*`, and `spn_check_*` |
 | `src/Domain/SensorProcessor/SensorProcessor.cpp` | Uses `sensor_convert_*` |
 | `src/Data/ConfigStorage/ConfigStorage.cpp` | Uses `crc32_calculateChecksum` |
 | `src/Domain/CommandHandler/CommandHandler.cpp` | Uses `presets_*` and `spn_category_*` |
@@ -80,19 +81,18 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 ## Next Candidates
 
 1. `updateAppDataForSpn()` - SPN-to-AppData field mapping
-2. J1939 message decoding
-3. SPN label lookup (human-readable names)
+2. SPN label lookup (human-readable names)
+3. Float byte reconstruction (IEEE 754)
 
 ## Firmware Size
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
-| FLASH code | 46.5KB | 47.1KB | +576 bytes |
+| FLASH code | 46.5KB | 47.3KB | +768 bytes |
 | RAM1 variables | 22.9KB | 21.9KB | -1KB |
 | RAM2 variables | 12.4KB | 12.4KB | 0 |
 
-*Note: v0.1.13 reduced code size by ~128 bytes compared to v0.1.12 due to pass-by-value optimization*
-*RAM1 reduced due to removal of inline KNOWN_SPNS lookup loops*
+*7 C-Next modules now provide memory-safe implementations of core functionality*
 
 ---
 

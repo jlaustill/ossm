@@ -9,6 +9,7 @@
 
 #include "Domain/CommandHandler/CommandHandler.h"
 #include "j1939_encode.h"
+#include "j1939_decode.h"
 #include "spn_check.h"
 
 // OSSM v0.0.2 uses CAN1 (D22/D23) - single bus for J1939 transmission
@@ -353,19 +354,19 @@ void J1939Bus::processConfigCommand(const uint8_t *data, uint8_t len) {
 }
 
 void J1939Bus::handleJ1939EnableSpn(const uint8_t *data) {
-    // Format: [1, spn_high, spn_low, enable, input?]
-    uint16_t spn = (static_cast<uint16_t>(data[1]) << 8) | data[2];
-    bool enable = (data[3] != 0);
-    uint8_t input = data[4];
+    // Use C-Next decoder for byte parsing
+    uint16_t spn = j1939_decode_getSpn(data);
+    bool enable = j1939_decode_getEnable(data);
+    uint8_t input = j1939_decode_getInput(data);
 
     TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
     sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
-    // Format: [2, input, param, b0, b1, b2, b3] - IEEE 754 float
-    uint8_t input = data[1];
-    uint8_t param = data[2];
+    // Use C-Next decoder for byte parsing
+    uint8_t input = j1939_decode_getNtcInput(data);
+    uint8_t param = j1939_decode_getNtcParam(data);
 
     // Reconstruct float from bytes (little endian)
     union {
@@ -382,26 +383,26 @@ void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
 }
 
 void J1939Bus::handleJ1939SetPressureRange(const uint8_t *data) {
-    // Format: [3, input, psi_high, psi_low]
-    uint8_t input = data[1];
-    uint16_t maxPsi = (static_cast<uint16_t>(data[2]) << 8) | data[3];
+    // Use C-Next decoder for byte parsing
+    uint8_t input = j1939_decode_getPressureInput(data);
+    uint16_t maxPsi = j1939_decode_getMaxPressure(data);
 
     TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
     sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939SetTcType(const uint8_t *data) {
-    // Format: [4, type]
-    uint8_t type = data[1];
+    // Use C-Next decoder for byte parsing
+    uint8_t type = j1939_decode_getTcType(data);
 
     TCommandResult result = CommandHandler::setTcType(type);
     sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939Query(const uint8_t *data) {
-    // Format: [5, query_type, sub_query?]
-    uint8_t queryType = data[1];
-    uint8_t subQuery = data[2];
+    // Use C-Next decoder for byte parsing
+    uint8_t queryType = j1939_decode_getQueryType(data);
+    uint8_t subQuery = j1939_decode_getSubQuery(data);
 
     TCommandResult result;
     switch (queryType) {
@@ -435,18 +436,18 @@ void J1939Bus::handleJ1939Reset() {
 }
 
 void J1939Bus::handleJ1939NtcPreset(const uint8_t *data) {
-    // Format: [8, input, preset]
-    uint8_t input = data[1];
-    uint8_t preset = data[2];
+    // Use C-Next decoder for byte parsing
+    uint8_t input = j1939_decode_getPresetInput(data);
+    uint8_t preset = j1939_decode_getPresetId(data);
 
     TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
     sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
 }
 
 void J1939Bus::handleJ1939PressurePreset(const uint8_t *data) {
-    // Format: [9, input, preset]
-    uint8_t input = data[1];
-    uint8_t preset = data[2];
+    // Use C-Next decoder for byte parsing
+    uint8_t input = j1939_decode_getPresetInput(data);
+    uint8_t preset = j1939_decode_getPresetId(data);
 
     TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
     sendConfigResponse(9, result.errorCode, result.data, result.dataLen);
