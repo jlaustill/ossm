@@ -15,65 +15,53 @@
 /* Scope: presets */
 
 float presets_ntcCoeffA(uint8_t preset) {
-    float presets_AEM_COEFF_A = 1.485995686e-03;
-    float presets_BOSCH_COEFF_A = 1.40e-03;
-    float presets_GM_COEFF_A = 1.29e-03;
     if (preset == 0) {
-        return presets_AEM_COEFF_A;
+        return 1.485995686e-03;
     }
     if (preset == 1) {
-        return presets_BOSCH_COEFF_A;
+        return 1.40e-03;
     }
     if (preset == 2) {
-        return presets_GM_COEFF_A;
+        return 1.29e-03;
     }
     return 0.0;
 }
 
 float presets_ntcCoeffB(uint8_t preset) {
-    float presets_AEM_COEFF_B = 2.279654266e-04;
-    float presets_BOSCH_COEFF_B = 2.37e-04;
-    float presets_GM_COEFF_B = 2.35e-04;
     if (preset == 0) {
-        return presets_AEM_COEFF_B;
+        return 2.279654266e-04;
     }
     if (preset == 1) {
-        return presets_BOSCH_COEFF_B;
+        return 2.37e-04;
     }
     if (preset == 2) {
-        return presets_GM_COEFF_B;
+        return 2.35e-04;
     }
     return 0.0;
 }
 
 float presets_ntcCoeffC(uint8_t preset) {
-    float presets_AEM_COEFF_C = 1.197578033e-07;
-    float presets_BOSCH_COEFF_C = 9.90e-08;
-    float presets_GM_COEFF_C = 9.00e-08;
     if (preset == 0) {
-        return presets_AEM_COEFF_C;
+        return 1.197578033e-07;
     }
     if (preset == 1) {
-        return presets_BOSCH_COEFF_C;
+        return 9.90e-08;
     }
     if (preset == 2) {
-        return presets_GM_COEFF_C;
+        return 9.00e-08;
     }
     return 0.0;
 }
 
 float presets_ntcResistor(uint8_t preset) {
-    float presets_AEM_RESISTOR = 10050.0;
-    float presets_BOSCH_RESISTOR = 2490.0;
-    float presets_GM_RESISTOR = 3000.0;
     if (preset == 0) {
-        return presets_AEM_RESISTOR;
+        return 10050.0;
     }
     if (preset == 1) {
-        return presets_BOSCH_RESISTOR;
+        return 2490.0;
     }
     if (preset == 2) {
-        return presets_GM_RESISTOR;
+        return 3000.0;
     }
     return 0.0;
 }

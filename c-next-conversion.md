@@ -2,7 +2,7 @@
 
 C-Next transpiles to standard C/C++, providing memory safety while generating code compatible with existing toolchains.
 
-**C-Next Version:** 0.1.13
+**C-Next Version:** 0.1.14
 
 ## Static Analysis Results
 
@@ -46,9 +46,12 @@ C-Next transpiles to standard C/C++, providing memory safety while generating co
 **cppcheck breakdown:**
 - 5x `unusedFunction` (unchanged - API surface)
 
-**v0.1.13 improvements (issues fixed):**
-- ✅ `cstyleCast` - Now generates `static_cast<>()` (#267 FIXED)
-- ✅ `constParameterPointer` - Now uses pass-by-value for small types (#269 FIXED)
+**v0.1.14 improvements (issues fixed):**
+- ✅ `cstyleCast` - Now generates `static_cast<>()` (#267 FIXED in v0.1.13)
+- ✅ `constParameterPointer` - Now uses pass-by-value for small types (#269 FIXED in v0.1.13)
+- ✅ Header/impl signature mismatch (#280 FIXED in v0.1.14)
+- ✅ const on modified pointer params (#281 FIXED in v0.1.14)
+- ⚠️ extern const mismatch - Still requires manual fix (extern declarations missing const)
 
 **Notes:**
 - New cppcheck warnings are style issues in C-Next generated code, not safety issues
