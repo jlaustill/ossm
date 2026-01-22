@@ -4,6 +4,7 @@
 #include <AppData.cnx>
 #include "AppConfig.h"
 #include "FlexCAN_T4.h"
+#include <J1939Message.h>
 #include "Domain/CommandHandler/CommandHandler.h"
 #include <J1939Encode.cnx>
 #include <J1939Decode.cnx>

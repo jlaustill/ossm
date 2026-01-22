@@ -2,12 +2,12 @@
 // Delegates to ossm class for setup and loop
 
 #include <Arduino.h>
-#include "Domain/ossm.h"
+#include <Domain/ossm.cnx>
 
 void setup() {
-    ossm.setup();
+    Ossm.setup();
 }
 
 void loop() {
-    ossm.loop();
+    Ossm.loop();
 }
