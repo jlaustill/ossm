@@ -4,11 +4,11 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
-#include "spn_category.h"
-#include "spn_info.h"
-#include "fault_decode.h"
+#include "Display/SpnCategory.h"
+#include "Display/SpnInfo.h"
+#include "Display/FaultDecode.h"
 
-// SPN labels indexed by spn_info_getIndex() - must match spn_info.cnx IDX_* order
+// SPN labels indexed by SpnInfo_getIndex() - must match spn_info.cnx IDX_* order
 static const char* const SPN_LABELS[] = {
     "Oil Temp(SPN 175)",       // IDX_OIL_TEMP = 0
     "Coolant Temp(SPN 110)",   // IDX_COOLANT_TEMP = 1
@@ -34,8 +34,8 @@ static const char* const SPN_LABELS[] = {
 
 // Get human-readable label for SPN using C-Next index lookup
 static const char* getSpnLabel(uint16_t spn) {
-    uint8_t idx = spn_info_getIndex(spn);
-    if (idx == spn_info_IDX_UNKNOWN) {
+    uint8_t idx = SpnInfo_getIndex(spn);
+    if (idx == SpnInfo_IDX_UNKNOWN) {
         return "Unknown";
     }
     return SPN_LABELS[idx];
@@ -166,7 +166,7 @@ void SerialCommandHandler::handleEnableSpn() {
     }
 
     // Get category for success message using C-Next module
-    ESpnCategory category = static_cast<ESpnCategory>(spn_category_getCategory(spn));
+    ESpnCategory category = static_cast<ESpnCategory>(SpnCategory_getCategory(spn));
 
     if (enable) {
         switch (category) {
@@ -542,26 +542,26 @@ void SerialCommandHandler::reportFaults() {
     // Check for any active faults using C-Next module
     uint8_t egtFault = MAX31856Manager::getFaultStatus();
 
-    if (fault_decode_hasFault(egtFault)) {
+    if (FaultDecode_hasFault(egtFault)) {
         Serial.println("--- FAULTS ---");
         Serial.print("EGT: 0x");
         Serial.print(egtFault, HEX);
         Serial.print(" (");
 
         // Decode fault bits using C-Next module
-        if (fault_decode_isOpen(egtFault)) Serial.print("OPEN ");
-        if (fault_decode_isOvuv(egtFault)) Serial.print("OVUV ");
-        if (fault_decode_isTcLow(egtFault)) Serial.print("TC_LOW ");
-        if (fault_decode_isTcHigh(egtFault)) Serial.print("TC_HIGH ");
-        if (fault_decode_isCjLow(egtFault)) Serial.print("CJ_LOW ");
-        if (fault_decode_isCjHigh(egtFault)) Serial.print("CJ_HIGH ");
-        if (fault_decode_isTcRange(egtFault)) Serial.print("TC_RANGE ");
-        if (fault_decode_isCjRange(egtFault)) Serial.print("CJ_RANGE ");
+        if (FaultDecode_isOpen(egtFault)) Serial.print("OPEN ");
+        if (FaultDecode_isOvuv(egtFault)) Serial.print("OVUV ");
+        if (FaultDecode_isTcLow(egtFault)) Serial.print("TC_LOW ");
+        if (FaultDecode_isTcHigh(egtFault)) Serial.print("TC_HIGH ");
+        if (FaultDecode_isCjLow(egtFault)) Serial.print("CJ_LOW ");
+        if (FaultDecode_isCjHigh(egtFault)) Serial.print("CJ_HIGH ");
+        if (FaultDecode_isTcRange(egtFault)) Serial.print("TC_RANGE ");
+        if (FaultDecode_isCjRange(egtFault)) Serial.print("CJ_RANGE ");
 
         Serial.println(")");
 
         // Show critical warning if applicable
-        if (fault_decode_isCritical(egtFault)) {
+        if (FaultDecode_isCritical(egtFault)) {
             Serial.println("WARNING: Critical fault - check sensor connection");
         }
     }

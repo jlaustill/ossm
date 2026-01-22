@@ -1,6 +1,6 @@
 #include "ConfigStorage.h"
 #include <EEPROM.h>
-#include "crc32.h"  // cnext-generated memory-safe checksum
+#include "Display/Crc32.h"  // cnext-generated memory-safe checksum
 
 bool ConfigStorage::loadConfig(AppConfig* config) {
     EEPROM.get(EEPROM_CONFIG_ADDRESS, *config);
@@ -17,7 +17,7 @@ bool ConfigStorage::loadConfig(AppConfig* config) {
 bool ConfigStorage::saveConfig(const AppConfig* config) {
     // Create a copy with updated checksum
     AppConfig configToSave = *config;
-    configToSave.checksum = crc32_calculateChecksum(&configToSave);
+    configToSave.checksum = Crc32_calculateChecksum(&configToSave);
 
     EEPROM.put(EEPROM_CONFIG_ADDRESS, configToSave);
     return true;
@@ -35,7 +35,7 @@ bool ConfigStorage::validateConfig(const AppConfig* config) {
     }
 
     // Verify checksum
-    uint32_t calculatedChecksum = crc32_calculateChecksum(config);
+    uint32_t calculatedChecksum = Crc32_calculateChecksum(config);
     if (calculatedChecksum != config->checksum) {
         return false;
     }
@@ -79,6 +79,6 @@ void ConfigStorage::loadDefaults(AppConfig* config) {
     config->bme280Enabled = false;
 
     // Calculate and set checksum
-    config->checksum = crc32_calculateChecksum(config);
+    config->checksum = Crc32_calculateChecksum(config);
 }
 

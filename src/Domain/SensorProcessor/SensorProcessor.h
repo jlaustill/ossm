@@ -2,7 +2,7 @@
 #define OSSM_SENSORPROCESSOR_H
 
 #include "AppConfig.h"
-#include "app_data.h"
+#include "Display/AppData.h"
 
 class SensorProcessor {
    public:

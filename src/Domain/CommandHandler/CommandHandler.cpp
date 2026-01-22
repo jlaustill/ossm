@@ -3,9 +3,9 @@
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
-#include "presets.h"
-#include "spn_category.h"
-#include "input_valid.h"
+#include "Display/Presets.h"
+#include "Display/SpnCategory.h"
+#include "Display/InputValid.h"
 
 // Static member initialization
 AppConfig* CommandHandler::config = nullptr;
@@ -18,7 +18,7 @@ void CommandHandler::initialize(AppConfig* cfg, AppData* data) {
 
 TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t input) {
     // Get SPN category using C-Next module
-    ESpnCategory category = static_cast<ESpnCategory>(spn_category_getCategory(spn));
+    ESpnCategory category = static_cast<ESpnCategory>(SpnCategory_getCategory(spn));
 
     if (category == SPN_CAT_UNKNOWN) {
         return TCommandResult::error(ECommandError::UNKNOWN_SPN);
@@ -28,7 +28,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
         // Enable SPN
         switch (category) {
             case SPN_CAT_TEMPERATURE:
-                if (!input_valid_isValidTempInput(input)) {
+                if (!InputValid_isValidTempInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -43,7 +43,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                 break;
 
             case SPN_CAT_PRESSURE:
-                if (!input_valid_isValidPressureInput(input)) {
+                if (!InputValid_isValidPressureInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -110,7 +110,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
 }
 
 TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPressure) {
-    if (!input_valid_isValidPressureInput(input)) {
+    if (!InputValid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
@@ -119,7 +119,7 @@ TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPress
 }
 
 TCommandResult CommandHandler::setTcType(uint8_t type) {
-    if (!presets_isValidTcType(type)) {
+    if (!Presets_isValidTcType(type)) {
         return TCommandResult::error(ECommandError::INVALID_TC_TYPE);
     }
 
@@ -128,41 +128,41 @@ TCommandResult CommandHandler::setTcType(uint8_t type) {
 }
 
 TCommandResult CommandHandler::applyNtcPreset(uint8_t input, uint8_t preset) {
-    if (!input_valid_isValidTempInput(input)) {
+    if (!InputValid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 
-    if (!presets_isValidNtcPreset(preset)) {
+    if (!Presets_isValidNtcPreset(preset)) {
         return TCommandResult::error(ECommandError::INVALID_PRESET);
     }
 
     TTempInputConfig& cfg = config->tempInputs[input - 1];
-    cfg.coeffA = presets_ntcCoeffA(preset);
-    cfg.coeffB = presets_ntcCoeffB(preset);
-    cfg.coeffC = presets_ntcCoeffC(preset);
-    cfg.resistorValue = presets_ntcResistor(preset);
+    cfg.coeffA = Presets_ntcCoeffA(preset);
+    cfg.coeffB = Presets_ntcCoeffB(preset);
+    cfg.coeffC = Presets_ntcCoeffC(preset);
+    cfg.resistorValue = Presets_ntcResistor(preset);
 
     return TCommandResult::ok();
 }
 
 TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset) {
-    if (!input_valid_isValidPressureInput(input)) {
+    if (!InputValid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
-    if (!presets_isValidPressurePreset(preset)) {
+    if (!Presets_isValidPressurePreset(preset)) {
         return TCommandResult::error(ECommandError::INVALID_PRESET);
     }
 
     TPressureInputConfig& cfg = config->pressureInputs[input - 1];
 
-    if (presets_isBarPreset(preset)) {
+    if (Presets_isBarPreset(preset)) {
         // Bar presets (PSIA) - value is centibar
-        cfg.maxPressure = presets_barPresetValue(preset);
+        cfg.maxPressure = Presets_barPresetValue(preset);
         cfg.pressureType = PRESSURE_TYPE_PSIA;
     } else {
         // PSI presets (PSIG)
-        cfg.maxPressure = presets_psiPresetValue(preset);
+        cfg.maxPressure = Presets_psiPresetValue(preset);
         cfg.pressureType = PRESSURE_TYPE_PSIG;
     }
 
@@ -170,7 +170,7 @@ TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset
 }
 
 TCommandResult CommandHandler::setNtcParam(uint8_t input, uint8_t param, float value) {
-    if (!input_valid_isValidTempInput(input)) {
+    if (!InputValid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 

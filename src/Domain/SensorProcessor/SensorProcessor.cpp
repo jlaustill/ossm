@@ -3,8 +3,8 @@
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
-#include "sensor_convert.h"
-#include "hardware_map.h"
+#include "Display/SensorConvert.h"
+#include "Display/HardwareMap.h"
 
 // Static member initialization
 const AppConfig* SensorProcessor::config = nullptr;
@@ -36,14 +36,14 @@ void SensorProcessor::processTempInputs() {
         }
 
         // Get hardware mapping using C-Next module
-        uint8_t device = hardware_map_tempDevice(i);
-        uint8_t channel = hardware_map_tempChannel(i);
+        uint8_t device = HardwareMap_tempDevice(i);
+        uint8_t channel = HardwareMap_tempChannel(i);
 
         // Get voltage from ADS1115
         float voltage = ADS1115Manager::getVoltage(device, channel);
 
         // Convert to temperature
-        float tempC = sensor_convert_ntcTemperature(voltage, &inputCfg);
+        float tempC = SensorConvert_ntcTemperature(voltage, &inputCfg);
 
         // Update AppData based on assigned SPN
         updateAppDataForSpn(inputCfg.assignedSpn, tempC);
@@ -60,14 +60,14 @@ void SensorProcessor::processPressureInputs() {
         }
 
         // Get hardware mapping using C-Next module
-        uint8_t device = hardware_map_pressureDevice(i);
-        uint8_t channel = hardware_map_pressureChannel(i);
+        uint8_t device = HardwareMap_pressureDevice(i);
+        uint8_t channel = HardwareMap_pressureChannel(i);
 
         // Get voltage from ADS1115
         float voltage = ADS1115Manager::getVoltage(device, channel);
 
         // Convert to pressure in kPa
-        float pressurekPa = sensor_convert_pressure(voltage, &inputCfg, getAtmosphericPressurekPa());
+        float pressurekPa = SensorConvert_pressure(voltage, &inputCfg, getAtmosphericPressurekPa());
 
         // Update AppData based on assigned SPN
         updateAppDataForSpn(inputCfg.assignedSpn, pressurekPa);
@@ -79,7 +79,7 @@ float SensorProcessor::getAtmosphericPressurekPa() {
     if (appData != nullptr && appData->absoluteBarometricpressurekPa > 0.0f) {
         return appData->absoluteBarometricpressurekPa;
     }
-    return sensor_convert_defaultAtmosphericPressure();
+    return SensorConvert_defaultAtmosphericPressure();
 }
 
 void SensorProcessor::updateAppDataForSpn(uint16_t spn, float value) {

@@ -3,15 +3,15 @@
 
 #include "J1939Bus.h"
 
-#include "app_data.h"
+#include "AppData.h"
 #include <AppConfig.h>
 #include <FlexCAN_T4.h>
 
 #include "Domain/CommandHandler/CommandHandler.h"
-#include "j1939_encode.h"
-#include "j1939_decode.h"
-#include "spn_check.h"
-#include "float_bytes.h"
+#include "J1939Encode.h"
+#include "J1939Decode.h"
+#include "SpnCheck.h"
+#include "FloatBytes.h"
 
 // OSSM v0.0.2 uses CAN1 (D22/D23) - single bus for J1939 transmission
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> CanBus;
@@ -21,7 +21,7 @@ AppConfig *J1939Bus::config;
 
 // Direct call to C-Next spn_check (v0.1.13+ uses pass-by-value for small types)
 static inline bool isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
-    return spn_check_isSpnEnabled(cfg, spn);
+    return SpnCheck_isSpnEnabled(cfg, spn);
 }
 
 void J1939Bus::sniffDataPrivate(const CAN_message_t &msg) {
@@ -73,14 +73,14 @@ void J1939Bus::sendPgn65129(float engineIntakeManifold1AirTemperatureC,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 1363)) {
-        uint16_t intakeTemp = j1939_encode_temp16bit(engineIntakeManifold1AirTemperatureC);
-        msg.buf[0] = j1939_encode_lowByte(intakeTemp);
-        msg.buf[1] = j1939_encode_highByte(intakeTemp);
+        uint16_t intakeTemp = J1939Encode_temp16bit(engineIntakeManifold1AirTemperatureC);
+        msg.buf[0] = J1939Encode_lowByte(intakeTemp);
+        msg.buf[1] = J1939Encode_highByte(intakeTemp);
     }
     if (isSpnEnabled(config, 1637)) {
-        uint16_t coolantTemp = j1939_encode_temp16bit(engineCoolantTemperatureC);
-        msg.buf[2] = j1939_encode_lowByte(coolantTemp);
-        msg.buf[3] = j1939_encode_highByte(coolantTemp);
+        uint16_t coolantTemp = J1939Encode_temp16bit(engineCoolantTemperatureC);
+        msg.buf[2] = J1939Encode_lowByte(coolantTemp);
+        msg.buf[3] = J1939Encode_highByte(coolantTemp);
     }
 
     CanBus.write(msg);
@@ -100,10 +100,10 @@ void J1939Bus::sendPgn65164() {
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 441)) {
-        msg.buf[0] = j1939_encode_temp8bit(appData->engineBayTemperatureC);
+        msg.buf[0] = J1939Encode_temp8bit(appData->engineBayTemperatureC);
     }
     if (isSpnEnabled(config, 354)) {
-        msg.buf[6] = j1939_encode_humidity(appData->humidity);
+        msg.buf[6] = J1939Encode_humidity(appData->humidity);
     }
 
     CanBus.write(msg);
@@ -125,13 +125,13 @@ void J1939Bus::sendPgn65189(float engineIntakeManifold2TemperatureC,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 1131)) {
-        msg.buf[0] = j1939_encode_temp8bit(engineIntakeManifold2TemperatureC);
+        msg.buf[0] = J1939Encode_temp8bit(engineIntakeManifold2TemperatureC);
     }
     if (isSpnEnabled(config, 1132)) {
-        msg.buf[1] = j1939_encode_temp8bit(engineIntakeManifold3TemperatureC);
+        msg.buf[1] = J1939Encode_temp8bit(engineIntakeManifold3TemperatureC);
     }
     if (isSpnEnabled(config, 1133)) {
-        msg.buf[2] = j1939_encode_temp8bit(engineIntakeManifold4TemperatureC);
+        msg.buf[2] = J1939Encode_temp8bit(engineIntakeManifold4TemperatureC);
     }
 
     CanBus.write(msg);
@@ -152,14 +152,14 @@ void J1939Bus::sendPgn65190(float engineTurbocharger1BoostPressurekPa,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 1127)) {
-        uint16_t boost1 = j1939_encode_boost16bit(engineTurbocharger1BoostPressurekPa);
-        msg.buf[0] = j1939_encode_lowByte(boost1);
-        msg.buf[1] = j1939_encode_highByte(boost1);
+        uint16_t boost1 = J1939Encode_boost16bit(engineTurbocharger1BoostPressurekPa);
+        msg.buf[0] = J1939Encode_lowByte(boost1);
+        msg.buf[1] = J1939Encode_highByte(boost1);
     }
     if (isSpnEnabled(config, 1128)) {
-        uint16_t boost2 = j1939_encode_boost16bit(engineTurbocharger2BoostPressurekPa);
-        msg.buf[2] = j1939_encode_lowByte(boost2);
-        msg.buf[3] = j1939_encode_highByte(boost2);
+        uint16_t boost2 = J1939Encode_boost16bit(engineTurbocharger2BoostPressurekPa);
+        msg.buf[2] = J1939Encode_lowByte(boost2);
+        msg.buf[3] = J1939Encode_highByte(boost2);
     }
 
     CanBus.write(msg);
@@ -181,15 +181,15 @@ void J1939Bus::sendPgn65262(float engineCoolantTemperatureC,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 110)) {
-        msg.buf[0] = j1939_encode_temp8bit(engineCoolantTemperatureC);
+        msg.buf[0] = J1939Encode_temp8bit(engineCoolantTemperatureC);
     }
     if (isSpnEnabled(config, 174)) {
-        msg.buf[1] = j1939_encode_temp8bit(engineFuelTemperatureC);
+        msg.buf[1] = J1939Encode_temp8bit(engineFuelTemperatureC);
     }
     if (isSpnEnabled(config, 175)) {
-        uint16_t oilTemp = j1939_encode_temp16bit(engineOilTemperatureC);
-        msg.buf[2] = j1939_encode_lowByte(oilTemp);
-        msg.buf[3] = j1939_encode_highByte(oilTemp);
+        uint16_t oilTemp = J1939Encode_temp16bit(engineOilTemperatureC);
+        msg.buf[2] = J1939Encode_lowByte(oilTemp);
+        msg.buf[3] = J1939Encode_highByte(oilTemp);
     }
 
     CanBus.write(msg);
@@ -211,13 +211,13 @@ void J1939Bus::sendPgn65263(float engineFuelDeliveryPressurekPa,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 94)) {
-        msg.buf[0] = j1939_encode_pressure4kPa(engineFuelDeliveryPressurekPa);
+        msg.buf[0] = J1939Encode_pressure4kPa(engineFuelDeliveryPressurekPa);
     }
     if (isSpnEnabled(config, 100)) {
-        msg.buf[3] = j1939_encode_pressure4kPa(engineOilPressurekPa);
+        msg.buf[3] = J1939Encode_pressure4kPa(engineOilPressurekPa);
     }
     if (isSpnEnabled(config, 109)) {
-        msg.buf[6] = j1939_encode_pressure2kPa(engineCoolantPressurekPa);
+        msg.buf[6] = J1939Encode_pressure2kPa(engineCoolantPressurekPa);
     }
 
     CanBus.write(msg);
@@ -239,15 +239,15 @@ void J1939Bus::sendPgn65269(float ambientTemperatureC,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 108)) {
-        msg.buf[0] = j1939_encode_barometric(barometricPressurekPa);
+        msg.buf[0] = J1939Encode_barometric(barometricPressurekPa);
     }
     if (isSpnEnabled(config, 171)) {
-        uint16_t ambientTemp = j1939_encode_temp16bit(ambientTemperatureC);
-        msg.buf[3] = j1939_encode_lowByte(ambientTemp);
-        msg.buf[4] = j1939_encode_highByte(ambientTemp);
+        uint16_t ambientTemp = J1939Encode_temp16bit(ambientTemperatureC);
+        msg.buf[3] = J1939Encode_lowByte(ambientTemp);
+        msg.buf[4] = J1939Encode_highByte(ambientTemp);
     }
     if (isSpnEnabled(config, 172)) {
-        msg.buf[5] = j1939_encode_temp8bit(airInletTemperatureC);
+        msg.buf[5] = J1939Encode_temp8bit(airInletTemperatureC);
     }
 
     CanBus.write(msg);
@@ -269,18 +269,18 @@ void J1939Bus::sendPgn65270(float airInletPressurekPa,
     for (int i = 0; i < 8; i++) msg.buf[i] = 0xFF;
 
     if (isSpnEnabled(config, 102)) {
-        msg.buf[1] = j1939_encode_pressure2kPa(boostPressurekPa);
+        msg.buf[1] = J1939Encode_pressure2kPa(boostPressurekPa);
     }
     if (isSpnEnabled(config, 105)) {
-        msg.buf[2] = j1939_encode_temp8bit(airInletTemperatureC);
+        msg.buf[2] = J1939Encode_temp8bit(airInletTemperatureC);
     }
     if (isSpnEnabled(config, 106)) {
-        msg.buf[3] = j1939_encode_pressure2kPa(airInletPressurekPa);
+        msg.buf[3] = J1939Encode_pressure2kPa(airInletPressurekPa);
     }
     if (isSpnEnabled(config, 173)) {
-        uint16_t egtTemp = j1939_encode_temp16bit(egtTemperatureC);
-        msg.buf[5] = j1939_encode_lowByte(egtTemp);
-        msg.buf[6] = j1939_encode_highByte(egtTemp);
+        uint16_t egtTemp = J1939Encode_temp16bit(egtTemperatureC);
+        msg.buf[5] = J1939Encode_lowByte(egtTemp);
+        msg.buf[6] = J1939Encode_highByte(egtTemp);
     }
 
     CanBus.write(msg);
@@ -356,9 +356,9 @@ void J1939Bus::processConfigCommand(const uint8_t *data, uint8_t len) {
 
 void J1939Bus::handleJ1939EnableSpn(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint16_t spn = j1939_decode_getSpn(data);
-    bool enable = j1939_decode_getEnable(data);
-    uint8_t input = j1939_decode_getInput(data);
+    uint16_t spn = J1939Decode_getSpn(data);
+    bool enable = J1939Decode_getEnable(data);
+    uint8_t input = J1939Decode_getInput(data);
 
     TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
     sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
@@ -366,11 +366,11 @@ void J1939Bus::handleJ1939EnableSpn(const uint8_t *data) {
 
 void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t input = j1939_decode_getNtcInput(data);
-    uint8_t param = j1939_decode_getNtcParam(data);
+    uint8_t input = J1939Decode_getNtcInput(data);
+    uint8_t param = J1939Decode_getNtcParam(data);
 
     // Reconstruct float from bytes using C-Next module (little endian)
-    float value = float_bytes_fromBytesLE(data[3], data[4], data[5], data[6]);
+    float value = FloatBytes_fromBytesLE(data[3], data[4], data[5], data[6]);
 
     TCommandResult result = CommandHandler::setNtcParam(input, param, value);
     sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
@@ -378,8 +378,8 @@ void J1939Bus::handleJ1939SetNtcParam(const uint8_t *data) {
 
 void J1939Bus::handleJ1939SetPressureRange(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t input = j1939_decode_getPressureInput(data);
-    uint16_t maxPsi = j1939_decode_getMaxPressure(data);
+    uint8_t input = J1939Decode_getPressureInput(data);
+    uint16_t maxPsi = J1939Decode_getMaxPressure(data);
 
     TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
     sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
@@ -387,7 +387,7 @@ void J1939Bus::handleJ1939SetPressureRange(const uint8_t *data) {
 
 void J1939Bus::handleJ1939SetTcType(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t type = j1939_decode_getTcType(data);
+    uint8_t type = J1939Decode_getTcType(data);
 
     TCommandResult result = CommandHandler::setTcType(type);
     sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
@@ -395,8 +395,8 @@ void J1939Bus::handleJ1939SetTcType(const uint8_t *data) {
 
 void J1939Bus::handleJ1939Query(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t queryType = j1939_decode_getQueryType(data);
-    uint8_t subQuery = j1939_decode_getSubQuery(data);
+    uint8_t queryType = J1939Decode_getQueryType(data);
+    uint8_t subQuery = J1939Decode_getSubQuery(data);
 
     TCommandResult result;
     switch (queryType) {
@@ -431,8 +431,8 @@ void J1939Bus::handleJ1939Reset() {
 
 void J1939Bus::handleJ1939NtcPreset(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t input = j1939_decode_getPresetInput(data);
-    uint8_t preset = j1939_decode_getPresetId(data);
+    uint8_t input = J1939Decode_getPresetInput(data);
+    uint8_t preset = J1939Decode_getPresetId(data);
 
     TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
     sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
@@ -440,8 +440,8 @@ void J1939Bus::handleJ1939NtcPreset(const uint8_t *data) {
 
 void J1939Bus::handleJ1939PressurePreset(const uint8_t *data) {
     // Use C-Next decoder for byte parsing
-    uint8_t input = j1939_decode_getPresetInput(data);
-    uint8_t preset = j1939_decode_getPresetId(data);
+    uint8_t input = J1939Decode_getPresetInput(data);
+    uint8_t preset = J1939Decode_getPresetId(data);
 
     TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
     sendConfigResponse(9, result.errorCode, result.data, result.dataLen);

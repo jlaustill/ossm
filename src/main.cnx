@@ -1,0 +1,13 @@
+// Main entry point for OSSM
+// Delegates to ossm class for setup and loop
+
+#include <Arduino.h>
+#include "Domain/ossm.h"
+
+void setup() {
+    ossm.setup();
+}
+
+void loop() {
+    ossm.loop();
+}
