@@ -2,13 +2,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-def transpile_cnext(source=None, target=None, env=None):
+def transpile_cnext():
     """Transpile all .cnx files before build"""
     src_dir = Path("src")
     if not src_dir.exists():
         print("Error: src directory not found")
-        if env:
-            env.Exit(1)
         return 1
 
     cnx_files = list(src_dir.rglob("*.cnx"))
@@ -16,7 +14,7 @@ def transpile_cnext(source=None, target=None, env=None):
         print("No .cnx files found")
         return 0
 
-    print(f"Transpiling {len(cnx_files)} C-Next files...")
+    print(f"C-Next: Transpiling {len(cnx_files)} files...")
 
     try:
         result = subprocess.run(
@@ -26,28 +24,31 @@ def transpile_cnext(source=None, target=None, env=None):
             text=True
         )
         if result.stdout:
-            print(result.stdout)
-        print("C-Next transpilation complete")
+            # Print just the summary, not all file names
+            lines = result.stdout.strip().split('\n')
+            for line in lines:
+                if line.startswith(('Compiled', 'Collected', 'Generated')):
+                    print(f"C-Next: {line}")
+        print("C-Next: Transpilation complete")
+        return 0
     except subprocess.CalledProcessError as e:
-        print("C-Next transpilation failed:")
+        print("C-Next: Transpilation FAILED")
         print(e.stderr)
-        if env:
-            env.Exit(1)
         return 1
     except FileNotFoundError:
-        print("Error: cnext command not found. Install C-Next transpiler.")
-        if env:
-            env.Exit(1)
+        print("C-Next: ERROR - cnext command not found")
+        print("Install C-Next transpiler: npm install -g c-next")
         return 1
 
-    return 0
-
-# PlatformIO integration
+# PlatformIO integration - run immediately during pre: script phase
 try:
     Import("env")
-    env.AddPreAction("buildprog", transpile_cnext)
+    # Run transpilation now, before build starts
+    result = transpile_cnext()
+    if result != 0:
+        env.Exit(1)
 except NameError:
-    # Not running under PlatformIO
+    # Not running under PlatformIO, allow standalone execution
     pass
 
 if __name__ == "__main__":
