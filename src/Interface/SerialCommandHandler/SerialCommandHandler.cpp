@@ -1,5 +1,6 @@
 #include "SerialCommandHandler.h"
 #include <Arduino.h>
+#include <EEPROM.h>
 #include "Data/ConfigStorage/ConfigStorage.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
@@ -121,6 +122,9 @@ void SerialCommandHandler::processCommand(const char* cmd) {
             break;
         case 10:  // Read Live Sensors
             handleReadSensors();
+            break;
+        case 11:  // Dump EEPROM
+            handleDumpEeprom();
             break;
         default:
             Serial.println("ERR,1,Unknown command");
@@ -603,4 +607,42 @@ void SerialCommandHandler::printPressureValueForSpn(uint16_t spn) {
     }
     Serial.print(value, 2);
     Serial.println(" kPa");
+}
+
+void SerialCommandHandler::handleDumpEeprom() {
+    // Dump raw EEPROM bytes for comparison between firmware versions
+    // Output format: SIZE:xxx followed by hex bytes, 16 per line
+    // This allows byte-for-byte comparison after flashing new firmware
+
+    size_t configSize = sizeof(AppConfig);
+
+    Serial.println("=== EEPROM Dump ===");
+    Serial.print("SIZE:");
+    Serial.println(configSize);
+    Serial.println("HEX:");
+
+    // Read and print raw bytes from EEPROM
+    for (size_t i = 0; i < configSize; i++) {
+        uint8_t byte = EEPROM.read(i);
+
+        // Print with leading zero if needed
+        if (byte < 0x10) {
+            Serial.print("0");
+        }
+        Serial.print(byte, HEX);
+
+        // Space between bytes, newline every 16 bytes
+        if ((i + 1) % 16 == 0) {
+            Serial.println();
+        } else {
+            Serial.print(" ");
+        }
+    }
+
+    // Final newline if we didn't end on a 16-byte boundary
+    if (configSize % 16 != 0) {
+        Serial.println();
+    }
+
+    Serial.println("END");
 }

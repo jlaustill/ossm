@@ -34,6 +34,7 @@ class SerialCommandHandler {
     static void handleNtcPreset();       // Cmd 8: input,preset
     static void handlePressurePreset();  // Cmd 9: input,preset
     static void handleReadSensors();     // Cmd 10: sensorType (0=all,1=EGT,2=temps,3=pres,4=BME)
+    static void handleDumpEeprom();      // Cmd 11: dump raw EEPROM as hex for comparison
 
     // Report any active faults (called after all commands)
     static void reportFaults();
