@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## NEVER DO WORKAROUNDS
+
+**CRITICAL: NEVER implement workarounds. EVER.**
+
+When you encounter a bug, limitation, or issue in a tool, library, or transpiler:
+
+1. **DO NOT** try to work around it
+2. **DO NOT** create wrapper functions to hide the problem
+3. **DO NOT** temporarily rename/move/modify files to bypass issues
+4. **DO NOT** suggest "creative solutions" that mask the underlying problem
+
+**INSTEAD:**
+- Document the bug thoroughly with minimal reproducers
+- File the bug report on the appropriate issue tracker
+- Wait for the fix
+- Ask the user if you're unsure whether something counts as a workaround
+
+Workarounds create technical debt, hide real issues from maintainers, and waste time going in circles. If something is broken, it needs to be fixed properly - not papered over.
+
 ## Project Overview
 
 Open Source Sensor Module (OSSM) - An embedded firmware for Teensy 4.1 that reads automotive sensors and transmits data over CAN bus using J1939 protocol. The module emulates a secondary PCM/ECM and supports up to 19 sensors (temperatures, pressures, humidity, etc.).

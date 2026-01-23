@@ -3,6 +3,9 @@
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
+#include "Display/Presets.h"
+#include "Display/SpnCategory.h"
+#include "Display/InputValid.h"
 
 // Static member initialization
 AppConfig* CommandHandler::config = nullptr;
@@ -14,14 +17,8 @@ void CommandHandler::initialize(AppConfig* cfg, AppData* data) {
 }
 
 TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t input) {
-    // Find SPN category
-    ESpnCategory category = SPN_CAT_UNKNOWN;
-    for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
-        if (KNOWN_SPNS[i].spn == spn) {
-            category = KNOWN_SPNS[i].category;
-            break;
-        }
-    }
+    // Get SPN category using C-Next module
+    ESpnCategory category = static_cast<ESpnCategory>(SpnCategory_getCategory(spn));
 
     if (category == SPN_CAT_UNKNOWN) {
         return TCommandResult::error(ECommandError::UNKNOWN_SPN);
@@ -31,7 +28,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
         // Enable SPN
         switch (category) {
             case SPN_CAT_TEMPERATURE:
-                if (input < 1 || input > TEMP_INPUT_COUNT) {
+                if (!InputValid_isValidTempInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -46,7 +43,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
                 break;
 
             case SPN_CAT_PRESSURE:
-                if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+                if (!InputValid_isValidPressureInput(input)) {
                     return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
                 }
                 // Clear any existing assignment of this SPN (move, not duplicate)
@@ -113,7 +110,7 @@ TCommandResult CommandHandler::enableSpn(uint16_t spn, bool enable, uint8_t inpu
 }
 
 TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPressure) {
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+    if (!InputValid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
     }
 
@@ -122,7 +119,7 @@ TCommandResult CommandHandler::setPressureRange(uint8_t input, uint16_t maxPress
 }
 
 TCommandResult CommandHandler::setTcType(uint8_t type) {
-    if (type > 7) {
+    if (!Presets_isValidTcType(type)) {
         return TCommandResult::error(ECommandError::INVALID_TC_TYPE);
     }
 
@@ -131,96 +128,49 @@ TCommandResult CommandHandler::setTcType(uint8_t type) {
 }
 
 TCommandResult CommandHandler::applyNtcPreset(uint8_t input, uint8_t preset) {
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
+    if (!InputValid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 
-    TTempInputConfig& cfg = config->tempInputs[input - 1];
-
-    switch (preset) {
-        case 0:  // AEM
-            cfg.coeffA = AEM_TEMP_COEFF_A;
-            cfg.coeffB = AEM_TEMP_COEFF_B;
-            cfg.coeffC = AEM_TEMP_COEFF_C;
-            cfg.resistorValue = AEM_TEMP_RESISTOR;
-            break;
-        case 1:  // Bosch
-            cfg.coeffA = BOSCH_TEMP_COEFF_A;
-            cfg.coeffB = BOSCH_TEMP_COEFF_B;
-            cfg.coeffC = BOSCH_TEMP_COEFF_C;
-            cfg.resistorValue = BOSCH_TEMP_RESISTOR;
-            break;
-        case 2:  // GM
-            cfg.coeffA = GM_TEMP_COEFF_A;
-            cfg.coeffB = GM_TEMP_COEFF_B;
-            cfg.coeffC = GM_TEMP_COEFF_C;
-            cfg.resistorValue = GM_TEMP_RESISTOR;
-            break;
-        default:
-            return TCommandResult::error(ECommandError::INVALID_PRESET);
+    if (!Presets_isValidNtcPreset(preset)) {
+        return TCommandResult::error(ECommandError::INVALID_PRESET);
     }
+
+    TTempInputConfig& cfg = config->tempInputs[input - 1];
+    cfg.coeffA = Presets_ntcCoeffA(preset);
+    cfg.coeffB = Presets_ntcCoeffB(preset);
+    cfg.coeffC = Presets_ntcCoeffC(preset);
+    cfg.resistorValue = Presets_ntcResistor(preset);
 
     return TCommandResult::ok();
 }
 
 TCommandResult CommandHandler::applyPressurePreset(uint8_t input, uint8_t preset) {
-    if (input < 1 || input > PRESSURE_INPUT_COUNT) {
+    if (!InputValid_isValidPressureInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_PRESSURE_INPUT);
+    }
+
+    if (!Presets_isValidPressurePreset(preset)) {
+        return TCommandResult::error(ECommandError::INVALID_PRESET);
     }
 
     TPressureInputConfig& cfg = config->pressureInputs[input - 1];
 
-    // Bar presets (0-15): PSIA absolute, value in centibar (1 bar = 100)
-    // PSI presets (20-30): PSIG gauge, value in PSI
-    if (preset <= 15) {
-        // Bar presets (PSIA) - stored in centibar for 0.5 bar precision
-        // Note: presets 13-15 are large values stored in bar (flagged by value > 20000)
-        static const uint16_t centibarValues[] = {
-            100,   // 0: 1 bar
-            150,   // 1: 1.5 bar
-            200,   // 2: 2 bar
-            250,   // 3: 2.5 bar
-            300,   // 4: 3 bar
-            400,   // 5: 4 bar
-            500,   // 6: 5 bar
-            700,   // 7: 7 bar
-            1000,  // 8: 10 bar
-            5000,  // 9: 50 bar
-            10000, // 10: 100 bar
-            15000, // 11: 150 bar
-            20000, // 12: 200 bar
-            21000, // 13: 1000 bar (stored as 21000 = flag + bar value)
-            22000, // 14: 2000 bar (stored as 22000 = flag + bar value)
-            23000  // 15: 3000 bar (stored as 23000 = flag + bar value)
-        };
-        cfg.maxPressure = centibarValues[preset];
+    if (Presets_isBarPreset(preset)) {
+        // Bar presets (PSIA) - value is centibar
+        cfg.maxPressure = Presets_barPresetValue(preset);
         cfg.pressureType = PRESSURE_TYPE_PSIA;
-    } else if (preset >= 20 && preset <= 30) {
-        // PSI presets (PSIG)
-        static const uint16_t psiValues[] = {
-            15,   // 20: 15 PSIG
-            30,   // 21: 30 PSIG
-            50,   // 22: 50 PSIG
-            100,  // 23: 100 PSIG
-            150,  // 24: 150 PSIG
-            200,  // 25: 200 PSIG
-            250,  // 26: 250 PSIG
-            300,  // 27: 300 PSIG
-            350,  // 28: 350 PSIG
-            400,  // 29: 400 PSIG
-            500   // 30: 500 PSIG
-        };
-        cfg.maxPressure = psiValues[preset - 20];
-        cfg.pressureType = PRESSURE_TYPE_PSIG;
     } else {
-        return TCommandResult::error(ECommandError::INVALID_PRESET);
+        // PSI presets (PSIG)
+        cfg.maxPressure = Presets_psiPresetValue(preset);
+        cfg.pressureType = PRESSURE_TYPE_PSIG;
     }
 
     return TCommandResult::ok();
 }
 
 TCommandResult CommandHandler::setNtcParam(uint8_t input, uint8_t param, float value) {
-    if (input < 1 || input > TEMP_INPUT_COUNT) {
+    if (!InputValid_isValidTempInput(input)) {
         return TCommandResult::error(ECommandError::INVALID_TEMP_INPUT);
     }
 

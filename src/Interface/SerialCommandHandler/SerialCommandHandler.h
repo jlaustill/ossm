@@ -2,7 +2,7 @@
 #define OSSM_SERIALCOMMANDHANDLER_H
 
 #include "AppConfig.h"
-#include "AppData.h"
+#include "Display/AppData.h"
 #include <SeaDash.hpp>
 
 class SerialCommandHandler {

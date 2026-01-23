@@ -1,0 +1,83 @@
+// SPN Enable Checking Functions
+// Determines if a given SPN is enabled in the configuration
+
+#include "AppConfig.h"
+
+scope SpnCheck {
+    // Check if a temperature SPN is assigned to any input
+    public bool isTempSpnEnabled(const AppConfig cfg, u16 spn) {
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            if (cfg.tempInputs[i].assignedSpn = spn) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Check if a pressure SPN is assigned to any input
+    public bool isPressureSpnEnabled(const AppConfig cfg, u16 spn) {
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+            if (cfg.pressureInputs[i].assignedSpn = spn) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Check if any SPN is enabled (temp, pressure, EGT, BME280, or hi-res)
+    public bool isSpnEnabled(const AppConfig cfg, u16 spn) {
+        // MISRA 13.5: Store function results first, no calls in conditions
+        bool tempEnabled <- this.isTempSpnEnabled(cfg, spn);
+        if (tempEnabled) {
+            return true;
+        }
+
+        bool pressureEnabled <- this.isPressureSpnEnabled(cfg, spn);
+        if (pressureEnabled) {
+            return true;
+        }
+
+        // Check EGT (SPN 173)
+        if (spn = 173) {
+            if (cfg.egtEnabled) {
+                return true;
+            }
+        }
+
+        // Check BME280 SPNs (171=ambient temp, 108=barometric, 354=humidity)
+        if (spn = 171) {
+            if (cfg.bme280Enabled) {
+                return true;
+            }
+        }
+        if (spn = 108) {
+            if (cfg.bme280Enabled) {
+                return true;
+            }
+        }
+        if (spn = 354) {
+            if (cfg.bme280Enabled) {
+                return true;
+            }
+        }
+
+        // Check hi-res SPNs (auto-enabled with standard counterparts)
+        // SPN 1637 = hi-res coolant temp (enabled if SPN 110 is assigned)
+        if (spn = 1637) {
+            bool coolantEnabled <- this.isTempSpnEnabled(cfg, 110);
+            if (coolantEnabled) {
+                return true;
+            }
+        }
+
+        // SPN 1363 = hi-res intake temp (enabled if SPN 105 is assigned)
+        if (spn = 1363) {
+            bool intakeEnabled <- this.isTempSpnEnabled(cfg, 105);
+            if (intakeEnabled) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

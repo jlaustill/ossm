@@ -1,0 +1,107 @@
+// Byte Utility Functions
+// Common byte manipulation operations for embedded systems
+// Uses C-Next bit-slice syntax for clean, safe byte operations
+
+#include <stdint.h>
+
+scope ByteUtils {
+    // Build u16 from high and low bytes (big-endian)
+    public u16 makeU16BE(u8 high, u8 low) {
+        u16 result <- 0;
+        result[0,8] <- low;
+        result[8,8] <- high;
+        return result;
+    }
+
+    // Build u16 from low and high bytes (little-endian)
+    public u16 makeU16LE(u8 low, u8 high) {
+        u16 result <- 0;
+        result[0,8] <- low;
+        result[8,8] <- high;
+        return result;
+    }
+
+    // Extract high byte from u16
+    public u8 highByte(u16 value) {
+        return value[8,8];
+    }
+
+    // Extract low byte from u16
+    public u8 lowByte(u16 value) {
+        return value[0,8];
+    }
+
+    // Build u32 from 4 bytes (big-endian)
+    public u32 makeU32BE(u8 b3, u8 b2, u8 b1, u8 b0) {
+        u32 result <- 0;
+        result[0,8] <- b0;
+        result[8,8] <- b1;
+        result[16,8] <- b2;
+        result[24,8] <- b3;
+        return result;
+    }
+
+    // Build u32 from 4 bytes (little-endian)
+    public u32 makeU32LE(u8 b0, u8 b1, u8 b2, u8 b3) {
+        u32 result <- 0;
+        result[0,8] <- b0;
+        result[8,8] <- b1;
+        result[16,8] <- b2;
+        result[24,8] <- b3;
+        return result;
+    }
+
+    // Extract byte 0 (lowest) from u32
+    public u8 byte0(u32 value) {
+        return value[0,8];
+    }
+
+    // Extract byte 1 from u32
+    public u8 byte1(u32 value) {
+        return value[8,8];
+    }
+
+    // Extract byte 2 from u32
+    public u8 byte2(u32 value) {
+        return value[16,8];
+    }
+
+    // Extract byte 3 (highest) from u32
+    public u8 byte3(u32 value) {
+        return value[24,8];
+    }
+
+    // Check if bit is set in byte
+    public bool isBitSet(u8 value, u8 bit) {
+        if (bit > 7) { return false; }
+        return value[bit,1] != 0;
+    }
+
+    // Set bit in byte (returns new value)
+    public u8 setBit(u8 value, u8 bit) {
+        if (bit > 7) { return value; }
+        value[bit,1] <- 1;
+        return value;
+    }
+
+    // Clear bit in byte (returns new value)
+    public u8 clearBit(u8 value, u8 bit) {
+        if (bit > 7) { return value; }
+        value[bit,1] <- 0;
+        return value;
+    }
+
+    // Clamp value to range
+    public u8 clampU8(u8 value, u8 minVal, u8 maxVal) {
+        if (value < minVal) { return minVal; }
+        if (value > maxVal) { return maxVal; }
+        return value;
+    }
+
+    // Clamp 16-bit value to range
+    public u16 clampU16(u16 value, u16 minVal, u16 maxVal) {
+        if (value < minVal) { return minVal; }
+        if (value > maxVal) { return maxVal; }
+        return value;
+    }
+}

@@ -4,36 +4,41 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
+#include "Display/SpnCategory.h"
+#include "Display/SpnInfo.h"
+#include "Display/FaultDecode.h"
 
-// Human-readable names for SPNs - format: "Name(SPN XXX)"
+// SPN labels indexed by SpnInfo_getIndex() - must match spn_info.cnx IDX_* order
+static const char* const SPN_LABELS[] = {
+    "Oil Temp(SPN 175)",       // IDX_OIL_TEMP = 0
+    "Coolant Temp(SPN 110)",   // IDX_COOLANT_TEMP = 1
+    "Fuel Temp(SPN 174)",      // IDX_FUEL_TEMP = 2
+    "Boost Temp(SPN 105)",     // IDX_BOOST_TEMP = 3
+    "CAC Inlet Temp(SPN 1131)",    // IDX_CAC_INLET_TEMP = 4
+    "Xfer Pipe Temp(SPN 1132)",    // IDX_XFER_PIPE_TEMP = 5
+    "Air Inlet Temp 4(SPN 1133)",  // IDX_AIR_INLET_TEMP4 = 6
+    "Air Inlet Temp(SPN 172)", // IDX_AIR_INLET_TEMP = 7
+    "Eng Bay Temp(SPN 441)",   // IDX_ENG_BAY_TEMP = 8
+    "Oil Pres(SPN 100)",       // IDX_OIL_PRES = 9
+    "Coolant Pres(SPN 109)",   // IDX_COOLANT_PRES = 10
+    "Fuel Pres(SPN 94)",       // IDX_FUEL_PRES = 11
+    "Boost Pres(SPN 102)",     // IDX_BOOST_PRES = 12
+    "Air Inlet Pres(SPN 106)", // IDX_AIR_INLET_PRES = 13
+    "CAC Inlet Pres(SPN 1127)",    // IDX_CAC_INLET_PRES = 14
+    "Xfer Pipe Pres(SPN 1128)",    // IDX_XFER_PIPE_PRES = 15
+    "EGT(SPN 173)",            // IDX_EGT = 16
+    "Ambient Temp(SPN 171)",   // IDX_AMBIENT_TEMP = 17
+    "Baro Pres(SPN 108)",      // IDX_BARO_PRES = 18
+    "Humidity(SPN 354)"        // IDX_HUMIDITY = 19
+};
+
+// Get human-readable label for SPN using C-Next index lookup
 static const char* getSpnLabel(uint16_t spn) {
-    switch (spn) {
-        // Temperature SPNs
-        case 175:  return "Oil Temp(SPN 175)";
-        case 110:  return "Coolant Temp(SPN 110)";
-        case 174:  return "Fuel Temp(SPN 174)";
-        case 105:  return "Boost Temp(SPN 105)";
-        case 1131: return "CAC Inlet Temp(SPN 1131)";
-        case 1132: return "Xfer Pipe Temp(SPN 1132)";
-        case 1133: return "Air Inlet Temp 4(SPN 1133)";
-        case 172:  return "Air Inlet Temp(SPN 172)";
-        case 441:  return "Eng Bay Temp(SPN 441)";
-        // Pressure SPNs
-        case 100:  return "Oil Pres(SPN 100)";
-        case 109:  return "Coolant Pres(SPN 109)";
-        case 94:   return "Fuel Pres(SPN 94)";
-        case 102:  return "Boost Pres(SPN 102)";
-        case 106:  return "Air Inlet Pres(SPN 106)";
-        case 1127: return "CAC Inlet Pres(SPN 1127)";
-        case 1128: return "Xfer Pipe Pres(SPN 1128)";
-        // EGT
-        case 173:  return "EGT(SPN 173)";
-        // BME280
-        case 171:  return "Ambient Temp(SPN 171)";
-        case 108:  return "Baro Pres(SPN 108)";
-        case 354:  return "Humidity(SPN 354)";
-        default:   return "Unknown";
+    uint8_t idx = SpnInfo_getIndex(spn);
+    if (idx == SpnInfo_IDX_UNKNOWN) {
+        return "Unknown";
     }
+    return SPN_LABELS[idx];
 }
 
 // Static member initialization
@@ -160,14 +165,8 @@ void SerialCommandHandler::handleEnableSpn() {
         return;
     }
 
-    // Find category for success message
-    ESpnCategory category = SPN_CAT_UNKNOWN;
-    for (size_t i = 0; i < KNOWN_SPN_COUNT; i++) {
-        if (KNOWN_SPNS[i].spn == spn) {
-            category = KNOWN_SPNS[i].category;
-            break;
-        }
-    }
+    // Get category for success message using C-Next module
+    ESpnCategory category = static_cast<ESpnCategory>(SpnCategory_getCategory(spn));
 
     if (enable) {
         switch (category) {
@@ -527,28 +526,44 @@ void SerialCommandHandler::handleReadSensors() {
     }
 }
 
+// Fault labels indexed by fault_decode IDX_* constants
+static const char* const FAULT_LABELS[] = {
+    "OPEN",      // IDX_OPEN = 0
+    "OVUV",      // IDX_OVUV = 1
+    "TC_LOW",    // IDX_TC_LOW = 2
+    "TC_HIGH",   // IDX_TC_HIGH = 3
+    "CJ_LOW",    // IDX_CJ_LOW = 4
+    "CJ_HIGH",   // IDX_CJ_HIGH = 5
+    "TC_RANGE",  // IDX_TC_RANGE = 6
+    "CJ_RANGE"   // IDX_CJ_RANGE = 7
+};
+
 void SerialCommandHandler::reportFaults() {
-    // Check for any active faults
+    // Check for any active faults using C-Next module
     uint8_t egtFault = MAX31856Manager::getFaultStatus();
 
-    // Only show fault section if there are faults
-    if (egtFault != 0) {
+    if (FaultDecode_hasFault(egtFault)) {
         Serial.println("--- FAULTS ---");
         Serial.print("EGT: 0x");
         Serial.print(egtFault, HEX);
         Serial.print(" (");
 
-        // Decode fault bits
-        if (egtFault & 0x01) Serial.print("OPEN ");
-        if (egtFault & 0x02) Serial.print("OVUV ");
-        if (egtFault & 0x04) Serial.print("TC_LOW ");
-        if (egtFault & 0x08) Serial.print("TC_HIGH ");
-        if (egtFault & 0x10) Serial.print("CJ_LOW ");
-        if (egtFault & 0x20) Serial.print("CJ_HIGH ");
-        if (egtFault & 0x40) Serial.print("TC_RANGE ");
-        if (egtFault & 0x80) Serial.print("CJ_RANGE ");
+        // Decode fault bits using C-Next module
+        if (FaultDecode_isOpen(egtFault)) Serial.print("OPEN ");
+        if (FaultDecode_isOvuv(egtFault)) Serial.print("OVUV ");
+        if (FaultDecode_isTcLow(egtFault)) Serial.print("TC_LOW ");
+        if (FaultDecode_isTcHigh(egtFault)) Serial.print("TC_HIGH ");
+        if (FaultDecode_isCjLow(egtFault)) Serial.print("CJ_LOW ");
+        if (FaultDecode_isCjHigh(egtFault)) Serial.print("CJ_HIGH ");
+        if (FaultDecode_isTcRange(egtFault)) Serial.print("TC_RANGE ");
+        if (FaultDecode_isCjRange(egtFault)) Serial.print("CJ_RANGE ");
 
         Serial.println(")");
+
+        // Show critical warning if applicable
+        if (FaultDecode_isCritical(egtFault)) {
+            Serial.println("WARNING: Critical fault - check sensor connection");
+        }
     }
 }
 

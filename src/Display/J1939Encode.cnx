@@ -1,0 +1,71 @@
+// J1939 SPN Encoding Functions
+// Converts sensor values to J1939 protocol format per SAE J1939-71
+
+scope J1939Encode {
+    // Temperature encoding: 16-bit with 0.03125 deg/bit resolution, +273 offset
+    // Used for high-resolution temperature SPNs (1363, 1637)
+    public u16 temp16bit(f32 temperatureC) {
+        f32 offset <- temperatureC + 273.0;
+        f32 scaled <- offset / 0.03125;
+        return (u16)scaled;
+    }
+
+    // Temperature encoding: 8-bit with 1 deg/bit resolution, +40 offset
+    // Used for standard temperature SPNs (110, 174, 175, etc.)
+    public u8 temp8bit(f32 temperatureC) {
+        f32 offset <- temperatureC + 40.0;
+        return (u8)offset;
+    }
+
+    // Humidity encoding: 8-bit with 0.4%/bit resolution
+    // Used for SPN 354
+    public u8 humidity(f32 humidityPercent) {
+        f32 scaled <- humidityPercent / 0.4;
+        return (u8)scaled;
+    }
+
+    // Boost pressure encoding: 16-bit with 0.125 kPa/bit resolution
+    // Used for turbocharger boost SPNs (1127, 1128)
+    public u16 boost16bit(f32 pressurekPa) {
+        f32 scaled <- pressurekPa / 0.125;
+        return (u16)scaled;
+    }
+
+    // Pressure encoding: 8-bit with 4 kPa/bit resolution
+    // Used for oil pressure (SPN 100), fuel delivery pressure (SPN 94)
+    public u8 pressure4kPa(f32 pressurekPa) {
+        f32 scaled <- pressurekPa / 4.0;
+        return (u8)scaled;
+    }
+
+    // Pressure encoding: 8-bit with 2 kPa/bit resolution
+    // Used for boost pressure (SPN 102), coolant pressure (SPN 109), air inlet (SPN 106)
+    public u8 pressure2kPa(f32 pressurekPa) {
+        f32 scaled <- pressurekPa / 2.0;
+        return (u8)scaled;
+    }
+
+    // Pressure encoding: 16-bit with 0.5 kPa/bit resolution
+    // Used for high-resolution pressure SPNs
+    public u16 pressure16bit(f32 pressurekPa) {
+        f32 scaled <- pressurekPa / 0.5;
+        return (u16)scaled;
+    }
+
+    // Barometric pressure encoding: 8-bit with 0.5 kPa/bit resolution
+    // Used for atmospheric/barometric pressure (SPN 108)
+    public u8 barometric(f32 pressurekPa) {
+        f32 scaled <- pressurekPa / 0.5;
+        return (u8)scaled;
+    }
+
+    // Extract low byte from 16-bit value (bits 0-7)
+    public u8 lowByte(u16 value) {
+        return (u8)(value & 0xFF);
+    }
+
+    // Extract high byte from 16-bit value (bits 8-15)
+    public u8 highByte(u16 value) {
+        return (u8)((value >> 8) & 0xFF);
+    }
+}

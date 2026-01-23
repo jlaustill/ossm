@@ -1,0 +1,76 @@
+// crc32.cnx - Memory-safe CRC32 checksum calculation
+// Requires C-Next v0.1.12+ for full C++ mode support
+#include "AppConfig.h"
+
+scope Crc32 {
+    // Process a single byte through CRC32 (IEEE 802.3 polynomial)
+    u32 crcByte(u32 crc, u8 byte) {
+        u32 c <- crc ^ byte;
+        for (i32 j <- 0; j < 8; j +<- 1) {
+            if (c & 1) {
+                c <- (c >> 1) ^ 0xEDB88320;
+            } else {
+                c <- c >> 1;
+            }
+        }
+        return c;
+    }
+
+    // Process a float by extracting its 4 bytes via bounded buffer
+    u32 crcFloat(u32 crc, f32 value) {
+        string<4> buf <- "";
+        buf[0, 4] <- value;
+        crc <- this.crcByte(crc, buf[0]);
+        crc <- this.crcByte(crc, buf[1]);
+        crc <- this.crcByte(crc, buf[2]);
+        crc <- this.crcByte(crc, buf[3]);
+        return crc;
+    }
+
+    // Calculate CRC32 checksum over AppConfig struct (excluding checksum field)
+    public u32 calculateChecksum(const AppConfig config) {
+        u32 crc <- 0xFFFFFFFF;
+
+        // Header: magic (4 bytes, little-endian)
+        crc <- this.crcByte(crc, config.magic[0,8]);
+        crc <- this.crcByte(crc, config.magic[8,8]);
+        crc <- this.crcByte(crc, config.magic[16,8]);
+        crc <- this.crcByte(crc, config.magic[24,8]);
+
+        // Header: version and j1939SourceAddress
+        crc <- this.crcByte(crc, config.version);
+        crc <- this.crcByte(crc, config.j1939SourceAddress);
+        // Skip reserved[2]
+
+        // Temperature inputs (8 structs × 18 bytes each)
+        for (u32 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            crc <- this.crcByte(crc, config.tempInputs[i].assignedSpn[0,8]);
+            crc <- this.crcByte(crc, config.tempInputs[i].assignedSpn[8,8]);
+            crc <- this.crcFloat(crc, config.tempInputs[i].coeffA);
+            crc <- this.crcFloat(crc, config.tempInputs[i].coeffB);
+            crc <- this.crcFloat(crc, config.tempInputs[i].coeffC);
+            crc <- this.crcFloat(crc, config.tempInputs[i].resistorValue);
+        }
+
+        // Pressure inputs (7 structs × 5 bytes each)
+        for (u32 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+            crc <- this.crcByte(crc, config.pressureInputs[i].assignedSpn[0,8]);
+            crc <- this.crcByte(crc, config.pressureInputs[i].assignedSpn[8,8]);
+            crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[0,8]);
+            crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[8,8]);
+            crc <- this.crcByte(crc, config.pressureInputs[i].pressureType);
+            // Skip reserved byte
+        }
+
+        // Thermocouple config
+        crc <- this.crcByte(crc, config.egtEnabled);
+        crc <- this.crcByte(crc, config.thermocoupleType);
+        // Skip tcReserved[2]
+
+        // BME280 config
+        crc <- this.crcByte(crc, config.bme280Enabled);
+        // Skip bme280Reserved[3]
+
+        return ~crc;
+    }
+}

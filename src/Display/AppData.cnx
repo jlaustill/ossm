@@ -1,0 +1,24 @@
+// Application sensor data structure
+// Holds all current sensor readings
+
+struct AppData {
+    f32 humidity;
+    f32 ambientTemperatureC;
+    f32 absoluteBarometricpressurekPa;
+    f32 oilTemperatureC;
+    f32 oilPressurekPa;
+    f32 coolantTemperatureC;
+    f32 coolantPressurekPa;
+    f32 transferPipeTemperatureC;
+    f32 transferPipePressurekPa;
+    f32 boostPressurekPa;
+    f32 boostTemperatureC;
+    f32 cacInletPressurekPa;
+    f32 cacInletTemperatureC;
+    f32 airInletPressurekPa;
+    f32 airInletTemperatureC;
+    f32 fuelPressurekPa;
+    f32 fuelTemperatureC;
+    f32 engineBayTemperatureC;
+    f32 egtTemperatureC;
+}

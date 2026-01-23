@@ -1,0 +1,412 @@
+// J1939 CAN Bus Communication
+// Handles J1939 message transmission and configuration commands
+
+#include <AppData.cnx>
+#include "AppConfig.h"
+#include "FlexCAN_T4.h"
+#include <J1939Message.h>
+#include "Domain/CommandHandler/CommandHandler.h"
+#include <J1939Encode.cnx>
+#include <J1939Decode.cnx>
+#include <SpnCheck.cnx>
+#include <FloatBytes.cnx>
+
+scope J1939Bus {
+    // CAN bus instance - OSSM v0.0.2 uses CAN1 (D22/D23)
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canBus;
+
+    // Application state
+    AppData appData;
+    AppConfig config;
+
+    // ========================================================================
+    // Helper functions (must be defined first)
+    // ========================================================================
+
+    // Helper to build CAN ID from J1939 parameters
+    u32 buildCanId(u16 pgn, u8 priority, u8 sourceAddr) {
+        u32 id <- ((u32)priority << 26) | ((u32)pgn << 8) | (u32)sourceAddr;
+        return id;
+    }
+
+    // Fill buffer with 0xFF (unused bytes)
+    void fillBuffer(u8 buf) {
+        for (u8 i <- 0; i < 8; i +<- 1) {
+            buf[i] <- 0xFF;
+        }
+    }
+
+    // Helper to send a CAN message with priority 6
+    void sendMessage(u16 pgn, const u8 buf) {
+        CAN_message_t msg;
+        msg.flags.extended <- 1;
+        msg.id <- this.buildCanId(pgn, 6, this.config.j1939SourceAddress);
+        msg.len <- 8;
+
+        for (u8 i <- 0; i < 8; i +<- 1) {
+            msg.buf[i] <- buf[i];
+        }
+
+        this.canBus.write(msg);
+    }
+
+    // Send configuration response on PGN 65281
+    public void sendConfigResponse(u8 cmd, u8 errCode, const u8 data[8], u8 dataLen) {
+        u8 buf[8];
+        buf[0] <- cmd;
+        buf[1] <- errCode;
+
+        for (u8 i <- 0; i < 6; i +<- 1) {
+            if (i < dataLen) {
+                buf[2 + i] <- data[i];
+            } else {
+                buf[2 + i] <- 0xFF;
+            }
+        }
+
+        CAN_message_t msg;
+        msg.flags.extended <- 1;
+        msg.id <- this.buildCanId(65281, 6, this.config.j1939SourceAddress);
+        msg.len <- 8;
+
+        for (u8 i <- 0; i < 8; i +<- 1) {
+            msg.buf[i] <- buf[i];
+        }
+
+        this.canBus.write(msg);
+    }
+
+    // ========================================================================
+    // Command handlers (must be before processConfigCommand)
+    // ========================================================================
+
+    void handleEnableSpn(const u8 data[8]) {
+        u16 spn <- global.J1939Decode.getSpn(data);
+        bool enable <- global.J1939Decode.getEnable(data);
+        u8 input <- global.J1939Decode.getInput(data);
+
+        TCommandResult result <- global.CommandHandler.enableSpn(spn, enable, input);
+        this.sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleSetNtcParam(const u8 data[8]) {
+        u8 input <- global.J1939Decode.getNtcInput(data);
+        u8 param <- global.J1939Decode.getNtcParam(data);
+        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
+
+        TCommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
+        this.sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleSetPressureRange(const u8 data[8]) {
+        u8 input <- global.J1939Decode.getPressureInput(data);
+        u16 maxPsi <- global.J1939Decode.getMaxPressure(data);
+
+        TCommandResult result <- global.CommandHandler.setPressureRange(input, maxPsi);
+        this.sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleSetTcType(const u8 data[8]) {
+        u8 tcType <- global.J1939Decode.getTcType(data);
+
+        TCommandResult result <- global.CommandHandler.setTcType(tcType);
+        this.sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleQuery(const u8 data[8]) {
+        u8 queryType <- global.J1939Decode.getQueryType(data);
+        u8 subQuery <- global.J1939Decode.getSubQuery(data);
+
+        TCommandResult result;
+
+        switch (queryType) {
+            case 0 { result <- global.CommandHandler.querySpnCounts(); }
+            case 1 { result <- global.CommandHandler.queryTempSpns(subQuery); }
+            case 2 { result <- global.CommandHandler.queryPresSpns(subQuery); }
+            case 4 { result <- global.CommandHandler.queryFullConfig(); }
+            default { result <- global.TCommandResult.error(global.ECommandError.INVALID_QUERY_TYPE); }
+        }
+
+        this.sendConfigResponse(5, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleSave() {
+        TCommandResult result <- global.CommandHandler.save();
+        this.sendConfigResponse(6, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleReset() {
+        TCommandResult result <- global.CommandHandler.reset();
+        this.sendConfigResponse(7, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handleNtcPreset(const u8 data[8]) {
+        u8 input <- global.J1939Decode.getPresetInput(data);
+        u8 preset <- global.J1939Decode.getPresetId(data);
+
+        TCommandResult result <- global.CommandHandler.applyNtcPreset(input, preset);
+        this.sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
+    }
+
+    void handlePressurePreset(const u8 data[8]) {
+        u8 input <- global.J1939Decode.getPresetInput(data);
+        u8 preset <- global.J1939Decode.getPresetId(data);
+
+        TCommandResult result <- global.CommandHandler.applyPressurePreset(input, preset);
+        this.sendConfigResponse(9, result.errorCode, result.data, result.dataLen);
+    }
+
+    // ========================================================================
+    // Command processing (must be before sniffDataPrivate)
+    // ========================================================================
+
+    public void processConfigCommand(const u8 data[8], u8 len) {
+        if (len < 1) { return; }
+
+        u8 cmd <- data[0];
+
+        switch (cmd) {
+            case 1 { this.handleEnableSpn(data); }
+            case 2 { this.handleSetNtcParam(data); }
+            case 3 { this.handleSetPressureRange(data); }
+            case 4 { this.handleSetTcType(data); }
+            case 5 { this.handleQuery(data); }
+            case 6 { this.handleSave(); }
+            case 7 { this.handleReset(); }
+            case 8 { this.handleNtcPreset(data); }
+            case 9 { this.handlePressurePreset(data); }
+            default {
+                u8 empty[1];
+                this.sendConfigResponse(cmd, 1, empty, 0);
+            }
+        }
+    }
+
+    // ========================================================================
+    // CAN message reception (must be before initialize)
+    // ========================================================================
+
+    void sniffDataPrivate(const CAN_message_t msg) {
+        J1939Message message;
+        message.setCanId(msg.id);
+        message.setData(msg.buf);
+
+        // PGN 65280 (0xFF00) - Configuration commands
+        if (message.pgn = 65280) {
+            this.processConfigCommand(msg.buf, 8);
+            return;
+        }
+
+        if (message.pgn = 59904) {
+            this.canBus.write(msg);
+        }
+    }
+
+    // ========================================================================
+    // Initialization
+    // ========================================================================
+
+    public void initialize(AppData currentData, AppConfig cfg) {
+        this.appData <- currentData;
+        this.config <- cfg;
+
+        Serial.println("J1939 Bus initializing");
+
+        this.canBus.begin();
+        this.canBus.setBaudRate(250 * 1000);
+        this.canBus.setMaxMB(16);
+        this.canBus.enableFIFO();
+        this.canBus.enableFIFOInterrupt();
+        this.canBus.onReceive(this.sniffDataPrivate);
+        this.canBus.mailboxStatus();
+
+        Serial.print("J1939 Source Address: ");
+        Serial.println(this.config.j1939SourceAddress);
+    }
+
+    // ========================================================================
+    // PGN transmission functions
+    // ========================================================================
+
+    // Send PGN 65129 - Engine Temperature 2
+    public void sendPgn65129(f32 intakeTemp, f32 coolantTemp) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn1363 <- global.SpnCheck.isSpnEnabled(this.config, 1363);
+        bool spn1637 <- global.SpnCheck.isSpnEnabled(this.config, 1637);
+
+        if (spn1363) {
+            u16 encoded <- global.J1939Encode.temp16bit(intakeTemp);
+            buf[0] <- encoded[0,8];
+            buf[1] <- encoded[8,8];
+        }
+        if (spn1637) {
+            u16 encoded <- global.J1939Encode.temp16bit(coolantTemp);
+            buf[2] <- encoded[0,8];
+            buf[3] <- encoded[8,8];
+        }
+
+        this.sendMessage(65129, buf);
+    }
+
+    // Send PGN 65164 - Engine Temperature 3
+    public void sendPgn65164() {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn441 <- global.SpnCheck.isSpnEnabled(this.config, 441);
+        bool spn354 <- global.SpnCheck.isSpnEnabled(this.config, 354);
+
+        if (spn441) {
+            buf[0] <- global.J1939Encode.temp8bit(this.appData.engineBayTemperatureC);
+        }
+        if (spn354) {
+            buf[6] <- global.J1939Encode.humidity(this.appData.humidity);
+        }
+
+        this.sendMessage(65164, buf);
+    }
+
+    // Send PGN 65189 - Turbocharger Information 4
+    public void sendPgn65189(f32 intake2Temp, f32 intake3Temp, f32 intake4Temp) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn1131 <- global.SpnCheck.isSpnEnabled(this.config, 1131);
+        bool spn1132 <- global.SpnCheck.isSpnEnabled(this.config, 1132);
+        bool spn1133 <- global.SpnCheck.isSpnEnabled(this.config, 1133);
+
+        if (spn1131) {
+            buf[0] <- global.J1939Encode.temp8bit(intake2Temp);
+        }
+        if (spn1132) {
+            buf[1] <- global.J1939Encode.temp8bit(intake3Temp);
+        }
+        if (spn1133) {
+            buf[2] <- global.J1939Encode.temp8bit(intake4Temp);
+        }
+
+        this.sendMessage(65189, buf);
+    }
+
+    // Send PGN 65190 - Turbocharger Information 5
+    public void sendPgn65190(f32 boost1kPa, f32 boost2kPa) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn1127 <- global.SpnCheck.isSpnEnabled(this.config, 1127);
+        bool spn1128 <- global.SpnCheck.isSpnEnabled(this.config, 1128);
+
+        if (spn1127) {
+            u16 encoded <- global.J1939Encode.boost16bit(boost1kPa);
+            buf[0] <- encoded[0,8];
+            buf[1] <- encoded[8,8];
+        }
+        if (spn1128) {
+            u16 encoded <- global.J1939Encode.boost16bit(boost2kPa);
+            buf[2] <- encoded[0,8];
+            buf[3] <- encoded[8,8];
+        }
+
+        this.sendMessage(65190, buf);
+    }
+
+    // Send PGN 65262 - Engine Temperature 1
+    public void sendPgn65262(f32 coolantTemp, f32 fuelTemp, f32 oilTemp) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn110 <- global.SpnCheck.isSpnEnabled(this.config, 110);
+        bool spn174 <- global.SpnCheck.isSpnEnabled(this.config, 174);
+        bool spn175 <- global.SpnCheck.isSpnEnabled(this.config, 175);
+
+        if (spn110) {
+            buf[0] <- global.J1939Encode.temp8bit(coolantTemp);
+        }
+        if (spn174) {
+            buf[1] <- global.J1939Encode.temp8bit(fuelTemp);
+        }
+        if (spn175) {
+            u16 encoded <- global.J1939Encode.temp16bit(oilTemp);
+            buf[2] <- encoded[0,8];
+            buf[3] <- encoded[8,8];
+        }
+
+        this.sendMessage(65262, buf);
+    }
+
+    // Send PGN 65263 - Engine Fluid Level/Pressure 1
+    public void sendPgn65263(f32 fuelPres, f32 oilPres, f32 coolantPres) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn94 <- global.SpnCheck.isSpnEnabled(this.config, 94);
+        bool spn100 <- global.SpnCheck.isSpnEnabled(this.config, 100);
+        bool spn109 <- global.SpnCheck.isSpnEnabled(this.config, 109);
+
+        if (spn94) {
+            buf[0] <- global.J1939Encode.pressure4kPa(fuelPres);
+        }
+        if (spn100) {
+            buf[3] <- global.J1939Encode.pressure4kPa(oilPres);
+        }
+        if (spn109) {
+            buf[6] <- global.J1939Encode.pressure2kPa(coolantPres);
+        }
+
+        this.sendMessage(65263, buf);
+    }
+
+    // Send PGN 65269 - Ambient Conditions
+    public void sendPgn65269(f32 ambientTemp, f32 airInletTemp, f32 baroPress) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn108 <- global.SpnCheck.isSpnEnabled(this.config, 108);
+        bool spn171 <- global.SpnCheck.isSpnEnabled(this.config, 171);
+        bool spn172 <- global.SpnCheck.isSpnEnabled(this.config, 172);
+
+        if (spn108) {
+            buf[0] <- global.J1939Encode.barometric(baroPress);
+        }
+        if (spn171) {
+            u16 encoded <- global.J1939Encode.temp16bit(ambientTemp);
+            buf[3] <- encoded[0,8];
+            buf[4] <- encoded[8,8];
+        }
+        if (spn172) {
+            buf[5] <- global.J1939Encode.temp8bit(airInletTemp);
+        }
+
+        this.sendMessage(65269, buf);
+    }
+
+    // Send PGN 65270 - Inlet/Exhaust Conditions 1
+    public void sendPgn65270(f32 airInletPres, f32 airInletTemp, f32 egtTemp, f32 boostPres) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        bool spn102 <- global.SpnCheck.isSpnEnabled(this.config, 102);
+        bool spn105 <- global.SpnCheck.isSpnEnabled(this.config, 105);
+        bool spn106 <- global.SpnCheck.isSpnEnabled(this.config, 106);
+        bool spn173 <- global.SpnCheck.isSpnEnabled(this.config, 173);
+
+        if (spn102) {
+            buf[1] <- global.J1939Encode.pressure2kPa(boostPres);
+        }
+        if (spn105) {
+            buf[2] <- global.J1939Encode.temp8bit(airInletTemp);
+        }
+        if (spn106) {
+            buf[3] <- global.J1939Encode.pressure2kPa(airInletPres);
+        }
+        if (spn173) {
+            u16 encoded <- global.J1939Encode.temp16bit(egtTemp);
+            buf[5] <- encoded[0,8];
+            buf[6] <- encoded[8,8];
+        }
+
+        this.sendMessage(65270, buf);
+    }
+}

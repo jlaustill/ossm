@@ -1,5 +1,6 @@
 #include "ConfigStorage.h"
 #include <EEPROM.h>
+#include "Display/Crc32.h"  // cnext-generated memory-safe checksum
 
 bool ConfigStorage::loadConfig(AppConfig* config) {
     EEPROM.get(EEPROM_CONFIG_ADDRESS, *config);
@@ -16,7 +17,7 @@ bool ConfigStorage::loadConfig(AppConfig* config) {
 bool ConfigStorage::saveConfig(const AppConfig* config) {
     // Create a copy with updated checksum
     AppConfig configToSave = *config;
-    configToSave.checksum = calculateChecksum(&configToSave);
+    configToSave.checksum = Crc32_calculateChecksum(&configToSave);
 
     EEPROM.put(EEPROM_CONFIG_ADDRESS, configToSave);
     return true;
@@ -34,7 +35,7 @@ bool ConfigStorage::validateConfig(const AppConfig* config) {
     }
 
     // Verify checksum
-    uint32_t calculatedChecksum = calculateChecksum(config);
+    uint32_t calculatedChecksum = Crc32_calculateChecksum(config);
     if (calculatedChecksum != config->checksum) {
         return false;
     }
@@ -78,25 +79,6 @@ void ConfigStorage::loadDefaults(AppConfig* config) {
     config->bme280Enabled = false;
 
     // Calculate and set checksum
-    config->checksum = calculateChecksum(config);
+    config->checksum = Crc32_calculateChecksum(config);
 }
 
-uint32_t ConfigStorage::calculateChecksum(const AppConfig* config) {
-    // Simple CRC32 implementation
-    // Calculate over entire struct except the checksum field itself
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(config);
-    size_t length = sizeof(AppConfig) - sizeof(config->checksum);
-
-    uint32_t crc = 0xFFFFFFFFU;
-    for (size_t i = 0; i < length; i++) {
-        crc ^= data[i];
-        for (int j = 0; j < 8; j++) {
-            if (crc & 1U) {
-                crc = (crc >> 1) ^ 0xEDB88320U;
-            } else {
-                crc >>= 1;
-            }
-        }
-    }
-    return ~crc;
-}

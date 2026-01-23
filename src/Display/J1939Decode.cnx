@@ -1,0 +1,118 @@
+// J1939 Message Decoding Functions
+// Parses incoming J1939 command data from CAN bus messages
+// Tests array access and byte manipulation patterns
+
+#include <stdint.h>
+
+scope J1939Decode {
+    // Extract command byte from J1939 config message
+    // Format: [cmd, ...]
+    public u8 getCommand(const u8 data[8]) {
+        return data[0];
+    }
+
+    // Extract SPN from enable/disable command
+    // Format: [1, spn_high, spn_low, enable, input]
+    public u16 getSpn(const u8 data[8]) {
+        u16 spn <- 0;
+        spn[0,8] <- data[2];
+        spn[8,8] <- data[1];
+        return spn;
+    }
+
+    // Extract enable flag from enable/disable command
+    // Format: [1, spn_high, spn_low, enable, input]
+    public bool getEnable(const u8 data[8]) {
+        if (data[3] != 0) {
+            return true;
+        }
+        return false;
+    }
+
+    // Extract input number from enable/disable command
+    // Format: [1, spn_high, spn_low, enable, input]
+    public u8 getInput(const u8 data[8]) {
+        return data[4];
+    }
+
+    // Extract input from NTC param command
+    // Format: [2, input, param, b0, b1, b2, b3]
+    public u8 getNtcInput(const u8 data[8]) {
+        return data[1];
+    }
+
+    // Extract param index from NTC param command
+    // Format: [2, input, param, b0, b1, b2, b3]
+    public u8 getNtcParam(const u8 data[8]) {
+        return data[2];
+    }
+
+    // Extract pressure input from set pressure range command
+    // Format: [3, input, psi_high, psi_low]
+    public u8 getPressureInput(const u8 data[8]) {
+        return data[1];
+    }
+
+    // Extract max pressure from set pressure range command
+    // Format: [3, input, psi_high, psi_low]
+    public u16 getMaxPressure(const u8 data[8]) {
+        u16 pressure <- 0;
+        pressure[0,8] <- data[3];
+        pressure[8,8] <- data[2];
+        return pressure;
+    }
+
+    // Extract thermocouple type from set TC type command
+    // Format: [4, type]
+    public u8 getTcType(const u8 data[8]) {
+        return data[1];
+    }
+
+    // Extract query type from query command
+    // Format: [5, query_type, sub_query]
+    public u8 getQueryType(const u8 data[8]) {
+        return data[1];
+    }
+
+    // Extract sub-query from query command
+    // Format: [5, query_type, sub_query]
+    public u8 getSubQuery(const u8 data[8]) {
+        return data[2];
+    }
+
+    // Extract preset input from NTC/pressure preset commands
+    // Format: [8/9, input, preset]
+    public u8 getPresetInput(const u8 data[8]) {
+        return data[1];
+    }
+
+    // Extract preset ID from NTC/pressure preset commands
+    // Format: [8/9, input, preset]
+    public u8 getPresetId(const u8 data[8]) {
+        return data[2];
+    }
+
+    // Validate command length for enable SPN command
+    public bool isValidEnableCmd(u8 len) {
+        if (len >= 5) {
+            return true;
+        }
+        return false;
+    }
+
+    // Validate command length for NTC param command
+    public bool isValidNtcParamCmd(u8 len) {
+        if (len >= 7) {
+            return true;
+        }
+        return false;
+    }
+
+    // Validate command length for pressure range command
+    public bool isValidPressureRangeCmd(u8 len) {
+        if (len >= 4) {
+            return true;
+        }
+        return false;
+    }
+}
