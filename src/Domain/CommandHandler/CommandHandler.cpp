@@ -197,14 +197,14 @@ TCommandResult CommandHandler::setNtcParam(uint8_t input, uint8_t param, float v
 }
 
 TCommandResult CommandHandler::save() {
-    if (ConfigStorage::saveConfig(config)) {
+    if (ConfigStorage_saveConfig(config)) {
         return TCommandResult::ok();
     }
     return TCommandResult::error(ECommandError::SAVE_FAILED);
 }
 
 TCommandResult CommandHandler::reset() {
-    ConfigStorage::loadDefaults(config);
+    ConfigStorage_loadDefaults(config);
     return TCommandResult::ok();
 }
 

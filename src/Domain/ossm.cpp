@@ -60,10 +60,10 @@ void Ossm_sendJ1939Messages(void) {
 void Ossm_setup(void) {
     Serial.begin(115200);
     Serial.println("OSSM Initializing...");
-    if (!ConfigStorage::loadConfig(&Ossm_appConfig)) {
+    if (!ConfigStorage_loadConfig(&Ossm_appConfig)) {
         Serial.println("Loading default configuration");
-        ConfigStorage::loadDefaults(&Ossm_appConfig);
-        ConfigStorage::saveConfig(&Ossm_appConfig);
+        ConfigStorage_loadDefaults(&Ossm_appConfig);
+        ConfigStorage_saveConfig(&Ossm_appConfig);
     } else {
         Serial.println("Configuration loaded from EEPROM");
     }
