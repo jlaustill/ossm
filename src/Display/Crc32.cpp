@@ -38,25 +38,25 @@ static uint32_t Crc32_crcFloat(uint32_t* crc, float value) {
 
 uint32_t Crc32_calculateChecksum(const AppConfig* config) {
     uint32_t crc = 0xFFFFFFFF;
-    crc = Crc32_crcByte(crc, config->magic & 0xFF);
-    crc = Crc32_crcByte(crc, (config->magic >> 8) & 0xFF);
-    crc = Crc32_crcByte(crc, (config->magic >> 16) & 0xFF);
-    crc = Crc32_crcByte(crc, (config->magic >> 24) & 0xFF);
+    crc = Crc32_crcByte(crc, ((config->magic) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config->magic >> 8) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config->magic >> 16) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config->magic >> 24) & 0xFFU));
     crc = Crc32_crcByte(crc, config->version);
     crc = Crc32_crcByte(crc, config->j1939SourceAddress);
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        crc = Crc32_crcByte(crc, config->tempInputs[i].assignedSpn & 0xFF);
-        crc = Crc32_crcByte(crc, (config->tempInputs[i].assignedSpn >> 8) & 0xFF);
+        crc = Crc32_crcByte(crc, ((config->tempInputs[i].assignedSpn) & 0xFFU));
+        crc = Crc32_crcByte(crc, ((config->tempInputs[i].assignedSpn >> 8) & 0xFFU));
         crc = Crc32_crcFloat(&crc, config->tempInputs[i].coeffA);
         crc = Crc32_crcFloat(&crc, config->tempInputs[i].coeffB);
         crc = Crc32_crcFloat(&crc, config->tempInputs[i].coeffC);
         crc = Crc32_crcFloat(&crc, config->tempInputs[i].resistorValue);
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        crc = Crc32_crcByte(crc, config->pressureInputs[i].assignedSpn & 0xFF);
-        crc = Crc32_crcByte(crc, (config->pressureInputs[i].assignedSpn >> 8) & 0xFF);
-        crc = Crc32_crcByte(crc, config->pressureInputs[i].maxPressure & 0xFF);
-        crc = Crc32_crcByte(crc, (config->pressureInputs[i].maxPressure >> 8) & 0xFF);
+        crc = Crc32_crcByte(crc, ((config->pressureInputs[i].assignedSpn) & 0xFFU));
+        crc = Crc32_crcByte(crc, ((config->pressureInputs[i].assignedSpn >> 8) & 0xFFU));
+        crc = Crc32_crcByte(crc, ((config->pressureInputs[i].maxPressure) & 0xFFU));
+        crc = Crc32_crcByte(crc, ((config->pressureInputs[i].maxPressure >> 8) & 0xFFU));
         crc = Crc32_crcByte(crc, static_cast<uint8_t>(config->pressureInputs[i].pressureType));
     }
     crc = Crc32_crcByte(crc, config->egtEnabled);

@@ -7,7 +7,7 @@
 
 // Byte Utility Functions
 // Common byte manipulation operations for embedded systems
-// Tests bit shifting, masking, and byte extraction patterns
+// Uses C-Next bit-slice syntax for clean, safe byte operations
 #include <stdint.h>
 
 #include <stdint.h>
@@ -16,95 +16,82 @@
 /* Scope: ByteUtils */
 
 uint16_t ByteUtils_makeU16BE(uint8_t high, uint8_t low) {
-    uint16_t h = high;
-    uint16_t l = low;
-    uint16_t result = (h << 8) | l;
+    uint16_t result = 0;
+    result = (result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8);
     return result;
 }
 
 uint16_t ByteUtils_makeU16LE(uint8_t low, uint8_t high) {
-    uint16_t h = high;
-    uint16_t l = low;
-    uint16_t result = (h << 8) | l;
+    uint16_t result = 0;
+    result = (result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8);
     return result;
 }
 
 uint8_t ByteUtils_highByte(uint16_t value) {
-    uint8_t result = (value >> 8) & 0xFF;
-    return result;
+    return ((value >> 8) & 0xFFU);
 }
 
 uint8_t ByteUtils_lowByte(uint16_t value) {
-    uint8_t result = value & 0xFF;
-    return result;
+    return ((value) & 0xFFU);
 }
 
 uint32_t ByteUtils_makeU32BE(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0) {
-    uint32_t byte3 = b3;
-    uint32_t byte2 = b2;
-    uint32_t byte1 = b1;
-    uint32_t byte0 = b0;
-    uint32_t result = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0;
+    uint32_t result = 0;
+    result = (result & ~(0xFFU << 0)) | ((b0 & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((b1 & 0xFFU) << 8);
+    result = (result & ~(0xFFU << 16)) | ((b2 & 0xFFU) << 16);
+    result = (result & ~(0xFFU << 24)) | ((b3 & 0xFFU) << 24);
     return result;
 }
 
 uint32_t ByteUtils_makeU32LE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
-    uint32_t byte3 = b3;
-    uint32_t byte2 = b2;
-    uint32_t byte1 = b1;
-    uint32_t byte0 = b0;
-    uint32_t result = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0;
+    uint32_t result = 0;
+    result = (result & ~(0xFFU << 0)) | ((b0 & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((b1 & 0xFFU) << 8);
+    result = (result & ~(0xFFU << 16)) | ((b2 & 0xFFU) << 16);
+    result = (result & ~(0xFFU << 24)) | ((b3 & 0xFFU) << 24);
     return result;
 }
 
 uint8_t ByteUtils_byte0(uint32_t value) {
-    uint8_t result = value & 0xFF;
-    return result;
+    return ((value) & 0xFFU);
 }
 
 uint8_t ByteUtils_byte1(uint32_t value) {
-    uint8_t result = (value >> 8) & 0xFF;
-    return result;
+    return ((value >> 8) & 0xFFU);
 }
 
 uint8_t ByteUtils_byte2(uint32_t value) {
-    uint8_t result = (value >> 16) & 0xFF;
-    return result;
+    return ((value >> 16) & 0xFFU);
 }
 
 uint8_t ByteUtils_byte3(uint32_t value) {
-    uint8_t result = (value >> 24) & 0xFF;
-    return result;
+    return ((value >> 24) & 0xFFU);
 }
 
 bool ByteUtils_isBitSet(uint8_t value, uint8_t bit) {
     if (bit > 7) {
         return false;
     }
-    uint8_t mask = 1 << bit;
-    if ((value & mask) != 0) {
-        return true;
-    }
-    return false;
+    return ((value >> bit) & ((1U << 1) - 1)) != 0;
 }
 
 uint8_t ByteUtils_setBit(uint8_t value, uint8_t bit) {
     if (bit > 7) {
         return value;
     }
-    uint8_t mask = 1 << bit;
-    uint8_t result = value | mask;
-    return result;
+    value = (value & ~(((1U << 1) - 1) << bit)) | ((1 & ((1U << 1) - 1)) << bit);
+    return value;
 }
 
 uint8_t ByteUtils_clearBit(uint8_t value, uint8_t bit) {
     if (bit > 7) {
         return value;
     }
-    uint8_t mask = 1 << bit;
-    uint8_t invMask = ~mask;
-    uint8_t result = value & invMask;
-    return result;
+    value = (value & ~(((1U << 1) - 1) << bit)) | ((0 & ((1U << 1) - 1)) << bit);
+    return value;
 }
 
 uint8_t ByteUtils_clampU8(uint8_t value, uint8_t minVal, uint8_t maxVal) {

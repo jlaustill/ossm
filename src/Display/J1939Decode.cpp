@@ -20,9 +20,9 @@ uint8_t J1939Decode_getCommand(const uint8_t data[8]) {
 }
 
 uint16_t J1939Decode_getSpn(const uint8_t data[8]) {
-    uint16_t high = data[1];
-    uint16_t low = data[2];
-    uint16_t spn = (high << 8) | low;
+    uint16_t spn = 0;
+    spn = (spn & ~(0xFFU << 0)) | ((data[2] & 0xFFU) << 0);
+    spn = (spn & ~(0xFFU << 8)) | ((data[1] & 0xFFU) << 8);
     return spn;
 }
 
@@ -50,9 +50,9 @@ uint8_t J1939Decode_getPressureInput(const uint8_t data[8]) {
 }
 
 uint16_t J1939Decode_getMaxPressure(const uint8_t data[8]) {
-    uint16_t high = data[2];
-    uint16_t low = data[3];
-    uint16_t pressure = (high << 8) | low;
+    uint16_t pressure = 0;
+    pressure = (pressure & ~(0xFFU << 0)) | ((data[3] & 0xFFU) << 0);
+    pressure = (pressure & ~(0xFFU << 8)) | ((data[2] & 0xFFU) << 8);
     return pressure;
 }
 
