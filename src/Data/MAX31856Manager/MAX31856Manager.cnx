@@ -1,0 +1,186 @@
+// MAX31856 Thermocouple Manager
+// Handles EGT (Exhaust Gas Temperature) readings via SPI
+
+#include <Adafruit_MAX31856.h>
+#include "AppConfig.h"
+#include <Arduino.h>
+#include <SPI.h>
+
+// Pin configuration - must be const for C++ constructor
+const u8 thermoCoupleCs <- 10;
+
+// MAX31856 instance with CS pin (file-level for constructor syntax)
+Adafruit_MAX31856 thermocouple(thermoCoupleCs);
+
+scope MAX31856Manager {
+    // Pin configuration
+    const u8 drdyPin <- 2;
+    const u8 faultPin <- 3;
+
+    // Conversion timing
+    const u32 CONVERSION_TIMEOUT_MS <- 500;
+
+    // State
+    bool enabled <- false;
+    bool initialized <- false;
+    bool conversionStarted <- false;
+    u32 conversionStartTime <- 0;
+
+    // Latest readings
+    f32 temperatureC <- 0.0;
+    f32 coldJunctionC <- 0.0;
+    u8 faultCode <- 0;
+    bool readingValid <- false;
+
+    // Start a one-shot conversion
+    void startConversion() {
+        if (!this.enabled || !this.initialized) {
+            this.conversionStarted <- false;
+            return;
+        }
+
+        global.thermocouple.triggerOneShot();
+        this.conversionStarted <- true;
+        this.conversionStartTime <- global.millis();
+    }
+
+    // Check if conversion is complete
+    bool isConversionComplete() {
+        if (!this.conversionStarted || !this.enabled || !this.initialized) {
+            return false;
+        }
+
+        // Check DRDY pin (active low when data ready)
+        i32 drdyState <- global.digitalRead(this.drdyPin);
+        if (drdyState = LOW) {
+            return true;
+        }
+
+        // Fallback: poll the conversion complete status
+        return global.thermocouple.conversionComplete();
+    }
+
+    // Read the conversion result
+    void readResult() {
+        if (!this.enabled || !this.initialized) {
+            return;
+        }
+
+        // Check for faults first
+        this.faultCode <- global.thermocouple.readFault();
+
+        if (this.faultCode != 0) {
+            // Fault detected - reading invalid
+            this.readingValid <- false;
+        } else {
+            // Read temperatures
+            this.temperatureC <- global.thermocouple.readThermocoupleTemperature();
+            this.coldJunctionC <- global.thermocouple.readCJTemperature();
+            this.readingValid <- true;
+        }
+
+        this.conversionStarted <- false;
+    }
+
+    // Initialize the MAX31856 based on config
+    public void initialize(const AppConfig config) {
+        this.enabled <- config.egtEnabled;
+
+        if (!this.enabled) {
+            global.Serial.println("MAX31856 disabled in config");
+            return;
+        }
+
+        // Configure pins
+        global.pinMode(this.drdyPin, INPUT);
+        global.pinMode(this.faultPin, INPUT);
+
+        bool began <- global.thermocouple.begin();
+        if (began) {
+            this.initialized <- true;
+
+            // Configure thermocouple type from config
+            // Cast enum to u8 for C++ library compatibility
+            global.thermocouple.setThermocoupleType((u8)config.thermocoupleType);
+
+            // Set noise rejection (60Hz for North America)
+            // MAX31856_NOISE_FILTER_60HZ = 0
+            global.thermocouple.setNoiseFilter(0);
+
+            // Use one-shot mode for lower power
+            // MAX31856_ONESHOT = 0
+            global.thermocouple.setConversionMode(0);
+
+            global.Serial.println("MAX31856 initialized");
+
+            // Start first conversion
+            this.startConversion();
+        } else {
+            this.initialized <- false;
+            global.Serial.println("MAX31856 FAILED to initialize");
+        }
+    }
+
+    // Call from main loop to update readings
+    // Returns true if a new reading is available
+    public bool update() {
+        if (!this.enabled || !this.initialized) {
+            return false;
+        }
+
+        // No conversion in progress, start one
+        if (!this.conversionStarted) {
+            this.startConversion();
+            return false;
+        }
+
+        // Check if conversion is complete
+        bool complete <- this.isConversionComplete();
+        if (complete) {
+            this.readResult();
+
+            // Start next conversion immediately
+            this.startConversion();
+            return true;
+        }
+
+        // Check for timeout
+        u32 now <- global.millis();
+        if (now - this.conversionStartTime > this.CONVERSION_TIMEOUT_MS) {
+            // Timeout - reading invalid, will retry
+            this.readingValid <- false;
+            this.conversionStarted <- false;
+
+            // Try to start a new conversion
+            this.startConversion();
+        }
+
+        return false;
+    }
+
+    // Get the latest temperature reading in Celsius
+    public f32 getTemperatureC() {
+        if (!this.readingValid) {
+            return -273.15;  // Return absolute zero as error indicator
+        }
+        return this.temperatureC;
+    }
+
+    // Get the latest cold junction temperature in Celsius
+    public f32 getColdJunctionC() {
+        if (!this.readingValid) {
+            return -273.15;
+        }
+        return this.coldJunctionC;
+    }
+
+    // Check if the device is enabled and initialized
+    public bool isEnabled() {
+        return this.enabled && this.initialized;
+    }
+
+    // Get the fault status code
+    public u8 getFaultStatus() {
+        return this.faultCode;
+    }
+}

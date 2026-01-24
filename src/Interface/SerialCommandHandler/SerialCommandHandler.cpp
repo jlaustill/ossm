@@ -432,7 +432,7 @@ void SerialCommandHandler::handleReadSensors() {
             // EGT
             if (config->egtEnabled) {
                 Serial.print("EGT: ");
-                if (MAX31856Manager::getFaultStatus() == 0) {
+                if (MAX31856Manager_getFaultStatus() == 0) {
                     Serial.print(appData->egtTemperatureC, 1);
                     Serial.println(" C");
                 } else {
@@ -478,12 +478,12 @@ void SerialCommandHandler::handleReadSensors() {
                 return;
             }
             Serial.print("EGT: ");
-            if (MAX31856Manager::getFaultStatus() == 0) {
+            if (MAX31856Manager_getFaultStatus() == 0) {
                 Serial.print(appData->egtTemperatureC, 1);
                 Serial.println(" C");
             } else {
                 Serial.print("FAULT (0x");
-                Serial.print(MAX31856Manager::getFaultStatus(), HEX);
+                Serial.print(MAX31856Manager_getFaultStatus(), HEX);
                 Serial.println(")");
             }
             break;
@@ -550,7 +550,7 @@ static const char* const FAULT_LABELS[] = {
 
 void SerialCommandHandler::reportFaults() {
     // Check for any active faults using C-Next module
-    uint8_t egtFault = MAX31856Manager::getFaultStatus();
+    uint8_t egtFault = MAX31856Manager_getFaultStatus();
 
     if (FaultDecode_hasFault(egtFault)) {
         Serial.println("--- FAULTS ---");
