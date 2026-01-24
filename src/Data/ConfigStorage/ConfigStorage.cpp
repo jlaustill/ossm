@@ -18,7 +18,8 @@
 
 bool ConfigStorage_loadConfig(const AppConfig* config) {
     EEPROM.get(0, (*config));
-    if (!ConfigStorage_validateConfig(config)) {
+    bool isValid = ConfigStorage_validateConfig(config);
+    if (!isValid) {
         ConfigStorage_loadDefaults(config);
         ConfigStorage_saveConfig(config);
         return false;

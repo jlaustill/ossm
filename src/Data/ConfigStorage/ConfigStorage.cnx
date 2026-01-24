@@ -13,7 +13,8 @@ scope ConfigStorage {
     public bool loadConfig(AppConfig config) {
         global.EEPROM.get(this.EEPROM_CONFIG_ADDRESS, config);
 
-        if (!this.validateConfig(config)) {
+        bool isValid <- this.validateConfig(config);
+        if (!isValid) {
             this.loadDefaults(config);
             this.saveConfig(config);
             return false;
