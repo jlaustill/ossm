@@ -13,10 +13,12 @@
 scope SensorProcessor {
     // Config is read-only after init, so a copy is fine
     AppConfig config;
+    bool initialized <- false;
 
     // Initialize with config
     public void initialize(const AppConfig cfg) {
         this.config <- cfg;
+        this.initialized <- true;
     }
 
     // Get atmospheric pressure for PSIG conversion (from BME280 or default)
@@ -163,6 +165,9 @@ scope SensorProcessor {
 
     // Process all enabled inputs and update AppData
     public void processAllInputs(AppData appData) {
+        if (!this.initialized) {
+            return;
+        }
         this.processTempInputs(appData);
         this.processPressureInputs(appData);
         this.processEgt(appData);

@@ -21,9 +21,11 @@
 
 /* Scope: SensorProcessor */
 static AppConfig SensorProcessor_config = {};
+static bool SensorProcessor_initialized = false;
 
 void SensorProcessor_initialize(const AppConfig* cfg) {
     SensorProcessor_config = (*cfg);
+    SensorProcessor_initialized = true;
 }
 
 static float SensorProcessor_getAtmosphericPressurekPa(const AppData* appData) {
@@ -158,6 +160,9 @@ static void SensorProcessor_processBme280(AppData* appData) {
 }
 
 void SensorProcessor_processAllInputs(AppData* appData) {
+    if (!SensorProcessor_initialized) {
+        return;
+    }
     SensorProcessor_processTempInputs(appData);
     SensorProcessor_processPressureInputs(appData);
     SensorProcessor_processEgt(appData);
