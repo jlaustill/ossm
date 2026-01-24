@@ -14,7 +14,7 @@
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
-#include "Domain/SensorProcessor/SensorProcessor.h"
+#include "SensorProcessor/SensorProcessor.h"
 #include "Domain/CommandHandler/CommandHandler.h"
 #include <Display/J1939Bus.h>
 #include "Interface/SerialCommandHandler/SerialCommandHandler.h"
@@ -37,7 +37,7 @@ void Ossm_processSensorUpdates(void) {
     ADS1115Manager::update();
     MAX31856Manager::update();
     BME280Manager::update();
-    SensorProcessor::processAllInputs();
+    SensorProcessor_processAllInputs(&Ossm_appData);
 }
 
 void Ossm_sendJ1939Messages(void) {
@@ -70,7 +70,7 @@ void Ossm_setup(void) {
     ADS1115Manager::initialize(&Ossm_appConfig);
     MAX31856Manager::initialize(&Ossm_appConfig);
     BME280Manager::initialize(&Ossm_appConfig);
-    SensorProcessor::initialize(&Ossm_appConfig, &Ossm_appData);
+    SensorProcessor_initialize(&Ossm_appConfig);
     CommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
     J1939Bus_initialize(&Ossm_appData, &Ossm_appConfig);
     SerialCommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);

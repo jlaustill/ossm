@@ -9,7 +9,7 @@
 #include "Data/ADS1115Manager/ADS1115Manager.h"
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
-#include "Domain/SensorProcessor/SensorProcessor.h"
+#include "SensorProcessor/SensorProcessor.cnx"
 #include "Domain/CommandHandler/CommandHandler.h"
 #include <Display/J1939Bus.cnx>
 #include "Interface/SerialCommandHandler/SerialCommandHandler.h"
@@ -45,7 +45,7 @@ scope Ossm {
         global.BME280Manager.update();
 
         // Process all sensor readings and update AppData
-        global.SensorProcessor.processAllInputs();
+        global.SensorProcessor.processAllInputs(this.appData);
     }
 
     // Send J1939 messages - defined before loop
@@ -124,7 +124,7 @@ scope Ossm {
         global.ADS1115Manager.initialize(this.appConfig);
         global.MAX31856Manager.initialize(this.appConfig);
         global.BME280Manager.initialize(this.appConfig);
-        global.SensorProcessor.initialize(this.appConfig, this.appData);
+        global.SensorProcessor.initialize(this.appConfig);
         global.CommandHandler.initialize(this.appConfig, this.appData);
 
         // Initialize J1939 bus

@@ -1,0 +1,171 @@
+// Sensor processing logic
+// Reads from hardware managers and updates AppData
+
+#include <Arduino.h>
+#include "AppConfig.h"
+#include "Data/ADS1115Manager/ADS1115Manager.h"
+#include "Data/MAX31856Manager/MAX31856Manager.h"
+#include "Data/BME280Manager/BME280Manager.h"
+#include <Display/SensorConvert.cnx>
+#include <Display/HardwareMap.cnx>
+#include <Display/AppData.cnx>
+
+scope SensorProcessor {
+    // Config is read-only after init, so a copy is fine
+    AppConfig config;
+
+    // Initialize with config
+    public void initialize(const AppConfig cfg) {
+        this.config <- cfg;
+    }
+
+    // Get atmospheric pressure for PSIG conversion (from BME280 or default)
+    f32 getAtmosphericPressurekPa(AppData appData) {
+        if (appData.absoluteBarometricpressurekPa > 0.0) {
+            return appData.absoluteBarometricpressurekPa;
+        }
+        return global.SensorConvert.defaultAtmosphericPressure();
+    }
+
+    // Update AppData based on SPN
+    void updateAppDataForSpn(AppData appData, u16 spn, f32 value) {
+        switch (spn) {
+            // Temperature SPNs
+            case 175 {  // Engine Oil Temperature
+                appData.oilTemperatureC <- value;
+            }
+            case 110 {  // Engine Coolant Temperature
+                appData.coolantTemperatureC <- value;
+            }
+            case 1637 { // Engine Coolant Temperature (High Resolution)
+                appData.coolantTemperatureC <- value;
+            }
+            case 174 {  // Fuel Temperature
+                appData.fuelTemperatureC <- value;
+            }
+            case 105 {  // Intake Manifold 1 Temperature (Boost Temp)
+                appData.boostTemperatureC <- value;
+            }
+            case 1363 { // Intake Manifold 1 Air Temperature (High Resolution)
+                appData.boostTemperatureC <- value;
+            }
+            case 1131 { // Intake Manifold 2 Temperature (CAC Inlet)
+                appData.cacInletTemperatureC <- value;
+            }
+            case 1132 { // Intake Manifold 3 Temperature (Transfer Pipe)
+                appData.transferPipeTemperatureC <- value;
+            }
+            case 1133 { // Intake Manifold 4 Temperature (Air Inlet)
+                appData.airInletTemperatureC <- value;
+            }
+            case 172 {  // Air Inlet Temperature
+                appData.airInletTemperatureC <- value;
+            }
+            case 441 {  // Engine Bay Temperature
+                appData.engineBayTemperatureC <- value;
+            }
+
+            // Pressure SPNs (value is already in kPa)
+            case 100 {  // Engine Oil Pressure
+                appData.oilPressurekPa <- value;
+            }
+            case 109 {  // Coolant Pressure
+                appData.coolantPressurekPa <- value;
+            }
+            case 94 {   // Fuel Delivery Pressure
+                appData.fuelPressurekPa <- value;
+            }
+            case 102 {  // Boost Pressure
+                appData.boostPressurekPa <- value;
+            }
+            case 106 {  // Air Inlet Pressure
+                appData.airInletPressurekPa <- value;
+            }
+            case 1127 { // Turbocharger 1 Boost Pressure (CAC Inlet)
+                appData.cacInletPressurekPa <- value;
+            }
+            case 1128 { // Turbocharger 2 Boost Pressure (Transfer Pipe)
+                appData.transferPipePressurekPa <- value;
+            }
+            default {
+                // Unknown SPN, ignore
+            }
+        }
+    }
+
+    // Process temperature inputs
+    void processTempInputs(AppData appData) {
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            u16 assignedSpn <- this.config.tempInputs[i].assignedSpn;
+
+            // Skip disabled inputs
+            if (assignedSpn = 0) {
+                continue;
+            }
+
+            // Get hardware mapping
+            u8 device <- global.HardwareMap.tempDevice(i);
+            u8 channel <- global.HardwareMap.tempChannel(i);
+
+            // Get voltage from ADS1115
+            f32 voltage <- global.ADS1115Manager.getVoltage(device, channel);
+
+            // Convert to temperature
+            f32 tempC <- global.SensorConvert.ntcTemperature(voltage, this.config.tempInputs[i]);
+
+            // Update AppData based on assigned SPN
+            this.updateAppDataForSpn(appData, assignedSpn, tempC);
+        }
+    }
+
+    // Process pressure inputs
+    void processPressureInputs(AppData appData) {
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+            u16 assignedSpn <- this.config.pressureInputs[i].assignedSpn;
+
+            // Skip disabled inputs
+            if (assignedSpn = 0) {
+                continue;
+            }
+
+            // Get hardware mapping
+            u8 device <- global.HardwareMap.pressureDevice(i);
+            u8 channel <- global.HardwareMap.pressureChannel(i);
+
+            // Get voltage from ADS1115
+            f32 voltage <- global.ADS1115Manager.getVoltage(device, channel);
+
+            // Convert to pressure in kPa
+            f32 pressurekPa <- global.SensorConvert.pressure(voltage, this.config.pressureInputs[i], this.getAtmosphericPressurekPa(appData));
+
+            // Update AppData based on assigned SPN
+            this.updateAppDataForSpn(appData, assignedSpn, pressurekPa);
+        }
+    }
+
+    // Process EGT from MAX31856
+    void processEgt(AppData appData) {
+        bool egtReady <- global.MAX31856Manager.isEnabled();
+        if (this.config.egtEnabled && egtReady) {
+            appData.egtTemperatureC <- global.MAX31856Manager.getTemperatureC();
+        }
+    }
+
+    // Process BME280 ambient sensors
+    void processBme280(AppData appData) {
+        bool bmeReady <- global.BME280Manager.isEnabled();
+        if (this.config.bme280Enabled && bmeReady) {
+            appData.ambientTemperatureC <- global.BME280Manager.getTemperatureC();
+            appData.humidity <- global.BME280Manager.getHumidity();
+            appData.absoluteBarometricpressurekPa <- global.BME280Manager.getPressurekPa();
+        }
+    }
+
+    // Process all enabled inputs and update AppData
+    public void processAllInputs(AppData appData) {
+        this.processTempInputs(appData);
+        this.processPressureInputs(appData);
+        this.processEgt(appData);
+        this.processBme280(appData);
+    }
+}
