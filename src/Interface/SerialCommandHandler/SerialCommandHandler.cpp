@@ -5,6 +5,7 @@
 #include "Data/MAX31856Manager/MAX31856Manager.h"
 #include "Data/BME280Manager/BME280Manager.h"
 #include "Domain/CommandHandler/CommandHandler.h"
+#include "Domain/CommandHandler/TCommandResult.h"
 #include "Display/SpnCategory.h"
 #include "Display/SpnInfo.h"
 #include "Display/FaultDecode.h"
@@ -146,20 +147,25 @@ void SerialCommandHandler::handleEnableSpn() {
     bool enable = (parsed.data[3] != 0);
     uint8_t input = (parsed.count > 4) ? parsed.data[4] : 0;
 
-    TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
+    uint8_t errorCode;
+    if (enable) {
+        errorCode = CommandHandler_enableSpn(config, spn, input);
+    } else {
+        errorCode = CommandHandler_disableSpn(config, spn);
+    }
 
-    if (result.errorCode != ECommandError::OK) {
+    if (errorCode != ECommandError_OK) {
         Serial.print("ERR,");
-        Serial.print(result.errorCode);
-        switch (result.errorCode) {
-            case ECommandError::UNKNOWN_SPN:
+        Serial.print(errorCode);
+        switch (errorCode) {
+            case ECommandError_UNKNOWN_SPN:
                 Serial.print(",Unknown SPN: ");
                 Serial.println(spn);
                 break;
-            case ECommandError::INVALID_TEMP_INPUT:
+            case ECommandError_INVALID_TEMP_INPUT:
                 Serial.println(",Input 1-8 required for temp SPN");
                 break;
-            case ECommandError::INVALID_PRESSURE_INPUT:
+            case ECommandError_INVALID_PRESSURE_INPUT:
                 Serial.println(",Input 1-7 required for pressure SPN");
                 break;
             default:
@@ -227,9 +233,9 @@ void SerialCommandHandler::handleSetPressureRange() {
     uint8_t input = parsed.data[1];
     uint16_t maxPressure = (static_cast<uint16_t>(parsed.data[2]) << 8) | parsed.data[3];
 
-    TCommandResult result = CommandHandler::setPressureRange(input, maxPressure);
+    uint8_t errorCode = CommandHandler_setPressureRange(config, input, maxPressure);
 
-    if (result.errorCode != ECommandError::OK) {
+    if (errorCode != ECommandError_OK) {
         Serial.println("ERR,5,Input must be 1-7");
         return;
     }
@@ -248,9 +254,9 @@ void SerialCommandHandler::handleSetTcType() {
     }
 
     uint8_t type = parsed.data[1];
-    TCommandResult result = CommandHandler::setTcType(type);
+    uint8_t errorCode = CommandHandler_setTcType(config, type);
 
-    if (result.errorCode != ECommandError::OK) {
+    if (errorCode != ECommandError_OK) {
         Serial.println("ERR,7,Type must be 0-7");
         return;
     }
@@ -320,8 +326,8 @@ void SerialCommandHandler::handleQuery() {
 
 void SerialCommandHandler::handleSave() {
     Serial.print("Saving configuration... ");
-    TCommandResult result = CommandHandler::save();
-    if (result.errorCode == ECommandError::OK) {
+    uint8_t errorCode = CommandHandler_save(config);
+    if (errorCode == ECommandError_OK) {
         Serial.println("OK");
     } else {
         Serial.println("ERR,9,Save failed");
@@ -330,7 +336,7 @@ void SerialCommandHandler::handleSave() {
 
 void SerialCommandHandler::handleReset() {
     Serial.println("Resetting to defaults...");
-    CommandHandler::reset();
+    CommandHandler_reset(config);
     Serial.println("OK,Use '6' to save");
 }
 
@@ -344,10 +350,10 @@ void SerialCommandHandler::handleNtcPreset() {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
 
-    TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
+    uint8_t errorCode = CommandHandler_applyNtcPreset(config, input, preset);
 
-    if (result.errorCode != ECommandError::OK) {
-        if (result.errorCode == ECommandError::INVALID_TEMP_INPUT) {
+    if (errorCode != ECommandError_OK) {
+        if (errorCode == ECommandError_INVALID_TEMP_INPUT) {
             Serial.println("ERR,4,Input must be 1-8");
         } else {
             Serial.println("ERR,10,Preset must be 0-2");
@@ -375,10 +381,10 @@ void SerialCommandHandler::handlePressurePreset() {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
 
-    TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
+    uint8_t errorCode = CommandHandler_applyPressurePreset(config, input, preset);
 
-    if (result.errorCode != ECommandError::OK) {
-        if (result.errorCode == ECommandError::INVALID_PRESSURE_INPUT) {
+    if (errorCode != ECommandError_OK) {
+        if (errorCode == ECommandError_INVALID_PRESSURE_INPUT) {
             Serial.println("ERR,5,Input must be 1-7");
         } else {
             Serial.println("ERR,10,Preset must be 0-15 (bar) or 20-30 (PSIG)");

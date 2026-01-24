@@ -111,7 +111,8 @@ scope Ossm {
         global.Serial.println("OSSM Initializing...");
 
         // Load configuration from EEPROM (or use defaults)
-        if (!global.ConfigStorage.loadConfig(this.appConfig)) {
+        bool configLoaded <- global.ConfigStorage.loadConfig(this.appConfig);
+        if (!configLoaded) {
             global.Serial.println("Loading default configuration");
             global.ConfigStorage.loadDefaults(this.appConfig);
             // Save defaults to EEPROM for next boot
@@ -125,7 +126,7 @@ scope Ossm {
         global.MAX31856Manager.initialize(this.appConfig);
         global.BME280Manager.initialize(this.appConfig);
         global.SensorProcessor.initialize(this.appConfig);
-        global.CommandHandler.initialize(this.appConfig, this.appData);
+        // CommandHandler no longer needs initialization - config passed to each function
 
         // Initialize J1939 bus
         global.J1939Bus.initialize(this.appData, this.appConfig);

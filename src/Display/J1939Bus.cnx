@@ -6,6 +6,7 @@
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
 #include "Domain/CommandHandler/CommandHandler.h"
+#include "Domain/CommandHandler/TCommandResult.h"
 #include <J1939Encode.cnx>
 #include <J1939Decode.cnx>
 #include <SpnCheck.cnx>
@@ -85,8 +86,15 @@ scope J1939Bus {
         bool enable <- global.J1939Decode.getEnable(data);
         u8 input <- global.J1939Decode.getInput(data);
 
-        TCommandResult result <- global.CommandHandler.enableSpn(spn, enable, input);
-        this.sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
+        u8 errorCode;
+        if (enable) {
+            errorCode <- global.CommandHandler.enableSpn(this.config, spn, input);
+        } else {
+            errorCode <- global.CommandHandler.disableSpn(this.config, spn);
+        }
+
+        u8 emptyData[8];
+        this.sendConfigResponse(1, errorCode, emptyData, 0);
     }
 
     void handleSetNtcParam(const u8 data[8]) {
@@ -94,66 +102,74 @@ scope J1939Bus {
         u8 param <- global.J1939Decode.getNtcParam(data);
         f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
 
-        TCommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
-        this.sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.setNtcParam(this.config, input, param, value);
+        u8 emptyData[8];
+        this.sendConfigResponse(2, errorCode, emptyData, 0);
     }
 
     void handleSetPressureRange(const u8 data[8]) {
         u8 input <- global.J1939Decode.getPressureInput(data);
         u16 maxPsi <- global.J1939Decode.getMaxPressure(data);
 
-        TCommandResult result <- global.CommandHandler.setPressureRange(input, maxPsi);
-        this.sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.setPressureRange(this.config, input, maxPsi);
+        u8 emptyData[8];
+        this.sendConfigResponse(3, errorCode, emptyData, 0);
     }
 
     void handleSetTcType(const u8 data[8]) {
         u8 tcType <- global.J1939Decode.getTcType(data);
 
-        TCommandResult result <- global.CommandHandler.setTcType(tcType);
-        this.sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.setTcType(this.config, tcType);
+        u8 emptyData[8];
+        this.sendConfigResponse(4, errorCode, emptyData, 0);
     }
 
     void handleQuery(const u8 data[8]) {
         u8 queryType <- global.J1939Decode.getQueryType(data);
         u8 subQuery <- global.J1939Decode.getSubQuery(data);
 
-        TCommandResult result;
+        TQueryResult queryResult;
+        u8 errorCode;
 
         switch (queryType) {
-            case 0 { result <- global.CommandHandler.querySpnCounts(); }
-            case 1 { result <- global.CommandHandler.queryTempSpns(subQuery); }
-            case 2 { result <- global.CommandHandler.queryPresSpns(subQuery); }
-            case 4 { result <- global.CommandHandler.queryFullConfig(); }
-            default { result <- global.TCommandResult.error(global.ECommandError.INVALID_QUERY_TYPE); }
+            case 0 { errorCode <- global.CommandHandler.querySpnCounts(this.config, queryResult); }
+            case 1 { errorCode <- global.CommandHandler.queryTempSpns(this.config, subQuery, queryResult); }
+            case 2 { errorCode <- global.CommandHandler.queryPresSpns(this.config, subQuery, queryResult); }
+            case 4 { errorCode <- global.CommandHandler.queryFullConfig(this.config, queryResult); }
+            default { errorCode <- 8; }  // ECommandError_INVALID_QUERY_TYPE
         }
 
-        this.sendConfigResponse(5, result.errorCode, result.data, result.dataLen);
+        this.sendConfigResponse(5, errorCode, queryResult.data, queryResult.len);
     }
 
     void handleSave() {
-        TCommandResult result <- global.CommandHandler.save();
-        this.sendConfigResponse(6, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.save(this.config);
+        u8 emptyData[8];
+        this.sendConfigResponse(6, errorCode, emptyData, 0);
     }
 
     void handleReset() {
-        TCommandResult result <- global.CommandHandler.reset();
-        this.sendConfigResponse(7, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.reset(this.config);
+        u8 emptyData[8];
+        this.sendConfigResponse(7, errorCode, emptyData, 0);
     }
 
     void handleNtcPreset(const u8 data[8]) {
         u8 input <- global.J1939Decode.getPresetInput(data);
         u8 preset <- global.J1939Decode.getPresetId(data);
 
-        TCommandResult result <- global.CommandHandler.applyNtcPreset(input, preset);
-        this.sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.applyNtcPreset(this.config, input, preset);
+        u8 emptyData[8];
+        this.sendConfigResponse(8, errorCode, emptyData, 0);
     }
 
     void handlePressurePreset(const u8 data[8]) {
         u8 input <- global.J1939Decode.getPresetInput(data);
         u8 preset <- global.J1939Decode.getPresetId(data);
 
-        TCommandResult result <- global.CommandHandler.applyPressurePreset(input, preset);
-        this.sendConfigResponse(9, result.errorCode, result.data, result.dataLen);
+        u8 errorCode <- global.CommandHandler.applyPressurePreset(this.config, input, preset);
+        u8 emptyData[8];
+        this.sendConfigResponse(9, errorCode, emptyData, 0);
     }
 
     // ========================================================================

@@ -60,7 +60,8 @@ void Ossm_sendJ1939Messages(void) {
 void Ossm_setup(void) {
     Serial.begin(115200);
     Serial.println("OSSM Initializing...");
-    if (!ConfigStorage_loadConfig(&Ossm_appConfig)) {
+    bool configLoaded = ConfigStorage_loadConfig(&Ossm_appConfig);
+    if (!configLoaded) {
         Serial.println("Loading default configuration");
         ConfigStorage_loadDefaults(&Ossm_appConfig);
         ConfigStorage_saveConfig(&Ossm_appConfig);
@@ -71,7 +72,6 @@ void Ossm_setup(void) {
     MAX31856Manager::initialize(&Ossm_appConfig);
     BME280Manager::initialize(&Ossm_appConfig);
     SensorProcessor_initialize(&Ossm_appConfig);
-    CommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
     J1939Bus_initialize(&Ossm_appData, &Ossm_appConfig);
     SerialCommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
     Ossm_sensorTimer.begin(Ossm_sensorTimerCallback, 50000);
