@@ -151,11 +151,11 @@ static void SensorProcessor_processEgt(AppData* appData) {
 }
 
 static void SensorProcessor_processBme280(AppData* appData) {
-    bool bmeReady = BME280Manager::isEnabled();
+    bool bmeReady = BME280Manager_isEnabled();
     if (SensorProcessor_config.bme280Enabled && bmeReady) {
-        appData->ambientTemperatureC = BME280Manager::getTemperatureC();
-        appData->humidity = BME280Manager::getHumidity();
-        appData->absoluteBarometricpressurekPa = BME280Manager::getPressurekPa();
+        appData->ambientTemperatureC = BME280Manager_getTemperatureC();
+        appData->humidity = BME280Manager_getHumidity();
+        appData->absoluteBarometricpressurekPa = BME280Manager_getPressurekPa();
     }
 }
 

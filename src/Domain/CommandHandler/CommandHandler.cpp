@@ -76,7 +76,7 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
         }
         case SPN_CAT_BME280: {
             cfg->bme280Enabled = true;
-            BME280Manager::initialize(&(*cfg));
+            BME280Manager_initialize(cfg);
             break;
         }
         default: {

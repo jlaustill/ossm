@@ -36,7 +36,7 @@ void Ossm_sensorTimerCallback(void) {
 void Ossm_processSensorUpdates(void) {
     ADS1115Manager::update();
     MAX31856Manager::update();
-    BME280Manager::update();
+    BME280Manager_update();
     SensorProcessor_processAllInputs(&Ossm_appData);
 }
 
@@ -70,7 +70,7 @@ void Ossm_setup(void) {
     }
     ADS1115Manager::initialize(&Ossm_appConfig);
     MAX31856Manager::initialize(&Ossm_appConfig);
-    BME280Manager::initialize(&Ossm_appConfig);
+    BME280Manager_initialize(&Ossm_appConfig);
     SensorProcessor_initialize(&Ossm_appConfig);
     J1939Bus_initialize(&Ossm_appData, &Ossm_appConfig);
     SerialCommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
