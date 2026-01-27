@@ -5,14 +5,12 @@
 
 #include "HardwareMap.h"
 
-// Hardware Mapping Functions
-// Maps logical sensor inputs to physical ADS1115 device/channel pairs
-// Tests lookup table patterns with multiple return values
-#include <stdint.h>
-
 #include <stdint.h>
 #include <stdbool.h>
 
+// Hardware Mapping Functions
+// Maps logical sensor inputs to physical ADS1115 device/channel pairs
+// Tests lookup table patterns with multiple return values
 // Temperature input count (8 inputs)
 const uint8_t TEMP_COUNT = 8;
 

@@ -3,79 +3,48 @@
  * A safer C for embedded systems
  */
 
-#include "Display/FloatBytes.h"
-
-// Float Byte Utilities
-// IEEE 754 float reconstruction from byte arrays
-// Used in J1939 command parsing for float parameter values
-#include <stdint.h>
-#include <string.h>
+#include "FloatBytes.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// Float Byte Utilities
+// IEEE 754 float reconstruction from byte arrays
+// Used in J1939 command parsing for float parameter values
 /* Scope: FloatBytes */
 
 float FloatBytes_fromBytesLE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
-    uint8_t buf[4] = {0};
-    buf[0] = b0;
-    buf[1] = b1;
-    buf[2] = b2;
-    buf[3] = b3;
     float result = 0.0;
-    memcpy(&result, &buf[0], 4);
+    result = (result & ~(0xFFU << 0)) | ((b0 & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((b1 & 0xFFU) << 8);
+    result = (result & ~(0xFFU << 16)) | ((b2 & 0xFFU) << 16);
+    result = (result & ~(0xFFU << 24)) | ((b3 & 0xFFU) << 24);
     return result;
 }
 
 float FloatBytes_fromBytesBE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
-    uint8_t buf[4] = {0};
-    buf[0] = b3;
-    buf[1] = b2;
-    buf[2] = b1;
-    buf[3] = b0;
     float result = 0.0;
-    memcpy(&result, &buf[0], 4);
+    result = (result & ~(0xFFU << 0)) | ((b3 & 0xFFU) << 0);
+    result = (result & ~(0xFFU << 8)) | ((b2 & 0xFFU) << 8);
+    result = (result & ~(0xFFU << 16)) | ((b1 & 0xFFU) << 16);
+    result = (result & ~(0xFFU << 24)) | ((b0 & 0xFFU) << 24);
     return result;
 }
 
 uint8_t FloatBytes_getByte0(float value) {
-    uint8_t buf[4] = {0};
-    buf[0] = 0;
-    buf[1] = 0;
-    buf[2] = 0;
-    buf[3] = 0;
-    memcpy(&buf[0], &value, 4);
-    return buf[0];
+    return ((value) & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte1(float value) {
-    uint8_t buf[4] = {0};
-    buf[0] = 0;
-    buf[1] = 0;
-    buf[2] = 0;
-    buf[3] = 0;
-    memcpy(&buf[0], &value, 4);
-    return buf[1];
+    return ((value >> 8) & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte2(float value) {
-    uint8_t buf[4] = {0};
-    buf[0] = 0;
-    buf[1] = 0;
-    buf[2] = 0;
-    buf[3] = 0;
-    memcpy(&buf[0], &value, 4);
-    return buf[2];
+    return ((value >> 16) & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte3(float value) {
-    uint8_t buf[4] = {0};
-    buf[0] = 0;
-    buf[1] = 0;
-    buf[2] = 0;
-    buf[3] = 0;
-    memcpy(&buf[0], &value, 4);
-    return buf[3];
+    return ((value >> 24) & 0xFFU);
 }
 
 bool FloatBytes_isValidFloat(float value) {

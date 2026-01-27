@@ -2,8 +2,6 @@
 // Maps logical sensor inputs to physical ADS1115 device/channel pairs
 // Tests lookup table patterns with multiple return values
 
-#include <stdint.h>
-
 // Temperature input count (8 inputs)
 const u8 TEMP_COUNT <- 8;
 // Pressure input count (7 inputs)

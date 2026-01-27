@@ -2,8 +2,6 @@
 // Provides SPN metadata without string handling
 // String labels are kept in C++ code, this module returns indices
 
-#include <stdint.h>
-
 scope SpnInfo {
     // SPN indices (for string table lookup in C++ code)
     // Temperature SPNs (0-8)

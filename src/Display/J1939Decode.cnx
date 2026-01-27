@@ -2,8 +2,6 @@
 // Parses incoming J1939 command data from CAN bus messages
 // Tests array access and byte manipulation patterns
 
-#include <stdint.h>
-
 scope J1939Decode {
     // Extract command byte from J1939 config message
     // Format: [cmd, ...]
