@@ -2,8 +2,6 @@
 // Common byte manipulation operations for embedded systems
 // Uses C-Next bit-slice syntax for clean, safe byte operations
 
-#include <stdint.h>
-
 scope ByteUtils {
     // Build u16 from high and low bytes (big-endian)
     public u16 makeU16BE(u8 high, u8 low) {

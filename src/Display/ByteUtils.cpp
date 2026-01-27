@@ -3,16 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "Display/ByteUtils.h"
-
-// Byte Utility Functions
-// Common byte manipulation operations for embedded systems
-// Uses C-Next bit-slice syntax for clean, safe byte operations
-#include <stdint.h>
+#include "ByteUtils.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// Byte Utility Functions
+// Common byte manipulation operations for embedded systems
+// Uses C-Next bit-slice syntax for clean, safe byte operations
 /* Scope: ByteUtils */
 
 uint16_t ByteUtils_makeU16BE(uint8_t high, uint8_t low) {
