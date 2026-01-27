@@ -3,16 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "Display/FaultDecode.h"
-
-// Fault Code Decoding
-// MAX31856 thermocouple fault bit interpretation
-// Provides pure functions for checking individual fault conditions
-#include <stdint.h>
+#include "FaultDecode.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// Fault Code Decoding
+// MAX31856 thermocouple fault bit interpretation
+// Provides pure functions for checking individual fault conditions
 /* Scope: FaultDecode */
 const uint8_t FaultDecode_FAULT_OPEN = 0x01;
 const uint8_t FaultDecode_FAULT_OVUV = 0x02;
