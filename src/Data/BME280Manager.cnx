@@ -2,7 +2,7 @@
 // Handles temperature, humidity, and barometric pressure readings
 
 #include <Adafruit_BME280.h>
-#include "AppConfig.h"
+#include <AppConfig.cnx>
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -24,6 +24,41 @@ scope BME280Manager {
     // Timing for periodic reads
     u32 lastReadTime <- 0;
     const u32 READ_INTERVAL_MS <- 1000;
+
+    // Call from main loop to update readings
+    // Returns true if readings were updated
+    public bool update() {
+        if (!this.enabled || !this.initialized) {
+            return false;
+        }
+
+        // Only read periodically to reduce I2C traffic
+        u32 now <- global.millis();
+        if (now - this.lastReadTime < this.READ_INTERVAL_MS) {
+            return false;
+        }
+
+        // Read all values (BME280 reads are fast, ~1ms)
+        this.temperatureC <- this.bme.readTemperature();
+        this.humidity <- this.bme.readHumidity();
+
+        // Convert from Pa to kPa
+        this.pressurekPa <- this.bme.readPressure() / 1000.0;
+
+        // Check for valid readings (NaN check)
+        bool tempNan <- global.isnan(this.temperatureC);
+        bool humNan <- global.isnan(this.humidity);
+        bool presNan <- global.isnan(this.pressurekPa);
+        if (tempNan || humNan || presNan) {
+            this.readingValid <- false;
+            return false;
+        }
+
+        this.readingValid <- true;
+        this.lastReadTime <- now;
+
+        return true;
+    }
 
     // Initialize the BME280 based on config
     public void initialize(const AppConfig config) {
@@ -65,41 +100,6 @@ scope BME280Manager {
             global.Serial.println("  ID 0x60 = BME280");
             global.Serial.println("  ID 0x61 = BME680");
         }
-    }
-
-    // Call from main loop to update readings
-    // Returns true if readings were updated
-    public bool update() {
-        if (!this.enabled || !this.initialized) {
-            return false;
-        }
-
-        // Only read periodically to reduce I2C traffic
-        u32 now <- global.millis();
-        if (now - this.lastReadTime < this.READ_INTERVAL_MS) {
-            return false;
-        }
-
-        // Read all values (BME280 reads are fast, ~1ms)
-        this.temperatureC <- this.bme.readTemperature();
-        this.humidity <- this.bme.readHumidity();
-
-        // Convert from Pa to kPa
-        this.pressurekPa <- this.bme.readPressure() / 1000.0;
-
-        // Check for valid readings (NaN check)
-        bool tempNan <- global.isnan(this.temperatureC);
-        bool humNan <- global.isnan(this.humidity);
-        bool presNan <- global.isnan(this.pressurekPa);
-        if (tempNan || humNan || presNan) {
-            this.readingValid <- false;
-            return false;
-        }
-
-        this.readingValid <- true;
-        this.lastReadTime <- now;
-
-        return true;
     }
 
     // Get the latest temperature reading in Celsius

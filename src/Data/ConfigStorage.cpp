@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Data/ConfigStorage/ConfigStorage.h"
+#include "ConfigStorage.h"
 
 // config_storage.cnx - EEPROM configuration persistence
 // Manages loading, saving, and validating AppConfig in EEPROM
-#include "AppConfig.h"
+#include <AppConfig.h>
 #include <EEPROM.h>
 #include <Display/Crc32.h>
 
@@ -15,24 +15,6 @@
 #include <stdbool.h>
 
 /* Scope: ConfigStorage */
-
-bool ConfigStorage_loadConfig(const AppConfig* config) {
-    EEPROM.get(0, (*config));
-    bool isValid = ConfigStorage_validateConfig(config);
-    if (!isValid) {
-        ConfigStorage_loadDefaults(config);
-        ConfigStorage_saveConfig(config);
-        return false;
-    }
-    return true;
-}
-
-bool ConfigStorage_saveConfig(const AppConfig* config) {
-    AppConfig configToSave = (*config);
-    configToSave.checksum = Crc32_calculateChecksum(config);
-    EEPROM.put(0, configToSave);
-    return true;
-}
 
 bool ConfigStorage_validateConfig(const AppConfig* config) {
     if (config->magic != CONFIG_MAGIC) {
@@ -62,11 +44,29 @@ void ConfigStorage_loadDefaults(AppConfig* config) {
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
         config->pressureInputs[i].assignedSpn = 0;
         config->pressureInputs[i].maxPressure = 100;
-        config->pressureInputs[i].pressureType = PRESSURE_TYPE_PSIG;
+        config->pressureInputs[i].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
         config->pressureInputs[i].reserved = 0;
     }
     config->egtEnabled = false;
-    config->thermocoupleType = TC_TYPE_K;
+    config->thermocoupleType = EThermocoupleType_TC_TYPE_K;
     config->bme280Enabled = false;
     config->checksum = Crc32_calculateChecksum(config);
+}
+
+bool ConfigStorage_saveConfig(const AppConfig* config) {
+    AppConfig configToSave = (*config);
+    configToSave.checksum = Crc32_calculateChecksum(config);
+    EEPROM.put(0, configToSave);
+    return true;
+}
+
+bool ConfigStorage_loadConfig(AppConfig* config) {
+    EEPROM.get(0, (*config));
+    bool isValid = ConfigStorage_validateConfig(config);
+    if (!isValid) {
+        ConfigStorage_loadDefaults(config);
+        ConfigStorage_saveConfig(config);
+        return false;
+    }
+    return true;
 }

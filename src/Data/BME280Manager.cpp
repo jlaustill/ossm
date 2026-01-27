@@ -3,12 +3,12 @@
  * A safer C for embedded systems
  */
 
-#include "Data/BME280Manager/BME280Manager.h"
+#include "BME280Manager.h"
 
 // BME280 Ambient Sensor Manager
 // Handles temperature, humidity, and barometric pressure readings
 #include <Adafruit_BME280.h>
-#include "AppConfig.h"
+#include <AppConfig.h>
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -25,6 +25,29 @@ static float BME280Manager_humidity = 0.0;
 static float BME280Manager_pressurekPa = 0.0;
 static bool BME280Manager_readingValid = false;
 static uint32_t BME280Manager_lastReadTime = 0;
+
+bool BME280Manager_update(void) {
+    if (!BME280Manager_enabled || !BME280Manager_initialized) {
+        return false;
+    }
+    uint32_t now = millis();
+    if (now - BME280Manager_lastReadTime < 1000) {
+        return false;
+    }
+    BME280Manager_temperatureC = BME280Manager_bme.readTemperature();
+    BME280Manager_humidity = BME280Manager_bme.readHumidity();
+    BME280Manager_pressurekPa = BME280Manager_bme.readPressure() / 1000.0;
+    bool tempNan = isnan(BME280Manager_temperatureC);
+    bool humNan = isnan(BME280Manager_humidity);
+    bool presNan = isnan(BME280Manager_pressurekPa);
+    if (tempNan || humNan || presNan) {
+        BME280Manager_readingValid = false;
+        return false;
+    }
+    BME280Manager_readingValid = true;
+    BME280Manager_lastReadTime = now;
+    return true;
+}
 
 void BME280Manager_initialize(const AppConfig* config) {
     BME280Manager_enabled = config->bme280Enabled;
@@ -52,29 +75,6 @@ void BME280Manager_initialize(const AppConfig* config) {
         Serial.println("  ID 0x60 = BME280");
         Serial.println("  ID 0x61 = BME680");
     }
-}
-
-bool BME280Manager_update(void) {
-    if (!BME280Manager_enabled || !BME280Manager_initialized) {
-        return false;
-    }
-    uint32_t now = millis();
-    if (now - BME280Manager_lastReadTime < 1000) {
-        return false;
-    }
-    BME280Manager_temperatureC = BME280Manager_bme.readTemperature();
-    BME280Manager_humidity = BME280Manager_bme.readHumidity();
-    BME280Manager_pressurekPa = BME280Manager_bme.readPressure() / 1000.0;
-    bool tempNan = isnan(BME280Manager_temperatureC);
-    bool humNan = isnan(BME280Manager_humidity);
-    bool presNan = isnan(BME280Manager_pressurekPa);
-    if (tempNan || humNan || presNan) {
-        BME280Manager_readingValid = false;
-        return false;
-    }
-    BME280Manager_readingValid = true;
-    BME280Manager_lastReadTime = now;
-    return true;
 }
 
 float BME280Manager_getTemperatureC(void) {
