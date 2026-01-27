@@ -3,16 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "Display/J1939Decode.h"
-
-// J1939 Message Decoding Functions
-// Parses incoming J1939 command data from CAN bus messages
-// Tests array access and byte manipulation patterns
-#include <stdint.h>
+#include "J1939Decode.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// J1939 Message Decoding Functions
+// Parses incoming J1939 command data from CAN bus messages
+// Tests array access and byte manipulation patterns
 /* Scope: J1939Decode */
 
 uint8_t J1939Decode_getCommand(const uint8_t data[8]) {
