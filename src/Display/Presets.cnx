@@ -1,7 +1,7 @@
 // Sensor Preset Lookup Tables
 // Provides NTC thermistor and pressure sensor preset configurations
 
-#include "AppConfig.h"
+#include "../AppConfig.cnx"
 
 scope Presets {
     // NTC Temperature Sensor Presets

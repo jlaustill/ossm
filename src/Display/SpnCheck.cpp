@@ -7,7 +7,7 @@
 
 // SPN Enable Checking Functions
 // Determines if a given SPN is enabled in the configuration
-#include "AppConfig.h"
+#include "../AppConfig.h"
 
 #include <stdint.h>
 #include <stdbool.h>

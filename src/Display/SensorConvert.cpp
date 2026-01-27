@@ -8,7 +8,7 @@
 // Sensor Conversion Functions
 // Physics calculations for NTC thermistors and pressure sensors
 #include <math.h>
-#include "AppConfig.h"
+#include "../AppConfig.h"
 
 #include <stdint.h>
 
@@ -49,7 +49,7 @@ float SensorConvert_pressure(float voltage, const TPressureInputConfig* cfg, flo
         clampedVoltage = 4.5;
     }
     float ratio = (clampedVoltage - 0.5) / (4.5 - 0.5);
-    if (cfg->pressureType == PRESSURE_TYPE_PSIA) {
+    if (cfg->pressureType == EPressureType_PRESSURE_TYPE_PSIA) {
         if (cfg->maxPressure > 20000) {
             float maxBar = static_cast<float>((cfg->maxPressure - 20000));
             float bar = ratio * maxBar;

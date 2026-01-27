@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/HardwareMap.h"
+#include "HardwareMap.h"
 
 // Hardware Mapping Functions
 // Maps logical sensor inputs to physical ADS1115 device/channel pairs

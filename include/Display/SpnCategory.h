@@ -8,25 +8,19 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <AppConfig.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* External variables */
-extern const uint8_t CAT_UNKNOWN;
-extern const uint8_t CAT_TEMPERATURE;
-extern const uint8_t CAT_PRESSURE;
-extern const uint8_t CAT_EGT;
-extern const uint8_t CAT_BME280;
-
 /* Function prototypes */
-uint8_t SpnCategory_getCategory(uint16_t spn);
+ESpnCategory SpnCategory_getCategory(uint16_t spn);
 bool SpnCategory_isValidSpn(uint16_t spn);
 uint16_t SpnCategory_getHiResSpn(uint16_t spn);
 bool SpnCategory_hasHiResVariant(uint16_t spn);
-bool SpnCategory_isTemperatureCategory(uint8_t category);
-bool SpnCategory_isPressureCategory(uint8_t category);
+bool SpnCategory_isTemperatureCategory(ESpnCategory category);
+bool SpnCategory_isPressureCategory(ESpnCategory category);
 
 #ifdef __cplusplus
 }

@@ -8,11 +8,11 @@
 // CommandHandler.cnx - Command processing for OSSM configuration
 // Handles SPN enable/disable, presets, parameters, and queries
 #include <Arduino.h>
-#include "AppConfig.h"
-#include "Data/ConfigStorage/ConfigStorage.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
+#include <AppConfig.h>
+#include <Data/ConfigStorage/ConfigStorage.h>
+#include <Data/ADS1115Manager/ADS1115Manager.h>
+#include <Data/MAX31856Manager/MAX31856Manager.h>
+#include <Data/BME280Manager/BME280Manager.h>
 #include <Display/Presets.h>
 #include <Display/SpnCategory.h>
 #include <Display/InputValid.h>
@@ -36,12 +36,12 @@ static inline uint8_t cnx_clamp_add_u8(uint8_t a, uint32_t b) {
 /* Scope: CommandHandler */
 
 uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
-    uint8_t category = SpnCategory_getCategory(spn);
-    if (category == SPN_CAT_UNKNOWN) {
+    ESpnCategory category = SpnCategory_getCategory(spn);
+    if (category == ESpnCategory_SPN_CAT_UNKNOWN) {
         return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
     }
     switch (category) {
-        case SPN_CAT_TEMPERATURE: {
+        case ESpnCategory_SPN_CAT_TEMPERATURE: {
             bool validInput = InputValid_isValidTempInput(input);
             if (!validInput) {
                 return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
@@ -52,10 +52,10 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
                 }
             }
             cfg->tempInputs[input - 1].assignedSpn = spn;
-            ADS1115Manager::initialize(&(*cfg));
+            ADS1115Manager_initialize(cfg);
             break;
         }
-        case SPN_CAT_PRESSURE: {
+        case ESpnCategory_SPN_CAT_PRESSURE: {
             bool validInput = InputValid_isValidPressureInput(input);
             if (!validInput) {
                 return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
@@ -66,15 +66,15 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
                 }
             }
             cfg->pressureInputs[input - 1].assignedSpn = spn;
-            ADS1115Manager::initialize(&(*cfg));
+            ADS1115Manager_initialize(cfg);
             break;
         }
-        case SPN_CAT_EGT: {
+        case ESpnCategory_SPN_CAT_EGT: {
             cfg->egtEnabled = true;
-            MAX31856Manager::initialize(&(*cfg));
+            MAX31856Manager_initialize(cfg);
             break;
         }
-        case SPN_CAT_BME280: {
+        case ESpnCategory_SPN_CAT_BME280: {
             cfg->bme280Enabled = true;
             BME280Manager_initialize(cfg);
             break;
@@ -88,12 +88,12 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
 }
 
 uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn) {
-    uint8_t category = SpnCategory_getCategory(spn);
-    if (category == SPN_CAT_UNKNOWN) {
+    ESpnCategory category = SpnCategory_getCategory(spn);
+    if (category == ESpnCategory_SPN_CAT_UNKNOWN) {
         return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
     }
     switch (category) {
-        case SPN_CAT_TEMPERATURE: {
+        case ESpnCategory_SPN_CAT_TEMPERATURE: {
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
                 if (cfg->tempInputs[i].assignedSpn == spn) {
                     cfg->tempInputs[i].assignedSpn = 0;
@@ -101,7 +101,7 @@ uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn) {
             }
             break;
         }
-        case SPN_CAT_PRESSURE: {
+        case ESpnCategory_SPN_CAT_PRESSURE: {
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
                 if (cfg->pressureInputs[i].assignedSpn == spn) {
                     cfg->pressureInputs[i].assignedSpn = 0;
@@ -109,11 +109,11 @@ uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn) {
             }
             break;
         }
-        case SPN_CAT_EGT: {
+        case ESpnCategory_SPN_CAT_EGT: {
             cfg->egtEnabled = false;
             break;
         }
-        case SPN_CAT_BME280: {
+        case ESpnCategory_SPN_CAT_BME280: {
             cfg->bme280Enabled = false;
             break;
         }
@@ -173,10 +173,10 @@ uint8_t CommandHandler_applyPressurePreset(AppConfig* cfg, uint8_t input, uint8_
     bool isBar = Presets_isBarPreset(preset);
     if (isBar) {
         cfg->pressureInputs[idx].maxPressure = Presets_barPresetValue(preset);
-        cfg->pressureInputs[idx].pressureType = PRESSURE_TYPE_PSIA;
+        cfg->pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIA;
     } else {
         cfg->pressureInputs[idx].maxPressure = Presets_psiPresetValue(preset);
-        cfg->pressureInputs[idx].pressureType = PRESSURE_TYPE_PSIG;
+        cfg->pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
     }
     return TCommandResult_ok();
 }

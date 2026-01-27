@@ -8,7 +8,7 @@
 // J1939 CAN Bus Communication
 // Handles J1939 message transmission and configuration commands
 #include <Display/AppData.h>
-#include "AppConfig.h"
+#include "../AppConfig.h"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
 #include "Domain/CommandHandler/CommandHandler.h"
@@ -24,7 +24,7 @@
 /* Scope: J1939Bus */
 static FlexCAN_T4<CAN1,RX_SIZE_256,TX_SIZE_16> J1939Bus_canBus = {};
 static AppData J1939Bus_appData = {0};
-static AppConfig J1939Bus_config = {};
+static AppConfig J1939Bus_config = {0};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
     uint32_t id = (static_cast<uint32_t>(priority) << 26) | (static_cast<uint32_t>(pgn) << 8) | static_cast<uint32_t>(sourceAddr);

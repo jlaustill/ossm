@@ -8,6 +8,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <Display/AppData.h>
+#include <AppConfig.h>
+#include "../Data/ConfigStorage/ConfigStorage.h"
+#include "../Data/ADS1115Manager/ADS1115Manager.h"
+#include "../Data/MAX31856Manager/MAX31856Manager.h"
+#include "../Data/BME280Manager/BME280Manager.h"
+#include "SensorProcessor/SensorProcessor.h"
+#include <Display/J1939Bus.h>
 
 #ifdef __cplusplus
 extern "C" {

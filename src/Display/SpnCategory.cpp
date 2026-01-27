@@ -5,92 +5,83 @@
 
 #include "Display/SpnCategory.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-
 // SPN Category Lookup Functions
 // Maps SPNs to their sensor category (temperature, pressure, EGT, BME280)
 // Also provides hi-res SPN mapping for dual-resolution sensors
-// Category constants matching ESpnCategory enum values
-const uint8_t CAT_UNKNOWN = 0;
+#include <AppConfig.h>
 
-const uint8_t CAT_TEMPERATURE = 1;
-
-const uint8_t CAT_PRESSURE = 2;
-
-const uint8_t CAT_EGT = 3;
-
-const uint8_t CAT_BME280 = 4;
+#include <stdint.h>
+#include <stdbool.h>
 
 /* Scope: SpnCategory */
 
-uint8_t SpnCategory_getCategory(uint16_t spn) {
+ESpnCategory SpnCategory_getCategory(uint16_t spn) {
     if (spn == 175) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 110) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 174) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 105) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 1131) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 1132) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 1133) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 172) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 441) {
-        return CAT_TEMPERATURE;
+        return ESpnCategory_SPN_CAT_TEMPERATURE;
     }
     if (spn == 100) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 109) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 94) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 102) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 106) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 1127) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 1128) {
-        return CAT_PRESSURE;
+        return ESpnCategory_SPN_CAT_PRESSURE;
     }
     if (spn == 173) {
-        return CAT_EGT;
+        return ESpnCategory_SPN_CAT_EGT;
     }
     if (spn == 171) {
-        return CAT_BME280;
+        return ESpnCategory_SPN_CAT_BME280;
     }
     if (spn == 108) {
-        return CAT_BME280;
+        return ESpnCategory_SPN_CAT_BME280;
     }
     if (spn == 354) {
-        return CAT_BME280;
+        return ESpnCategory_SPN_CAT_BME280;
     }
-    return CAT_UNKNOWN;
+    return ESpnCategory_SPN_CAT_UNKNOWN;
 }
 
 bool SpnCategory_isValidSpn(uint16_t spn) {
-    uint8_t cat = SpnCategory_getCategory(spn);
-    if (cat == CAT_UNKNOWN) {
+    ESpnCategory cat = SpnCategory_getCategory(spn);
+    if (cat == ESpnCategory_SPN_CAT_UNKNOWN) {
         return false;
     }
     return true;
@@ -114,15 +105,15 @@ bool SpnCategory_hasHiResVariant(uint16_t spn) {
     return true;
 }
 
-bool SpnCategory_isTemperatureCategory(uint8_t category) {
-    if (category == CAT_TEMPERATURE) {
+bool SpnCategory_isTemperatureCategory(ESpnCategory category) {
+    if (category == ESpnCategory_SPN_CAT_TEMPERATURE) {
         return true;
     }
     return false;
 }
 
-bool SpnCategory_isPressureCategory(uint8_t category) {
-    if (category == CAT_PRESSURE) {
+bool SpnCategory_isPressureCategory(ESpnCategory category) {
+    if (category == ESpnCategory_SPN_CAT_PRESSURE) {
         return true;
     }
     return false;

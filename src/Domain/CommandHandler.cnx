@@ -2,11 +2,11 @@
 // Handles SPN enable/disable, presets, parameters, and queries
 
 #include <Arduino.h>
-#include "AppConfig.h"
-#include "Data/ConfigStorage/ConfigStorage.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
+#include <AppConfig.cnx>
+#include <Data/ConfigStorage/ConfigStorage.cnx>
+#include <Data/ADS1115Manager/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager/MAX31856Manager.cnx>
+#include <Data/BME280Manager/BME280Manager.cnx>
 #include <Display/Presets.cnx>
 #include <Display/SpnCategory.cnx>
 #include <Display/InputValid.cnx>
@@ -33,9 +33,9 @@ scope CommandHandler {
     // Clears any existing assignment of this SPN first (move, not duplicate)
     // Then assigns to the specified input and initializes hardware
     public u8 enableSpn(AppConfig cfg, u16 spn, u8 input) {
-        u8 category <- global.SpnCategory.getCategory(spn);
+        global.ESpnCategory category <- global.SpnCategory.getCategory(spn);
 
-        if (category = SPN_CAT_UNKNOWN) {
+        if (category = global.ESpnCategory.SPN_CAT_UNKNOWN) {
             return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
         }
 
@@ -96,9 +96,9 @@ scope CommandHandler {
 
     // Disable an SPN (finds and clears its assignment)
     public u8 disableSpn(AppConfig cfg, u16 spn) {
-        u8 category <- global.SpnCategory.getCategory(spn);
+        global.ESpnCategory category <- global.SpnCategory.getCategory(spn);
 
-        if (category = SPN_CAT_UNKNOWN) {
+        if (category = global.ESpnCategory.SPN_CAT_UNKNOWN) {
             return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
         }
 

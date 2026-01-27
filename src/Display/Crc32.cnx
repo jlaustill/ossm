@@ -1,6 +1,6 @@
 // crc32.cnx - Memory-safe CRC32 checksum calculation
 // Requires C-Next v0.1.12+ for full C++ mode support
-#include "AppConfig.h"
+#include "../AppConfig.cnx"
 
 scope Crc32 {
     // Process a single byte through CRC32 (IEEE 802.3 polynomial)

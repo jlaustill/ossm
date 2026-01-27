@@ -2,7 +2,7 @@
 // Handles J1939 message transmission and configuration commands
 
 #include <AppData.cnx>
-#include "AppConfig.h"
+#include "../AppConfig.cnx"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
 #include "Domain/CommandHandler/CommandHandler.h"

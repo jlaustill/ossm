@@ -2,7 +2,7 @@
 // Physics calculations for NTC thermistors and pressure sensors
 
 #include <math.h>
-#include "AppConfig.h"
+#include "../AppConfig.cnx"
 
 scope SensorConvert {
     // Physical constants

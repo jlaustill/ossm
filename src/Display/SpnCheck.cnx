@@ -1,7 +1,7 @@
 // SPN Enable Checking Functions
 // Determines if a given SPN is enabled in the configuration
 
-#include "AppConfig.h"
+#include "../AppConfig.cnx"
 
 scope SpnCheck {
     // Check if a temperature SPN is assigned to any input

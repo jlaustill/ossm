@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "../AppConfig.h"
 
 #ifdef __cplusplus
 extern "C" {
