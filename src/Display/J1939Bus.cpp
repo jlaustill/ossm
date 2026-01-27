@@ -3,20 +3,20 @@
  * A safer C for embedded systems
  */
 
-#include "J1939Bus.h"
+#include "Display/J1939Bus.h"
 
 // J1939 CAN Bus Communication
 // Handles J1939 message transmission and configuration commands
-#include <AppData.h>
+#include <Display/AppData.h>
 #include "../AppConfig.h"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
 #include "Domain/CommandHandler/CommandHandler.h"
 #include "Domain/CommandHandler/TCommandResult.h"
-#include <J1939Encode.h>
-#include <J1939Decode.h>
-#include <SpnCheck.h>
-#include <FloatBytes.h>
+#include <Display/J1939Encode.h>
+#include <Display/J1939Decode.h>
+#include <Display/SpnCheck.h>
+#include <Display/FloatBytes.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -110,7 +110,7 @@ static void J1939Bus_handleSetTcType(const uint8_t data[8]) {
 static void J1939Bus_handleQuery(const uint8_t data[8]) {
     uint8_t queryType = J1939Decode_getQueryType(data);
     uint8_t subQuery = J1939Decode_getSubQuery(data);
-    TQueryResult queryResult = {};
+    TQueryResult queryResult = {0};
     uint8_t errorCode = 0;
     switch (queryType) {
         case 0: {
@@ -134,7 +134,7 @@ static void J1939Bus_handleQuery(const uint8_t data[8]) {
             break;
         }
     }
-    J1939Bus_sendConfigResponse(5, errorCode, &queryResult.data, queryResult.len);
+    J1939Bus_sendConfigResponse(5, errorCode, queryResult.data, queryResult.len);
 }
 
 static void J1939Bus_handleSave(void) {

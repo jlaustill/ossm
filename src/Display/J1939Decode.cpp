@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "J1939Decode.h"
+#include "Display/J1939Decode.h"
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Crc32.h"
+#include "Display/Crc32.h"
 
 // crc32.cnx - Memory-safe CRC32 checksum calculation
 // Requires C-Next v0.1.12+ for full C++ mode support

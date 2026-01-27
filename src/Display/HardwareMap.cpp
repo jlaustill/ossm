@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "HardwareMap.h"
+#include "Display/HardwareMap.h"
 
 #include <stdint.h>
 #include <stdbool.h>

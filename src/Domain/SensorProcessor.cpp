@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "SensorProcessor.h"
+#include "Domain/SensorProcessor.h"
 
 // Sensor processing logic
 // Reads from hardware managers and updates AppData

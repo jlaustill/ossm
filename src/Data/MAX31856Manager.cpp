@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "MAX31856Manager.h"
+#include "Data/MAX31856Manager.h"
 
 // MAX31856 Thermocouple Manager
 // Handles EGT (Exhaust Gas Temperature) readings via SPI

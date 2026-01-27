@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "SerialCommandHandler.h"
+#include "Domain/SerialCommandHandler.h"
 
 /**
  * Serial Command Handler

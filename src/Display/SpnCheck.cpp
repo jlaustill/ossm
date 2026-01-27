@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "SpnCheck.h"
+#include "Display/SpnCheck.h"
 
 // SPN Enable Checking Functions
 // Determines if a given SPN is enabled in the configuration

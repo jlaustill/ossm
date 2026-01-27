@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "ADS1115Manager.h"
+#include "Data/ADS1115Manager.h"
 
 /**
  * ADS1115 ADC Manager

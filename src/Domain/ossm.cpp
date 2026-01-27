@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "ossm.h"
+#include "Domain/ossm.h"
 
 // Main OSSM application logic
 // Handles sensor polling, J1939 messaging, and command processing

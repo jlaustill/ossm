@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "ConfigStorage.h"
+#include "Data/ConfigStorage.h"
 
 // config_storage.cnx - EEPROM configuration persistence
 // Manages loading, saving, and validating AppConfig in EEPROM

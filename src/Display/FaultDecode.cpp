@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "FaultDecode.h"
+#include "Display/FaultDecode.h"
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "SpnInfo.h"
+#include "Display/SpnInfo.h"
 
 #include <stdint.h>
 #include <stdbool.h>
