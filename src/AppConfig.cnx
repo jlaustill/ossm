@@ -1,0 +1,222 @@
+// AppConfig.cnx - Main configuration types and constants for OSSM
+
+// Configuration magic number and version
+const u32 CONFIG_MAGIC <- 0x4F53534D;  // "OSSM" in ASCII
+const u8 CONFIG_VERSION <- 3;           // Bumped for pressure type support
+
+// Number of user-facing inputs
+const u8 TEMP_INPUT_COUNT <- 8;
+const u8 PRESSURE_INPUT_COUNT <- 7;
+
+// ADS1115 device count (internal, fixed)
+const u8 ADS_DEVICE_COUNT <- 4;
+
+// Thermocouple types (MAX31856)
+enum EThermocoupleType {
+    TC_TYPE_B <- 0,
+    TC_TYPE_E <- 1,
+    TC_TYPE_J <- 2,
+    TC_TYPE_K <- 3,  // Default
+    TC_TYPE_N <- 4,
+    TC_TYPE_R <- 5,
+    TC_TYPE_S <- 6,
+    TC_TYPE_T <- 7
+}
+
+// NTC Presets
+enum ENtcPreset {
+    NTC_PRESET_AEM <- 0,
+    NTC_PRESET_BOSCH <- 1,
+    NTC_PRESET_GM <- 2
+}
+
+// Pressure Type (PSIA = absolute, PSIG = gauge)
+enum EPressureType {
+    PRESSURE_TYPE_PSIA <- 0,  // Absolute pressure (bar presets)
+    PRESSURE_TYPE_PSIG <- 1   // Gauge pressure (PSI presets, uses BME280 atm)
+}
+
+// Pressure Presets
+// Bar presets (0-15) are PSIA, PSI presets (20-30) are PSIG
+enum EPressurePreset {
+    // Bar presets (PSIA - Absolute)
+    PRESSURE_PRESET_1_BAR <- 0,
+    PRESSURE_PRESET_1_5_BAR <- 1,
+    PRESSURE_PRESET_2_BAR <- 2,
+    PRESSURE_PRESET_2_5_BAR <- 3,
+    PRESSURE_PRESET_3_BAR <- 4,
+    PRESSURE_PRESET_4_BAR <- 5,
+    PRESSURE_PRESET_5_BAR <- 6,
+    PRESSURE_PRESET_7_BAR <- 7,
+    PRESSURE_PRESET_10_BAR <- 8,
+    PRESSURE_PRESET_50_BAR <- 9,
+    PRESSURE_PRESET_100_BAR <- 10,
+    PRESSURE_PRESET_150_BAR <- 11,
+    PRESSURE_PRESET_200_BAR <- 12,
+    PRESSURE_PRESET_1000_BAR <- 13,
+    PRESSURE_PRESET_2000_BAR <- 14,
+    PRESSURE_PRESET_3000_BAR <- 15,
+    // Reserved: 16-19 for future bar presets
+
+    // PSI presets (PSIG - Gauge)
+    PRESSURE_PRESET_15_PSIG <- 20,
+    PRESSURE_PRESET_30_PSIG <- 21,
+    PRESSURE_PRESET_50_PSIG <- 22,
+    PRESSURE_PRESET_100_PSIG <- 23,
+    PRESSURE_PRESET_150_PSIG <- 24,
+    PRESSURE_PRESET_200_PSIG <- 25,
+    PRESSURE_PRESET_250_PSIG <- 26,
+    PRESSURE_PRESET_300_PSIG <- 27,
+    PRESSURE_PRESET_350_PSIG <- 28,
+    PRESSURE_PRESET_400_PSIG <- 29,
+    PRESSURE_PRESET_500_PSIG <- 30
+}
+
+// Known SPNs and their categories
+enum ESpnCategory {
+    SPN_CAT_TEMPERATURE <- 0,  // Requires temp input 1-8
+    SPN_CAT_PRESSURE <- 1,     // Requires pressure input 1-7
+    SPN_CAT_EGT <- 2,          // Uses thermocouple
+    SPN_CAT_BME280 <- 3,       // Uses BME280
+    SPN_CAT_UNKNOWN <- 4
+}
+
+// Temperature input configuration (temp1-temp8)
+struct TTempInputConfig {
+    u16 assignedSpn;      // Which SPN this input feeds (0 = disabled)
+    f32 coeffA;           // Steinhart-Hart A coefficient
+    f32 coeffB;           // Steinhart-Hart B coefficient
+    f32 coeffC;           // Steinhart-Hart C coefficient
+    f32 resistorValue;    // Reference resistor in voltage divider (ohms)
+}
+
+// Pressure input configuration (pres1-pres7)
+struct TPressureInputConfig {
+    u16 assignedSpn;         // Which SPN this input feeds (0 = disabled)
+    u16 maxPressure;         // Max value: bar for PSIA, PSI for PSIG
+    EPressureType pressureType;  // PSIA (bar) or PSIG (PSI)
+    u8 reserved;             // Padding for alignment
+}
+
+// Fixed hardware mapping: tempX -> ADS device/channel
+// This is internal, not user-configurable
+struct THardwareMapping {
+    u8 adsDevice;    // 0-3 (0x48-0x4B)
+    u8 adsChannel;   // 0-3
+}
+
+// SPN definitions
+struct TSpnInfo {
+    u16 spn;
+    ESpnCategory category;
+    u16 hiResSpn;   // Auto-enabled hi-res SPN (0 if none)
+}
+
+// Main configuration structure (stored in EEPROM)
+struct AppConfig {
+    // Header
+    u32 magic;               // CONFIG_MAGIC validates EEPROM contents
+    u8 version;              // Configuration version for migration
+    u8 j1939SourceAddress;   // J1939 source address (default 149)
+    u8 reserved[2];          // Padding for alignment
+
+    // Temperature inputs (user-facing: temp1-temp8)
+    TTempInputConfig tempInputs[8];
+
+    // Pressure inputs (user-facing: pres1-pres7)
+    TPressureInputConfig pressureInputs[7];
+
+    // Thermocouple (EGT)
+    bool egtEnabled;              // SPN 173 enabled
+    EThermocoupleType thermocoupleType;
+    u8 tcReserved[2];             // Padding
+
+    // BME280 (ambient sensors)
+    bool bme280Enabled;           // Enables SPNs 171, 108, 354
+    u8 bme280Reserved[3];         // Padding
+
+    // CRC32 for validation
+    u32 checksum;
+}
+
+// Default AEM temperature sensor Steinhart-Hart coefficients
+const f32 AEM_TEMP_COEFF_A <- 1.485995686e-03;
+const f32 AEM_TEMP_COEFF_B <- 2.279654266e-04;
+const f32 AEM_TEMP_COEFF_C <- 1.197578033e-07;
+const f32 AEM_TEMP_RESISTOR <- 10050.0;
+
+// Bosch NTC coefficients (placeholder - need real values)
+const f32 BOSCH_TEMP_COEFF_A <- 1.40e-03;
+const f32 BOSCH_TEMP_COEFF_B <- 2.37e-04;
+const f32 BOSCH_TEMP_COEFF_C <- 9.90e-08;
+const f32 BOSCH_TEMP_RESISTOR <- 2490.0;
+
+// GM NTC coefficients (placeholder - need real values)
+const f32 GM_TEMP_COEFF_A <- 1.29e-03;
+const f32 GM_TEMP_COEFF_B <- 2.35e-04;
+const f32 GM_TEMP_COEFF_C <- 9.00e-08;
+const f32 GM_TEMP_RESISTOR <- 3000.0;
+
+// Temperature input hardware mappings (fixed)
+// Index 0 = temp1, Index 7 = temp8
+const THardwareMapping TEMP_HARDWARE_MAP[8] <- [
+    { adsDevice: 0, adsChannel: 0 },  // temp1 -> ADS 0x48, channel 0 (A0)
+    { adsDevice: 0, adsChannel: 2 },  // temp2 -> ADS 0x48, channel 2 (A2)
+    { adsDevice: 1, adsChannel: 0 },  // temp3 -> ADS 0x49, channel 0 (A0)
+    { adsDevice: 1, adsChannel: 3 },  // temp4 -> ADS 0x49, channel 3 (A3)
+    { adsDevice: 2, adsChannel: 1 },  // temp5 -> ADS 0x4A, channel 1
+    { adsDevice: 2, adsChannel: 2 },  // temp6 -> ADS 0x4A, channel 2
+    { adsDevice: 3, adsChannel: 1 },  // temp7 -> ADS 0x4B, channel 1
+    { adsDevice: 3, adsChannel: 2 }   // temp8 -> ADS 0x4B, channel 2
+];
+
+// Pressure input hardware mappings (fixed)
+// Index 0 = pres1, Index 6 = pres7
+const THardwareMapping PRESSURE_HARDWARE_MAP[7] <- [
+    { adsDevice: 0, adsChannel: 1 },  // pres1 -> ADS 0x48, channel 1 (A1)
+    { adsDevice: 0, adsChannel: 3 },  // pres2 -> ADS 0x48, channel 3
+    { adsDevice: 2, adsChannel: 0 },  // pres3 -> ADS 0x4A, channel 0
+    { adsDevice: 2, adsChannel: 3 },  // pres4 -> ADS 0x4A, channel 3
+    { adsDevice: 1, adsChannel: 1 },  // pres5 -> ADS 0x49, channel 1 (A1)
+    { adsDevice: 1, adsChannel: 2 },  // pres6 -> ADS 0x49, channel 2 (A2)
+    { adsDevice: 3, adsChannel: 0 }   // pres7 -> ADS 0x4B, channel 0
+];
+
+// ADS1115 device I2C addresses (fixed)
+const u8 ADS_I2C_ADDRESSES[4] <- [0x48, 0x49, 0x4A, 0x4B];
+
+// ADS1115 DRDY pins (fixed)
+const u8 ADS_DRDY_PINS[4] <- [0, 1, 4, 5];  // D0, D1, D4, D5
+
+// Known SPNs lookup table
+const TSpnInfo KNOWN_SPNS[20] <- [
+    // Temperature SPNs (require temp input)
+    { spn: 175, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 110, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 1637 },
+    { spn: 174, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 105, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 1363 },
+    { spn: 1131, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 1132, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 1133, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 172, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+    { spn: 441, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
+
+    // Pressure SPNs (require pressure input)
+    { spn: 100, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 109, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 94, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 102, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 106, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 1127, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+    { spn: 1128, category: ESpnCategory.SPN_CAT_PRESSURE, hiResSpn: 0 },
+
+    // EGT SPN (thermocouple)
+    { spn: 173, category: ESpnCategory.SPN_CAT_EGT, hiResSpn: 0 },
+
+    // BME280 SPNs (grouped)
+    { spn: 171, category: ESpnCategory.SPN_CAT_BME280, hiResSpn: 0 },
+    { spn: 108, category: ESpnCategory.SPN_CAT_BME280, hiResSpn: 0 },
+    { spn: 354, category: ESpnCategory.SPN_CAT_BME280, hiResSpn: 0 }
+];
+
+const u8 KNOWN_SPN_COUNT <- 20;
