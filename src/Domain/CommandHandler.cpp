@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/CommandHandler/CommandHandler.h"
+#include "CommandHandler.h"
 
 // CommandHandler.cnx - Command processing for OSSM configuration
 // Handles SPN enable/disable, presets, parameters, and queries
@@ -38,13 +38,13 @@ static inline uint8_t cnx_clamp_add_u8(uint8_t a, uint32_t b) {
 uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
     ESpnCategory category = SpnCategory_getCategory(spn);
     if (category == ESpnCategory_SPN_CAT_UNKNOWN) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
     }
     switch (category) {
         case ESpnCategory_SPN_CAT_TEMPERATURE: {
             bool validInput = InputValid_isValidTempInput(input);
             if (!validInput) {
-                return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
+                return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
             }
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
                 if (cfg->tempInputs[i].assignedSpn == spn) {
@@ -58,7 +58,7 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
         case ESpnCategory_SPN_CAT_PRESSURE: {
             bool validInput = InputValid_isValidPressureInput(input);
             if (!validInput) {
-                return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
+                return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
             }
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
                 if (cfg->pressureInputs[i].assignedSpn == spn) {
@@ -80,17 +80,17 @@ uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input) {
             break;
         }
         default: {
-            return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
+            return TCommandResult.error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
             break;
         }
     }
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn) {
     ESpnCategory category = SpnCategory_getCategory(spn);
     if (category == ESpnCategory_SPN_CAT_UNKNOWN) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
     }
     switch (category) {
         case ESpnCategory_SPN_CAT_TEMPERATURE: {
@@ -118,56 +118,56 @@ uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn) {
             break;
         }
         default: {
-            return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
+            return TCommandResult.error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
             break;
         }
     }
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_setPressureRange(AppConfig* cfg, uint8_t input, uint16_t maxPressure) {
     bool valid = InputValid_isValidPressureInput(input);
     if (!valid) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
     }
     cfg->pressureInputs[input - 1].maxPressure = maxPressure;
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_setTcType(AppConfig* cfg, uint8_t tcType) {
     bool valid = Presets_isValidTcType(tcType);
     if (!valid) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TC_TYPE));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_TC_TYPE));
     }
     cfg->thermocoupleType = static_cast<EThermocoupleType>(tcType);
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_applyNtcPreset(AppConfig* cfg, uint8_t input, uint8_t preset) {
     bool validInput = InputValid_isValidTempInput(input);
     if (!validInput) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
     }
     bool validPreset = Presets_isValidNtcPreset(preset);
     if (!validPreset) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESET));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_PRESET));
     }
     uint8_t idx = input - 1;
     cfg->tempInputs[idx].coeffA = Presets_ntcCoeffA(preset);
     cfg->tempInputs[idx].coeffB = Presets_ntcCoeffB(preset);
     cfg->tempInputs[idx].coeffC = Presets_ntcCoeffC(preset);
     cfg->tempInputs[idx].resistorValue = Presets_ntcResistor(preset);
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_applyPressurePreset(AppConfig* cfg, uint8_t input, uint8_t preset) {
     bool validInput = InputValid_isValidPressureInput(input);
     if (!validInput) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
     }
     bool validPreset = Presets_isValidPressurePreset(preset);
     if (!validPreset) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESET));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_PRESET));
     }
     uint8_t idx = input - 1;
     bool isBar = Presets_isBarPreset(preset);
@@ -178,13 +178,13 @@ uint8_t CommandHandler_applyPressurePreset(AppConfig* cfg, uint8_t input, uint8_
         cfg->pressureInputs[idx].maxPressure = Presets_psiPresetValue(preset);
         cfg->pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
     }
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_setNtcParam(AppConfig* cfg, uint8_t input, uint8_t param, float value) {
     bool validInput = InputValid_isValidTempInput(input);
     if (!validInput) {
-        return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
+        return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT));
     }
     uint8_t idx = input - 1;
     switch (param) {
@@ -205,24 +205,24 @@ uint8_t CommandHandler_setNtcParam(AppConfig* cfg, uint8_t input, uint8_t param,
             break;
         }
         default: {
-            return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_NTC_PARAM));
+            return TCommandResult.error(static_cast<uint8_t>(ECommandError_INVALID_NTC_PARAM));
             break;
         }
     }
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_save(const AppConfig* cfg) {
     bool saved = ConfigStorage_saveConfig(cfg);
     if (saved) {
-        return TCommandResult_ok();
+        return TCommandResult.ok();
     }
-    return TCommandResult_error(static_cast<uint8_t>(ECommandError_SAVE_FAILED));
+    return TCommandResult.error(static_cast<uint8_t>(ECommandError_SAVE_FAILED));
 }
 
 uint8_t CommandHandler_reset(const AppConfig* cfg) {
     ConfigStorage_loadDefaults(cfg);
-    return TCommandResult_ok();
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_querySpnCounts(const AppConfig* cfg, TQueryResult* out) {
@@ -238,27 +238,27 @@ uint8_t CommandHandler_querySpnCounts(const AppConfig* cfg, TQueryResult* out) {
             presCount = cnx_clamp_add_u8(presCount, 1);
         }
     }
-    out->data[0] = tempCount;
-    out->data[1] = presCount;
+    out.data[0] = tempCount;
+    out.data[1] = presCount;
     if (cfg->egtEnabled) {
-        out->data[2] = 1;
+        out.data[2] = 1;
     } else {
-        out->data[2] = 0;
+        out.data[2] = 0;
     }
     if (cfg->bme280Enabled) {
-        out->data[3] = 1;
+        out.data[3] = 1;
     } else {
-        out->data[3] = 0;
+        out.data[3] = 0;
     }
-    out->len = 4;
-    return TCommandResult_ok();
+    out.len = 4;
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_queryFullConfig(const AppConfig* cfg, TQueryResult* out) {
-    out->data[0] = cfg->j1939SourceAddress;
-    out->data[1] = static_cast<uint8_t>(cfg->thermocoupleType);
-    out->len = 2;
-    return TCommandResult_ok();
+    out.data[0] = cfg->j1939SourceAddress;
+    out.data[1] = static_cast<uint8_t>(cfg->thermocoupleType);
+    out.len = 2;
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_queryTempSpns(const AppConfig* cfg, uint8_t subQuery, TQueryResult* out) {
@@ -267,15 +267,15 @@ uint8_t CommandHandler_queryTempSpns(const AppConfig* cfg, uint8_t subQuery, TQu
         uint8_t idx = startIdx + i;
         if (idx < TEMP_INPUT_COUNT) {
             uint16_t spn = cfg->tempInputs[idx].assignedSpn;
-            out->data[i * 2] = ((spn >> 8) & 0xFFU);
-            out->data[i * 2 + 1] = ((spn) & 0xFFU);
+            out.data[i * 2] = ((spn >> 8) & 0xFFU);
+            out.data[i * 2 + 1] = ((spn) & 0xFFU);
         } else {
-            out->data[i * 2] = 0xFF;
-            out->data[i * 2 + 1] = 0xFF;
+            out.data[i * 2] = 0xFF;
+            out.data[i * 2 + 1] = 0xFF;
         }
     }
-    out->len = 6;
-    return TCommandResult_ok();
+    out.len = 6;
+    return TCommandResult.ok();
 }
 
 uint8_t CommandHandler_queryPresSpns(const AppConfig* cfg, uint8_t subQuery, TQueryResult* out) {
@@ -284,13 +284,13 @@ uint8_t CommandHandler_queryPresSpns(const AppConfig* cfg, uint8_t subQuery, TQu
         uint8_t idx = startIdx + i;
         if (idx < PRESSURE_INPUT_COUNT) {
             uint16_t spn = cfg->pressureInputs[idx].assignedSpn;
-            out->data[i * 2] = ((spn >> 8) & 0xFFU);
-            out->data[i * 2 + 1] = ((spn) & 0xFFU);
+            out.data[i * 2] = ((spn >> 8) & 0xFFU);
+            out.data[i * 2 + 1] = ((spn) & 0xFFU);
         } else {
-            out->data[i * 2] = 0xFF;
-            out->data[i * 2 + 1] = 0xFF;
+            out.data[i * 2] = 0xFF;
+            out.data[i * 2 + 1] = 0xFF;
         }
     }
-    out->len = 6;
-    return TCommandResult_ok();
+    out.len = 6;
+    return TCommandResult.ok();
 }

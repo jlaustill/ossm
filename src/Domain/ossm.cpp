@@ -3,21 +3,21 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/ossm.h"
+#include "ossm.h"
 
 // Main OSSM application logic
 // Handles sensor polling, J1939 messaging, and command processing
 #include <Arduino.h>
 #include <Display/AppData.h>
 #include <AppConfig.h>
-#include "../Data/ConfigStorage/ConfigStorage.h"
-#include "../Data/ADS1115Manager/ADS1115Manager.h"
-#include "../Data/MAX31856Manager/MAX31856Manager.h"
-#include "../Data/BME280Manager/BME280Manager.h"
-#include "SensorProcessor/SensorProcessor.h"
-#include "Domain/CommandHandler/CommandHandler.h"
+#include "../Data/ConfigStorage.h"
+#include "../Data/ADS1115Manager.h"
+#include "../Data/MAX31856Manager.h"
+#include "../Data/BME280Manager.h"
+#include "SensorProcessor.h"
+#include "CommandHandler.h"
 #include <Display/J1939Bus.h>
-#include "Interface/SerialCommandHandler/SerialCommandHandler.h"
+#include "SerialCommandHandler.h"
 
 #include <stdbool.h>
 
