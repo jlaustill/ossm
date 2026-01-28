@@ -2,24 +2,39 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ALWAYS REVIEW BEFORE FILING ISSUES
+
+**CRITICAL: NEVER file a GitHub issue without reviewing with the user first. ZERO EXCEPTIONS.**
+
+Before filing any bug report:
+1. Create the minimal reproducer
+2. Verify the bug reproduces
+3. **STOP and show the user** the proposed issue title and body
+4. Wait for user approval before running `gh issue create`
+
+This applies to ALL repositories, not just this one.
+
 ## NEVER DO WORKAROUNDS
 
-**CRITICAL: NEVER implement workarounds. EVER.**
+**CRITICAL: NEVER implement workarounds. EVER. ZERO EXCEPTIONS.**
 
-When you encounter a bug, limitation, or issue in a tool, library, or transpiler:
+We face bugs HEAD ON. When you encounter a bug, limitation, or issue in a tool, library, or transpiler:
 
 1. **DO NOT** try to work around it
 2. **DO NOT** create wrapper functions to hide the problem
 3. **DO NOT** temporarily rename/move/modify files to bypass issues
 4. **DO NOT** suggest "creative solutions" that mask the underlying problem
+5. **DO NOT** use alternative approaches just to avoid a bug
+6. **DO NOT** flatten data structures, split files, or restructure code to dodge transpiler limitations
 
 **INSTEAD:**
 - Document the bug thoroughly with minimal reproducers
 - File the bug report on the appropriate issue tracker
 - Wait for the fix
+- Move on to other work that isn't blocked
 - Ask the user if you're unsure whether something counts as a workaround
 
-Workarounds create technical debt, hide real issues from maintainers, and waste time going in circles. If something is broken, it needs to be fixed properly - not papered over.
+Workarounds create technical debt, hide real issues from maintainers, and waste time going in circles. If something is broken, it needs to be fixed properly - not papered over. There are no "temporary" workarounds - they become permanent debt.
 
 ## Project Overview
 
@@ -85,3 +100,18 @@ include/
 - **ADS1115** ADCs (I2C addresses 0x4B, etc.) for analog sensor inputs
 - **BME280** for ambient conditions
 - **MAX31856** for thermocouple (EGT)
+
+## C-Next Transpiler Workflow
+
+### Include Paths
+- Use angle brackets for includes: `#include <AppConfig.cnx>` not `"../../AppConfig.cnx"`
+- Transpiler resolves paths relative to `src/` directory
+- Include files in subdirectories use relative paths from file location: `#include "types/TAdcReading.cnx"`
+
+### Output Format
+- C-Next generates `.cpp` when C++ is in use, `cnext.config.json` has `cppRequired: true`, or `--cpp` flag passed; otherwise `.c`
+- Use `cnext --clean` to remove stale generated files when output format changes
+
+### Bug Reproducers
+- Create minimal reproducers in `~/code/c-next2/bugs/issue-<name>/` before filing
+- Include both the `.cnx` source and generated output showing the bug

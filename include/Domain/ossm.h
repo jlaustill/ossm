@@ -8,6 +8,16 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <Display/AppData.h>
+#include <AppConfig.h>
+#include "../Data/ConfigStorage.h"
+#include "../Data/ADS1115Manager.h"
+#include "../Data/MAX31856Manager.h"
+#include "../Data/BME280Manager.h"
+#include "SensorProcessor.h"
+#include "CommandHandler.h"
+#include <Display/J1939Bus.h>
+#include "SerialCommandHandler.h"
 
 #ifdef __cplusplus
 extern "C" {

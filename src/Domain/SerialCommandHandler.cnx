@@ -1,0 +1,604 @@
+/**
+ * Serial Command Handler
+ * Processes serial commands for sensor configuration
+ */
+
+#include <Arduino.h>
+#include <EEPROM.h>
+#include <Parse.hpp>
+#include <AppConfig.cnx>
+#include <Display/AppData.cnx>
+#include <Data/ConfigStorage.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
+#include <Domain/CommandHandler.cnx>
+#include <Domain/TCommandResult.cnx>
+#include <Display/SpnCategory.cnx>
+#include <Display/SpnInfo.cnx>
+#include <Display/FaultDecode.cnx>
+#include <Display/J1939Bus.cnx>
+#include <Display/J1939Encode.cnx>
+
+// SPN labels indexed by SpnInfo_getIndex()
+const string<32> SPN_LABELS[20] <- [
+    "Oil Temp(SPN 175)",
+    "Coolant Temp(SPN 110)",
+    "Fuel Temp(SPN 174)",
+    "Boost Temp(SPN 105)",
+    "CAC Inlet Temp(SPN 1131)",
+    "Xfer Pipe Temp(SPN 1132)",
+    "Air Inlet Temp 4(SPN 1133)",
+    "Air Inlet Temp(SPN 172)",
+    "Eng Bay Temp(SPN 441)",
+    "Oil Pres(SPN 100)",
+    "Coolant Pres(SPN 109)",
+    "Fuel Pres(SPN 94)",
+    "Boost Pres(SPN 102)",
+    "Air Inlet Pres(SPN 106)",
+    "CAC Inlet Pres(SPN 1127)",
+    "Xfer Pipe Pres(SPN 1128)",
+    "EGT(SPN 173)",
+    "Ambient Temp(SPN 171)",
+    "Baro Pres(SPN 108)",
+    "Humidity(SPN 354)"
+];
+
+// Module state for command buffer
+string<128> cmdBuffer;
+u8 cmdIndex <- 0;
+SeaDash.Parse.ParseResult parsed <- { data: [0], count: 0, success: false };
+
+scope SerialCommandHandler {
+    // Get SPN label - prints directly since string return not fully supported
+    void printSpnLabel(u16 spn) {
+        u8 idx <- global.SpnInfo.getIndex(spn);
+        if (idx = global.SpnInfo.IDX_UNKNOWN) {
+            Serial.print("Unknown");
+            return;
+        }
+        Serial.print(global.SPN_LABELS[idx]);
+    }
+
+    void printTempValueForSpn(u16 spn, const AppData appData) {
+        f32 value <- -273.15;
+        switch (spn) {
+            case 175 { value <- appData.oilTemperatureC; }
+            case 110 { value <- appData.coolantTemperatureC; }
+            case 1637 { value <- appData.coolantTemperatureC; }
+            case 174 { value <- appData.fuelTemperatureC; }
+            case 105 { value <- appData.boostTemperatureC; }
+            case 1363 { value <- appData.boostTemperatureC; }
+            case 1131 { value <- appData.cacInletTemperatureC; }
+            case 1132 { value <- appData.transferPipeTemperatureC; }
+            case 1133 { value <- appData.airInletTemperatureC; }
+            case 172 { value <- appData.airInletTemperatureC; }
+            case 441 { value <- appData.engineBayTemperatureC; }
+        }
+        if (value < -200.0) {
+            Serial.println("ERROR");
+        } else {
+            Serial.print(value, 1);
+            Serial.println(" C");
+        }
+    }
+
+    void printPressureValueForSpn(u16 spn, const AppData appData) {
+        f32 value <- 0.0;
+        switch (spn) {
+            case 100 { value <- appData.oilPressurekPa; }
+            case 109 { value <- appData.coolantPressurekPa; }
+            case 94 { value <- appData.fuelPressurekPa; }
+            case 102 { value <- appData.boostPressurekPa; }
+            case 106 { value <- appData.airInletPressurekPa; }
+            case 1127 { value <- appData.cacInletPressurekPa; }
+            case 1128 { value <- appData.transferPipePressurekPa; }
+        }
+        Serial.print(value, 2);
+        Serial.println(" kPa");
+    }
+
+    void reportFaults() {
+        u8 egtFault <- global.MAX31856Manager.getFaultStatus();
+        bool hasFault <- global.FaultDecode.hasFault(egtFault);
+
+        if (hasFault) {
+            Serial.println("--- FAULTS ---");
+            Serial.print("EGT: 0x");
+            Serial.print(egtFault, HEX);
+            Serial.print(" (");
+
+            bool isOpen <- global.FaultDecode.isOpen(egtFault);
+            if (isOpen) { Serial.print("OPEN "); }
+            bool isOvuv <- global.FaultDecode.isOvuv(egtFault);
+            if (isOvuv) { Serial.print("OVUV "); }
+            bool isTcLow <- global.FaultDecode.isTcLow(egtFault);
+            if (isTcLow) { Serial.print("TC_LOW "); }
+            bool isTcHigh <- global.FaultDecode.isTcHigh(egtFault);
+            if (isTcHigh) { Serial.print("TC_HIGH "); }
+            bool isCjLow <- global.FaultDecode.isCjLow(egtFault);
+            if (isCjLow) { Serial.print("CJ_LOW "); }
+            bool isCjHigh <- global.FaultDecode.isCjHigh(egtFault);
+            if (isCjHigh) { Serial.print("CJ_HIGH "); }
+            bool isTcRange <- global.FaultDecode.isTcRange(egtFault);
+            if (isTcRange) { Serial.print("TC_RANGE "); }
+            bool isCjRange <- global.FaultDecode.isCjRange(egtFault);
+            if (isCjRange) { Serial.print("CJ_RANGE "); }
+
+            Serial.println(")");
+
+            bool isCritical <- global.FaultDecode.isCritical(egtFault);
+            if (isCritical) {
+                Serial.println("WARNING: Critical fault - check sensor connection");
+            }
+        }
+    }
+
+    void handleEnableSpn(AppConfig config) {
+        if (global.parsed.count < 4) {
+            Serial.println("ERR,2,Usage: 1,spnHi,spnLo,enable[,input]");
+            return;
+        }
+
+        u16 spnHi <- global.parsed.data[1];
+        u16 spnLo <- global.parsed.data[2];
+        u16 spn <- (spnHi << 8) | spnLo;
+        bool enable <- (global.parsed.data[3] != 0);
+        u8 input <- 0;
+        if (global.parsed.count > 4) {
+            input <- global.parsed.data[4];
+        }
+
+        u8 errorCode <- 0;
+        if (enable) {
+            errorCode <- global.CommandHandler.enableSpn(config, spn, input);
+        } else {
+            errorCode <- global.CommandHandler.disableSpn(config, spn);
+        }
+
+        if (errorCode != (u8)global.ECommandError.OK) {
+            Serial.print("ERR,");
+            Serial.print(errorCode);
+            if (errorCode = (u8)global.ECommandError.UNKNOWN_SPN) {
+                Serial.print(",Unknown SPN: ");
+                Serial.println(spn);
+            } else if (errorCode = (u8)global.ECommandError.INVALID_TEMP_INPUT) {
+                Serial.println(",Input 1-8 required for temp SPN");
+            } else if (errorCode = (u8)global.ECommandError.INVALID_PRESSURE_INPUT) {
+                Serial.println(",Input 1-7 required for pressure SPN");
+            } else {
+                Serial.println();
+            }
+            return;
+        }
+
+        global.ESpnCategory catValue <- global.SpnCategory.getCategory(spn);
+
+        if (enable) {
+            if (catValue = SPN_CAT_TEMPERATURE) {
+                Serial.print("OK,SPN ");
+                Serial.print(spn);
+                Serial.print(" enabled on temp");
+                Serial.println(input);
+            } else if (catValue = SPN_CAT_PRESSURE) {
+                Serial.print("OK,SPN ");
+                Serial.print(spn);
+                Serial.print(" enabled on pres");
+                Serial.println(input);
+            } else if (catValue = SPN_CAT_EGT) {
+                Serial.println("OK,EGT enabled");
+            } else if (catValue = SPN_CAT_BME280) {
+                Serial.println("OK,BME280 enabled (SPNs 171, 108, 354)");
+            } else {
+                Serial.println("OK");
+            }
+        } else {
+            if (catValue = SPN_CAT_EGT) {
+                Serial.println("OK,EGT disabled");
+            } else if (catValue = SPN_CAT_BME280) {
+                Serial.println("OK,BME280 disabled");
+            } else {
+                Serial.print("OK,SPN ");
+                Serial.print(spn);
+                Serial.println(" disabled");
+            }
+        }
+    }
+
+    void handleSetPressureRange(AppConfig config) {
+        if (global.parsed.count < 4) {
+            Serial.println("ERR,2,Usage: 3,input,valueHi,valueLo (use preset cmd 9)");
+            return;
+        }
+
+        u8 input <- global.parsed.data[1];
+        u16 valueHi <- global.parsed.data[2];
+        u16 valueLo <- global.parsed.data[3];
+        u16 maxPressure <- (valueHi << 8) | valueLo;
+
+        u8 errorCode <- global.CommandHandler.setPressureRange(config, input, maxPressure);
+
+        if (errorCode != (u8)global.ECommandError.OK) {
+            Serial.println("ERR,5,Input must be 1-7");
+            return;
+        }
+
+        Serial.print("OK,pres");
+        Serial.print(input);
+        Serial.print(" maxPressure=");
+        Serial.println(maxPressure);
+    }
+
+    void handleSetTcType(AppConfig config) {
+        if (global.parsed.count < 2) {
+            Serial.println("ERR,2,Usage: 4,type (0-7)");
+            return;
+        }
+
+        u8 tcType <- global.parsed.data[1];
+        u8 errorCode <- global.CommandHandler.setTcType(config, tcType);
+
+        if (errorCode != (u8)global.ECommandError.OK) {
+            Serial.println("ERR,7,Type must be 0-7");
+            return;
+        }
+
+        Serial.print("OK,Thermocouple type=");
+        Serial.println(tcType);
+    }
+
+    void printEnabledSpns(AppConfig config) {
+        Serial.println("=== Enabled SPNs ===");
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
+            if (config.tempInputs[i].assignedSpn != 0) {
+                Serial.print("temp");
+                Serial.print(i + 1);
+                Serial.print(": ");
+                this.printSpnLabel(config.tempInputs[i].assignedSpn);
+                Serial.println();
+            }
+        }
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
+            if (config.pressureInputs[i].assignedSpn != 0) {
+                Serial.print("pres");
+                Serial.print(i + 1);
+                Serial.print(": ");
+                this.printSpnLabel(config.pressureInputs[i].assignedSpn);
+                Serial.println();
+            }
+        }
+        if (config.egtEnabled) {
+            this.printSpnLabel(173);
+            Serial.println();
+        }
+        if (config.bme280Enabled) {
+            this.printSpnLabel(171);
+            Serial.print(", ");
+            this.printSpnLabel(108);
+            Serial.print(", ");
+            this.printSpnLabel(354);
+            Serial.println();
+        }
+    }
+
+    void handleQuery(AppConfig config) {
+        u8 queryType <- 0;
+        if (global.parsed.count > 1) {
+            queryType <- global.parsed.data[1];
+        }
+
+        switch (queryType) {
+            case 0 {
+                this.printEnabledSpns(config);
+            }
+            case 4 {
+                Serial.println("=== Full Configuration ===");
+                Serial.print("J1939 Address: ");
+                Serial.println(config.j1939SourceAddress);
+                Serial.print("EGT Enabled: ");
+                if (config.egtEnabled) {
+                    Serial.println("Yes");
+                } else {
+                    Serial.println("No");
+                }
+                Serial.print("TC Type: ");
+                Serial.println(config.thermocoupleType);
+                Serial.print("BME280 Enabled: ");
+                if (config.bme280Enabled) {
+                    Serial.println("Yes");
+                } else {
+                    Serial.println("No");
+                }
+                this.printEnabledSpns(config);
+            }
+            default {
+                Serial.println("ERR,8,Query type 0 or 4");
+            }
+        }
+    }
+
+    void handleSave(AppConfig config) {
+        Serial.print("Saving configuration... ");
+        u8 errorCode <- global.CommandHandler.save(config);
+        if (errorCode = (u8)global.ECommandError.OK) {
+            Serial.println("OK");
+        } else {
+            Serial.println("ERR,9,Save failed");
+        }
+    }
+
+    void handleReset(AppConfig config) {
+        Serial.println("Resetting to defaults...");
+        global.CommandHandler.reset(config);
+        Serial.println("OK,Use '6' to save");
+    }
+
+    void handleNtcPreset(AppConfig config) {
+        if (global.parsed.count < 3) {
+            Serial.println("ERR,2,Usage: 8,input,preset (0=AEM,1=Bosch,2=GM)");
+            return;
+        }
+
+        u8 input <- global.parsed.data[1];
+        u8 preset <- global.parsed.data[2];
+
+        u8 errorCode <- global.CommandHandler.applyNtcPreset(config, input, preset);
+
+        if (errorCode != (u8)global.ECommandError.OK) {
+            if (errorCode = (u8)global.ECommandError.INVALID_TEMP_INPUT) {
+                Serial.println("ERR,4,Input must be 1-8");
+            } else {
+                Serial.println("ERR,10,Preset must be 0-2");
+            }
+            return;
+        }
+
+        const string<8> presetNames[3] <- ["AEM", "Bosch", "GM"];
+        Serial.print("OK,temp");
+        Serial.print(input);
+        Serial.print(" set to ");
+        Serial.print(presetNames[preset]);
+        Serial.println(" preset");
+    }
+
+    void handlePressurePreset(AppConfig config) {
+        if (global.parsed.count < 3) {
+            Serial.println("ERR,2,Usage: 9,input,preset (0-15=bar, 20-30=PSIG)");
+            return;
+        }
+
+        u8 input <- global.parsed.data[1];
+        u8 preset <- global.parsed.data[2];
+
+        u8 errorCode <- global.CommandHandler.applyPressurePreset(config, input, preset);
+
+        if (errorCode != (u8)global.ECommandError.OK) {
+            if (errorCode = (u8)global.ECommandError.INVALID_PRESSURE_INPUT) {
+                Serial.println("ERR,5,Input must be 1-7");
+            } else {
+                Serial.println("ERR,10,Preset must be 0-15 (bar) or 20-30 (PSIG)");
+            }
+            return;
+        }
+
+        Serial.print("OK,pres");
+        Serial.print(input);
+        Serial.print(" set to ");
+
+        if (preset <= 15) {
+            const string<8> barNames[16] <- [
+                "1", "1.5", "2", "2.5", "3", "4", "5", "7",
+                "10", "50", "100", "150", "200", "1000", "2000", "3000"
+            ];
+            Serial.print(barNames[preset]);
+            Serial.println(" bar (PSIA)");
+        } else if (preset >= 20 && preset <= 30) {
+            const u16 psiValues[11] <- [
+                15, 30, 50, 100, 150, 200, 250, 300, 350, 400, 500
+            ];
+            Serial.print(psiValues[preset - 20]);
+            Serial.println(" PSIG");
+        }
+    }
+
+    void handleReadSensors(AppConfig config, const AppData appData) {
+        u8 sensorType <- 0;
+        if (global.parsed.count > 1) {
+            sensorType <- global.parsed.data[1];
+        }
+
+        switch (sensorType) {
+            case 0 {
+                Serial.println("=== Live Sensor Values ===");
+                if (config.egtEnabled) {
+                    Serial.print("EGT: ");
+                    u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
+                    if (faultStatus = 0) {
+                        Serial.print(appData.egtTemperatureC, 1);
+                        Serial.println(" C");
+                    } else {
+                        Serial.println("FAULT");
+                    }
+                }
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
+                    if (config.tempInputs[i].assignedSpn != 0) {
+                        this.printSpnLabel(config.tempInputs[i].assignedSpn);
+                        Serial.print(": ");
+                        this.printTempValueForSpn(config.tempInputs[i].assignedSpn, appData);
+                    }
+                }
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
+                    if (config.pressureInputs[i].assignedSpn != 0) {
+                        this.printSpnLabel(config.pressureInputs[i].assignedSpn);
+                        Serial.print(": ");
+                        this.printPressureValueForSpn(config.pressureInputs[i].assignedSpn, appData);
+                    }
+                }
+                if (config.bme280Enabled) {
+                    this.printSpnLabel(171);
+                    Serial.print(": ");
+                    Serial.print(appData.ambientTemperatureC, 1);
+                    Serial.println(" C");
+                    this.printSpnLabel(354);
+                    Serial.print(": ");
+                    Serial.print(appData.humidity, 1);
+                    Serial.println(" %");
+                    this.printSpnLabel(108);
+                    Serial.print(": ");
+                    Serial.print(appData.absoluteBarometricpressurekPa, 2);
+                    Serial.println(" kPa");
+                }
+            }
+            case 1 {
+                if (!config.egtEnabled) {
+                    Serial.println("ERR,11,EGT not enabled");
+                    return;
+                }
+                Serial.print("EGT: ");
+                u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
+                if (faultStatus = 0) {
+                    Serial.print(appData.egtTemperatureC, 1);
+                    Serial.println(" C");
+                } else {
+                    Serial.print("FAULT (0x");
+                    Serial.print(faultStatus, HEX);
+                    Serial.println(")");
+                }
+            }
+            case 2 {
+                Serial.println("=== Temperature Sensors ===");
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
+                    if (config.tempInputs[i].assignedSpn != 0) {
+                        this.printSpnLabel(config.tempInputs[i].assignedSpn);
+                        Serial.print(": ");
+                        this.printTempValueForSpn(config.tempInputs[i].assignedSpn, appData);
+                    }
+                }
+            }
+            case 3 {
+                Serial.println("=== Pressure Sensors ===");
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
+                    if (config.pressureInputs[i].assignedSpn != 0) {
+                        this.printSpnLabel(config.pressureInputs[i].assignedSpn);
+                        Serial.print(": ");
+                        this.printPressureValueForSpn(config.pressureInputs[i].assignedSpn, appData);
+                    }
+                }
+            }
+            case 4 {
+                if (!config.bme280Enabled) {
+                    Serial.println("ERR,12,BME280 not enabled");
+                    return;
+                }
+                Serial.println("=== BME280 Ambient ===");
+                this.printSpnLabel(171);
+                Serial.print(": ");
+                Serial.print(appData.ambientTemperatureC, 1);
+                Serial.println(" C");
+                this.printSpnLabel(354);
+                Serial.print(": ");
+                Serial.print(appData.humidity, 1);
+                Serial.println(" %");
+                this.printSpnLabel(108);
+                Serial.print(": ");
+                Serial.print(appData.absoluteBarometricpressurekPa, 2);
+                Serial.println(" kPa");
+            }
+            default {
+                Serial.println("ERR,11,Sensor type 0-4");
+            }
+        }
+    }
+
+    void handleDumpEeprom() {
+        u32 configSize <- sizeof(AppConfig);
+
+        Serial.println("=== EEPROM Dump ===");
+        Serial.print("SIZE:");
+        Serial.println(configSize);
+        Serial.println("HEX:");
+
+        for (u32 i <- 0; i < configSize; i <- i + 1) {
+            u8 byte <- EEPROM.read(i);
+
+            if (byte < 0x10) {
+                Serial.print("0");
+            }
+            Serial.print(byte, HEX);
+
+            u32 pos <- i + 1;
+            if (pos % 16 = 0) {
+                Serial.println();
+            } else {
+                Serial.print(" ");
+            }
+        }
+
+        if (configSize % 16 != 0) {
+            Serial.println();
+        }
+
+        Serial.println("END");
+    }
+
+    void processCommand(AppConfig config, const AppData appData) {
+        u32 len <- global.cmdBuffer.length;
+        if (len = 0) {
+            return;
+        }
+
+        // Parse uses the cmdBuffer directly
+        global.parsed <- SeaDash.Parse.parse(global.cmdBuffer, ',');
+        if (!global.parsed.success || global.parsed.count < 1) {
+            Serial.println("ERR,1,Parse failed");
+            return;
+        }
+
+        u8 cmdNum <- global.parsed.data[0];
+
+        switch (cmdNum) {
+            case 1 { this.handleEnableSpn(config); }
+            case 3 { this.handleSetPressureRange(config); }
+            case 4 { this.handleSetTcType(config); }
+            case 5 { this.handleQuery(config); }
+            case 6 { this.handleSave(config); }
+            case 7 { this.handleReset(config); }
+            case 8 { this.handleNtcPreset(config); }
+            case 9 { this.handlePressurePreset(config); }
+            case 10 { this.handleReadSensors(config, appData); }
+            case 11 { this.handleDumpEeprom(); }
+            default { Serial.println("ERR,1,Unknown command"); }
+        }
+
+        this.reportFaults();
+    }
+
+    // Public functions
+
+    public void initialize() {
+        global.cmdIndex <- 0;
+        global.cmdBuffer <- "";
+
+        Serial.println("OSSM Command Interface Ready (byte format)");
+        Serial.println("Commands: 1,spnHi,spnLo,en,input | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
+    }
+
+    public void update(AppConfig config, const AppData appData) {
+        i32 available <- Serial.available();
+        while (available > 0) {
+            i32 readResult <- Serial.read();
+            char c <- readResult[0, 8];
+
+            if (c = '\n' || c = '\r') {
+                if (global.cmdIndex > 0) {
+                    this.processCommand(config, appData);
+                    global.cmdIndex <- 0;
+                    global.cmdBuffer <- "";
+                }
+            } else if (global.cmdIndex < 127) {
+                global.cmdBuffer[global.cmdIndex] <- c;
+                global.cmdIndex <- global.cmdIndex + 1;
+            }
+            available <- Serial.available();
+        }
+    }
+}

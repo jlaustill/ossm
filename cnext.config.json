@@ -1,0 +1,12 @@
+{
+    "cppRequired": true,
+    "debugMode": true,
+    "target": "teensy41",
+    "include": [
+        "include/",
+        ".pio"
+    ],
+    "noCache": true,
+    "headerOut": "include",
+    "basePath": "src"
+}

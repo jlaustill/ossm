@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <AppConfig.h>
+#include <Display/Crc32.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,10 +19,10 @@ extern "C" {
 typedef struct AppConfig AppConfig;
 
 /* Function prototypes */
-bool ConfigStorage_loadConfig(const AppConfig* config);
-bool ConfigStorage_saveConfig(const AppConfig* config);
 bool ConfigStorage_validateConfig(const AppConfig* config);
 void ConfigStorage_loadDefaults(AppConfig* config);
+bool ConfigStorage_saveConfig(const AppConfig* config);
+bool ConfigStorage_loadConfig(AppConfig* config);
 
 #ifdef __cplusplus
 }

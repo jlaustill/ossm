@@ -1,0 +1,248 @@
+/**
+ * ADS1115 ADC Manager
+ * Manages multiple ADS1115 devices for sensor readings
+ */
+
+#include <Arduino.h>
+#include <Adafruit_ADS1X15.h>
+#include "../AppConfig.cnx"
+#include "types/TAdcReading.cnx"
+#include <Display/HardwareMap.cnx>
+
+scope ADS1115Manager {
+    const u8 ADS_CHANNEL_COUNT <- 4;
+
+    // Timeout for conversion (should be ~8ms at 128 SPS, use 15ms for safety)
+    const u32 CONVERSION_TIMEOUT_MS <- 15;
+
+    // ADS1115 device instances
+    Adafruit_ADS1115 ads[ADS_DEVICE_COUNT];
+
+    // Device configuration
+    u8 drdyPins[ADS_DEVICE_COUNT] <- [0, 0, 0, 0];
+    bool deviceEnabled[ADS_DEVICE_COUNT] <- [false, false, false, false];
+    bool deviceInitialized[ADS_DEVICE_COUNT] <- [false, false, false, false];
+
+    // Reading buffers
+    // TODO: Re-enable atomic when C-Next supports Arduino/Teensy critical sections
+    volatile TAdcReading readings[ADS_DEVICE_COUNT][this.ADS_CHANNEL_COUNT];
+
+    // State machine for round-robin cycling
+    u8 currentDevice <- 0;
+    u8 currentChannel <- 0;
+    bool conversionStarted <- false;
+    u32 conversionStartTime <- 0;
+
+    // MUX values for single-ended channels
+    const u16 MUX_SINGLE[4] <- [
+        ADS1X15_REG_CONFIG_MUX_SINGLE_0,
+        ADS1X15_REG_CONFIG_MUX_SINGLE_1,
+        ADS1X15_REG_CONFIG_MUX_SINGLE_2,
+        ADS1X15_REG_CONFIG_MUX_SINGLE_3
+    ];
+
+    // Private functions
+
+    void startConversion() {
+        if (this.currentDevice >= ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
+            this.conversionStarted <- false;
+            return;
+        }
+
+        this.ads[this.currentDevice].startADCReading(this.MUX_SINGLE[this.currentChannel], false);
+        this.conversionStarted <- true;
+        this.conversionStartTime <- millis();
+    }
+
+    bool isConversionComplete() {
+        if (!this.conversionStarted || this.currentDevice >= ADS_DEVICE_COUNT) {
+            return false;
+        }
+
+        i32 pinState <- digitalRead(this.drdyPins[this.currentDevice]);
+        if (pinState = LOW) {
+            return true;
+        }
+
+        return this.ads[this.currentDevice].conversionComplete();
+    }
+
+    void readResult() {
+        if (this.currentDevice >= ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
+            return;
+        }
+
+        i16 result <- this.ads[this.currentDevice].getLastConversionResults();
+        u32 now <- millis();
+
+        // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
+        this.readings[this.currentDevice][this.currentChannel].rawValue <- result;
+        this.readings[this.currentDevice][this.currentChannel].timestamp <- now;
+        this.readings[this.currentDevice][this.currentChannel].valid <- true;
+
+        this.conversionStarted <- false;
+    }
+
+    void advanceChannel() {
+        this.currentChannel <- this.currentChannel + 1;
+
+        if (this.currentChannel >= this.ADS_CHANNEL_COUNT) {
+            this.currentChannel <- 0;
+            this.currentDevice <- this.currentDevice + 1;
+
+            while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
+                this.currentDevice <- this.currentDevice + 1;
+            }
+
+            if (this.currentDevice >= ADS_DEVICE_COUNT) {
+                this.currentDevice <- 0;
+
+                while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
+                    this.currentDevice <- this.currentDevice + 1;
+                }
+            }
+        }
+    }
+
+    // Public functions
+
+    public void initialize(const AppConfig config) {
+        // Initialize reading buffers
+        for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
+            for (u8 c <- 0; c < this.ADS_CHANNEL_COUNT; c <- c + 1) {
+                this.readings[d][c].rawValue <- 0;
+                this.readings[d][c].timestamp <- 0;
+                this.readings[d][c].valid <- false;
+            }
+        }
+
+        // Determine which ADS devices need to be enabled based on input usage
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
+            if (config.tempInputs[i].assignedSpn != 0) {
+                u8 dev <- global.HardwareMap.tempDevice(i);
+                this.deviceEnabled[dev] <- true;
+            }
+        }
+
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
+            if (config.pressureInputs[i].assignedSpn != 0) {
+                u8 dev <- global.HardwareMap.pressureDevice(i);
+                this.deviceEnabled[dev] <- true;
+            }
+        }
+
+        // Initialize each enabled ADS1115 device
+        for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
+            this.drdyPins[d] <- ADS_DRDY_PINS[d];
+
+            if (!this.deviceEnabled[d]) {
+                this.deviceInitialized[d] <- false;
+                continue;
+            }
+
+            pinMode(this.drdyPins[d], INPUT);
+
+            u8 addr <- ADS_I2C_ADDRESSES[d];
+            bool beginResult <- this.ads[d].begin(addr);
+            if (beginResult) {
+                this.deviceInitialized[d] <- true;
+                // GAIN_ONE = 1, RATE_ADS1115_128SPS = 0x0080
+                this.ads[d].setGain(1);
+                this.ads[d].setDataRate(0x0080);
+
+                Serial.print("ADS1115 @ 0x");
+                Serial.print(addr, HEX);
+                Serial.print(" initialized, DRDY pin D");
+                Serial.println(this.drdyPins[d]);
+            } else {
+                this.deviceInitialized[d] <- false;
+                Serial.print("ADS1115 @ 0x");
+                Serial.print(addr, HEX);
+                Serial.println(" FAILED to initialize");
+            }
+        }
+
+        this.currentDevice <- 0;
+        this.currentChannel <- 0;
+        this.conversionStarted <- false;
+
+        while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
+            this.currentDevice <- this.currentDevice + 1;
+        }
+
+        if (this.currentDevice < ADS_DEVICE_COUNT) {
+            this.startConversion();
+        }
+    }
+
+    public bool update() {
+        if (this.currentDevice >= ADS_DEVICE_COUNT) {
+            return false;
+        }
+
+        if (!this.conversionStarted) {
+            this.startConversion();
+            return false;
+        }
+
+        bool conversionDone <- this.isConversionComplete();
+        if (conversionDone) {
+            this.readResult();
+            this.advanceChannel();
+
+            if (this.currentDevice < ADS_DEVICE_COUNT) {
+                this.startConversion();
+            }
+            return true;
+        }
+
+        u32 elapsed <- millis() - this.conversionStartTime;
+        if (elapsed > this.CONVERSION_TIMEOUT_MS) {
+            Serial.print("ADS1115 timeout on device ");
+            Serial.print(this.currentDevice);
+            Serial.print(" channel ");
+            Serial.println(this.currentChannel);
+
+            this.readings[this.currentDevice][this.currentChannel].valid <- false;
+            this.advanceChannel();
+
+            if (this.currentDevice < ADS_DEVICE_COUNT) {
+                this.startConversion();
+            }
+        }
+
+        return false;
+    }
+
+    public TAdcReading getReading(u8 device, u8 channel) {
+        TAdcReading copy <- { rawValue: 0, timestamp: 0, valid: false };
+
+        if (device >= ADS_DEVICE_COUNT || channel >= this.ADS_CHANNEL_COUNT) {
+            return copy;
+        }
+
+        // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
+        copy.rawValue <- this.readings[device][channel].rawValue;
+        copy.timestamp <- this.readings[device][channel].timestamp;
+        copy.valid <- this.readings[device][channel].valid;
+
+        return copy;
+    }
+
+    public f32 getVoltage(u8 device, u8 channel) {
+        TAdcReading reading <- this.getReading(device, channel);
+
+        if (!reading.valid) {
+            return 0.0;
+        }
+
+        return this.ads[device].computeVolts(reading.rawValue);
+    }
+
+    public bool isDeviceEnabled(u8 device) {
+        if (device >= ADS_DEVICE_COUNT) {
+            return false;
+        }
+        return this.deviceEnabled[device] && this.deviceInitialized[device];
+    }
+}

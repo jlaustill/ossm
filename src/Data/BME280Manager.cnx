@@ -1,0 +1,133 @@
+// BME280 Ambient Sensor Manager
+// Handles temperature, humidity, and barometric pressure readings
+
+#include <Adafruit_BME280.h>
+#include <AppConfig.cnx>
+#include <Arduino.h>
+#include <Wire.h>
+
+scope BME280Manager {
+    // BME280 instance (C++ object)
+    Adafruit_BME280 bme;
+
+    // Configuration
+    u8 i2cAddress <- 0x76;
+    bool enabled <- false;
+    bool initialized <- false;
+
+    // Latest readings
+    f32 temperatureC <- 0.0;
+    f32 humidity <- 0.0;
+    f32 pressurekPa <- 0.0;
+    bool readingValid <- false;
+
+    // Timing for periodic reads
+    u32 lastReadTime <- 0;
+    const u32 READ_INTERVAL_MS <- 1000;
+
+    // Call from main loop to update readings
+    // Returns true if readings were updated
+    public bool update() {
+        if (!this.enabled || !this.initialized) {
+            return false;
+        }
+
+        // Only read periodically to reduce I2C traffic
+        u32 now <- global.millis();
+        if (now - this.lastReadTime < this.READ_INTERVAL_MS) {
+            return false;
+        }
+
+        // Read all values (BME280 reads are fast, ~1ms)
+        this.temperatureC <- this.bme.readTemperature();
+        this.humidity <- this.bme.readHumidity();
+
+        // Convert from Pa to kPa
+        this.pressurekPa <- this.bme.readPressure() / 1000.0;
+
+        // Check for valid readings (NaN check)
+        bool tempNan <- global.isnan(this.temperatureC);
+        bool humNan <- global.isnan(this.humidity);
+        bool presNan <- global.isnan(this.pressurekPa);
+        if (tempNan || humNan || presNan) {
+            this.readingValid <- false;
+            return false;
+        }
+
+        this.readingValid <- true;
+        this.lastReadTime <- now;
+
+        return true;
+    }
+
+    // Initialize the BME280 based on config
+    public void initialize(const AppConfig config) {
+        this.enabled <- config.bme280Enabled;
+
+        if (!this.enabled) {
+            global.Serial.println("BME280 disabled in config");
+            return;
+        }
+
+        // Fixed I2C address (0x76 is standard for BME280)
+        this.i2cAddress <- 0x76;
+
+        bool began <- this.bme.begin(this.i2cAddress);
+        if (began) {
+            this.initialized <- true;
+
+            // Configure for weather monitoring (low power, low oversampling)
+            // Using numeric values for C++ enums:
+            // MODE_NORMAL=3, SAMPLING_X1=1, FILTER_OFF=0, STANDBY_MS_1000=5
+            this.bme.setSampling(3, 1, 1, 1, 0, 5);
+
+            global.Serial.print("BME280 initialized at 0x");
+            global.Serial.println(this.i2cAddress, HEX);
+
+            // Do initial read
+            this.update();
+        } else {
+            this.initialized <- false;
+            global.Serial.print("BME280 FAILED to initialize at 0x");
+            global.Serial.print(this.i2cAddress, HEX);
+            global.Serial.println(" - check wiring");
+
+            // Print sensor ID for debugging
+            global.Serial.print("  Sensor ID: 0x");
+            global.Serial.println(this.bme.sensorID(), HEX);
+            global.Serial.println("  ID 0xFF = bad address or no sensor");
+            global.Serial.println("  ID 0x56-0x58 = BMP280");
+            global.Serial.println("  ID 0x60 = BME280");
+            global.Serial.println("  ID 0x61 = BME680");
+        }
+    }
+
+    // Get the latest temperature reading in Celsius
+    public f32 getTemperatureC() {
+        if (!this.readingValid) {
+            return -273.15;  // Return absolute zero as error indicator
+        }
+        return this.temperatureC;
+    }
+
+    // Get the latest humidity reading in %
+    public f32 getHumidity() {
+        if (!this.readingValid) {
+            return 0.0;
+        }
+        return this.humidity;
+    }
+
+    // Get the latest pressure reading in kPa
+    public f32 getPressurekPa() {
+        if (!this.readingValid) {
+            return 0.0;
+        }
+        return this.pressurekPa;
+    }
+
+    // Check if the device is enabled and initialized
+    public bool isEnabled() {
+        return this.enabled && this.initialized;
+    }
+}

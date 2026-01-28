@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Display/Presets.h"
+#include "Presets.h"
 
 // Sensor Preset Lookup Tables
 // Provides NTC thermistor and pressure sensor preset configurations
-#include "AppConfig.h"
+#include "../AppConfig.h"
 
 #include <stdint.h>
 #include <stdbool.h>

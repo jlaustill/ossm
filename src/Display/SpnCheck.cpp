@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Display/SpnCheck.h"
+#include "SpnCheck.h"
 
 // SPN Enable Checking Functions
 // Determines if a given SPN is enabled in the configuration
-#include "AppConfig.h"
+#include "../AppConfig.h"
 
 #include <stdint.h>
 #include <stdbool.h>

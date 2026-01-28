@@ -3,16 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "Display/InputValid.h"
-
-// Input Validation Module
-// Centralizes all input range checking for commands
-// Supports both 1-indexed (user-facing) and 0-indexed (internal) inputs
-#include <stdint.h>
+#include "InputValid.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// Input Validation Module
+// Centralizes all input range checking for commands
+// Supports both 1-indexed (user-facing) and 0-indexed (internal) inputs
 /* Scope: InputValid */
 const uint8_t InputValid_TEMP_COUNT = 8;
 const uint8_t InputValid_PRESSURE_COUNT = 7;

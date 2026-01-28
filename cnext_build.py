@@ -18,7 +18,7 @@ def transpile_cnext():
 
     try:
         result = subprocess.run(
-            ["cnext", "src", "--no-cache", "--include", ".pio", "--include", "include", "-o", "src", "--header-out", "include"],
+            ["cnext", "src"],
             check=True,
             capture_output=True,
             text=True

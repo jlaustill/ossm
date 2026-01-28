@@ -1,38 +1,12 @@
 // config_storage.cnx - EEPROM configuration persistence
 // Manages loading, saving, and validating AppConfig in EEPROM
-#include "AppConfig.h"
+#include <AppConfig.cnx>
 #include <EEPROM.h>
 #include <Display/Crc32.cnx>
 
 scope ConfigStorage {
     // EEPROM storage address for configuration
     const i32 EEPROM_CONFIG_ADDRESS <- 0;
-
-    // Load configuration from EEPROM into provided struct
-    // Returns true if valid config was loaded, false if defaults were used
-    public bool loadConfig(AppConfig config) {
-        global.EEPROM.get(this.EEPROM_CONFIG_ADDRESS, config);
-
-        bool isValid <- this.validateConfig(config);
-        if (!isValid) {
-            this.loadDefaults(config);
-            this.saveConfig(config);
-            return false;
-        }
-
-        return true;
-    }
-
-    // Save configuration to EEPROM
-    // Returns true on success
-    public bool saveConfig(const AppConfig config) {
-        // Create a copy with updated checksum
-        AppConfig configToSave <- config;
-        configToSave.checksum <- global.Crc32.calculateChecksum(config);
-
-        global.EEPROM.put(this.EEPROM_CONFIG_ADDRESS, configToSave);
-        return true;
-    }
 
     // Validate configuration structure
     public bool validateConfig(const AppConfig config) {
@@ -93,5 +67,31 @@ scope ConfigStorage {
 
         // Calculate and set checksum
         config.checksum <- global.Crc32.calculateChecksum(config);
+    }
+
+    // Save configuration to EEPROM
+    // Returns true on success
+    public bool saveConfig(const AppConfig config) {
+        // Create a copy with updated checksum
+        AppConfig configToSave <- config;
+        configToSave.checksum <- global.Crc32.calculateChecksum(config);
+
+        global.EEPROM.put(this.EEPROM_CONFIG_ADDRESS, configToSave);
+        return true;
+    }
+
+    // Load configuration from EEPROM into provided struct
+    // Returns true if valid config was loaded, false if defaults were used
+    public bool loadConfig(AppConfig config) {
+        global.EEPROM.get(this.EEPROM_CONFIG_ADDRESS, config);
+
+        bool isValid <- this.validateConfig(config);
+        if (!isValid) {
+            this.loadDefaults(config);
+            this.saveConfig(config);
+            return false;
+        }
+
+        return true;
     }
 }

@@ -2,52 +2,47 @@
 // Maps SPNs to their sensor category (temperature, pressure, EGT, BME280)
 // Also provides hi-res SPN mapping for dual-resolution sensors
 
-// Category constants matching ESpnCategory enum values
-const u8 CAT_UNKNOWN <- 0;
-const u8 CAT_TEMPERATURE <- 1;
-const u8 CAT_PRESSURE <- 2;
-const u8 CAT_EGT <- 3;
-const u8 CAT_BME280 <- 4;
+#include <AppConfig.cnx>
 
 scope SpnCategory {
     // Get the category for a given SPN
-    // Returns CAT_UNKNOWN if SPN not recognized
-    public u8 getCategory(u16 spn) {
+    // Returns SPN_CAT_UNKNOWN if SPN not recognized
+    public global.ESpnCategory getCategory(u16 spn) {
         // Temperature SPNs
-        if (spn = 175) { return CAT_TEMPERATURE; }   // Engine Oil Temp
-        if (spn = 110) { return CAT_TEMPERATURE; }   // Engine Coolant Temp
-        if (spn = 174) { return CAT_TEMPERATURE; }   // Fuel Temp
-        if (spn = 105) { return CAT_TEMPERATURE; }   // Intake Manifold 1 Temp
-        if (spn = 1131) { return CAT_TEMPERATURE; }  // Intake Manifold 2 Temp
-        if (spn = 1132) { return CAT_TEMPERATURE; }  // Intake Manifold 3 Temp
-        if (spn = 1133) { return CAT_TEMPERATURE; }  // Intake Manifold 4 Temp
-        if (spn = 172) { return CAT_TEMPERATURE; }   // Air Inlet Temp
-        if (spn = 441) { return CAT_TEMPERATURE; }   // Engine Bay Temp
+        if (spn = 175) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Engine Oil Temp
+        if (spn = 110) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Engine Coolant Temp
+        if (spn = 174) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Fuel Temp
+        if (spn = 105) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Intake Manifold 1 Temp
+        if (spn = 1131) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }  // Intake Manifold 2 Temp
+        if (spn = 1132) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }  // Intake Manifold 3 Temp
+        if (spn = 1133) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }  // Intake Manifold 4 Temp
+        if (spn = 172) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Air Inlet Temp
+        if (spn = 441) { return global.ESpnCategory.SPN_CAT_TEMPERATURE; }   // Engine Bay Temp
 
         // Pressure SPNs
-        if (spn = 100) { return CAT_PRESSURE; }      // Engine Oil Pressure
-        if (spn = 109) { return CAT_PRESSURE; }      // Coolant Pressure
-        if (spn = 94) { return CAT_PRESSURE; }       // Fuel Delivery Pressure
-        if (spn = 102) { return CAT_PRESSURE; }      // Boost Pressure
-        if (spn = 106) { return CAT_PRESSURE; }      // Air Inlet Pressure
-        if (spn = 1127) { return CAT_PRESSURE; }     // TC1 Boost Pressure
-        if (spn = 1128) { return CAT_PRESSURE; }     // TC2 Boost Pressure
+        if (spn = 100) { return global.ESpnCategory.SPN_CAT_PRESSURE; }      // Engine Oil Pressure
+        if (spn = 109) { return global.ESpnCategory.SPN_CAT_PRESSURE; }      // Coolant Pressure
+        if (spn = 94) { return global.ESpnCategory.SPN_CAT_PRESSURE; }       // Fuel Delivery Pressure
+        if (spn = 102) { return global.ESpnCategory.SPN_CAT_PRESSURE; }      // Boost Pressure
+        if (spn = 106) { return global.ESpnCategory.SPN_CAT_PRESSURE; }      // Air Inlet Pressure
+        if (spn = 1127) { return global.ESpnCategory.SPN_CAT_PRESSURE; }     // TC1 Boost Pressure
+        if (spn = 1128) { return global.ESpnCategory.SPN_CAT_PRESSURE; }     // TC2 Boost Pressure
 
         // EGT SPN
-        if (spn = 173) { return CAT_EGT; }           // Exhaust Gas Temp
+        if (spn = 173) { return global.ESpnCategory.SPN_CAT_EGT; }           // Exhaust Gas Temp
 
         // BME280 SPNs
-        if (spn = 171) { return CAT_BME280; }        // Ambient Air Temp
-        if (spn = 108) { return CAT_BME280; }        // Barometric Pressure
-        if (spn = 354) { return CAT_BME280; }        // Relative Humidity
+        if (spn = 171) { return global.ESpnCategory.SPN_CAT_BME280; }        // Ambient Air Temp
+        if (spn = 108) { return global.ESpnCategory.SPN_CAT_BME280; }        // Barometric Pressure
+        if (spn = 354) { return global.ESpnCategory.SPN_CAT_BME280; }        // Relative Humidity
 
-        return CAT_UNKNOWN;
+        return global.ESpnCategory.SPN_CAT_UNKNOWN;
     }
 
     // Check if SPN is a valid known SPN
     public bool isValidSpn(u16 spn) {
-        u8 cat <- this.getCategory(spn);
-        if (cat = CAT_UNKNOWN) {
+        global.ESpnCategory cat <- this.getCategory(spn);
+        if (cat = global.ESpnCategory.SPN_CAT_UNKNOWN) {
             return false;
         }
         return true;
@@ -73,16 +68,16 @@ scope SpnCategory {
     }
 
     // Check if category is temperature
-    public bool isTemperatureCategory(u8 category) {
-        if (category = CAT_TEMPERATURE) {
+    public bool isTemperatureCategory(global.ESpnCategory category) {
+        if (category = global.ESpnCategory.SPN_CAT_TEMPERATURE) {
             return true;
         }
         return false;
     }
 
     // Check if category is pressure
-    public bool isPressureCategory(u8 category) {
-        if (category = CAT_PRESSURE) {
+    public bool isPressureCategory(global.ESpnCategory category) {
+        if (category = global.ESpnCategory.SPN_CAT_PRESSURE) {
             return true;
         }
         return false;

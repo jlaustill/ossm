@@ -3,16 +3,16 @@
 
 #include <Arduino.h>
 #include <Display/AppData.cnx>
-#include <AppConfig.h>
+#include <AppConfig.cnx>
 
-#include "Data/ConfigStorage/ConfigStorage.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
-#include "SensorProcessor/SensorProcessor.cnx"
-#include "Domain/CommandHandler/CommandHandler.h"
+#include "../Data/ConfigStorage.cnx"
+#include "../Data/ADS1115Manager.cnx"
+#include "../Data/MAX31856Manager.cnx"
+#include "../Data/BME280Manager.cnx"
+#include "SensorProcessor.cnx"
+#include "CommandHandler.cnx"
 #include <Display/J1939Bus.cnx>
-#include "Interface/SerialCommandHandler/SerialCommandHandler.h"
+#include "SerialCommandHandler.cnx"
 
 scope Ossm {
     // Static member variables
@@ -107,11 +107,18 @@ scope Ossm {
 
     public void setup() {
         global.Serial.begin(115200);
+        // Wait for USB serial connection (up to 3 seconds)
+        u32 startTime <- global.millis();
+        u32 elapsed <- global.millis() - startTime;
+        while (!global.Serial && elapsed < 3000) {
+            elapsed <- global.millis() - startTime;
+        }
 
         global.Serial.println("OSSM Initializing...");
 
         // Load configuration from EEPROM (or use defaults)
-        if (!global.ConfigStorage.loadConfig(this.appConfig)) {
+        bool configLoaded <- global.ConfigStorage.loadConfig(this.appConfig);
+        if (!configLoaded) {
             global.Serial.println("Loading default configuration");
             global.ConfigStorage.loadDefaults(this.appConfig);
             // Save defaults to EEPROM for next boot
@@ -125,13 +132,13 @@ scope Ossm {
         global.MAX31856Manager.initialize(this.appConfig);
         global.BME280Manager.initialize(this.appConfig);
         global.SensorProcessor.initialize(this.appConfig);
-        global.CommandHandler.initialize(this.appConfig, this.appData);
+        // CommandHandler no longer needs initialization - config passed to each function
 
         // Initialize J1939 bus
         global.J1939Bus.initialize(this.appData, this.appConfig);
 
         // Initialize serial command handler
-        global.SerialCommandHandler.initialize(this.appConfig, this.appData);
+        global.SerialCommandHandler.initialize();
 
         // Start sensor polling timer (50ms interval)
         this.sensorTimer.begin(this.sensorTimerCallback, this.SENSOR_TIMER_INTERVAL_US);
@@ -147,7 +154,7 @@ scope Ossm {
         }
 
         // Process serial commands
-        global.SerialCommandHandler.update();
+        global.SerialCommandHandler.update(this.appConfig, this.appData);
 
         // Send J1939 messages on their own timing
         this.sendJ1939Messages();

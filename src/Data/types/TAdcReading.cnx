@@ -1,0 +1,12 @@
+/**
+ * ADC reading structure used throughout the project.
+ * rawValue   - The signed 16-bit result from the ADS1115 conversion.
+ * timestamp  - Milliseconds (from millis()) when the conversion completed.
+ * valid      - Flag indicating whether the reading is fresh/valid.
+ */
+
+struct TAdcReading {
+    i16 rawValue;
+    u32 timestamp;
+    bool valid;
+}

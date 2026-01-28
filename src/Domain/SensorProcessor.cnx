@@ -2,10 +2,10 @@
 // Reads from hardware managers and updates AppData
 
 #include <Arduino.h>
-#include "AppConfig.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
+#include <AppConfig.cnx>
+#include <Data/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
 #include <Display/SensorConvert.cnx>
 #include <Display/HardwareMap.cnx>
 #include <Display/AppData.cnx>

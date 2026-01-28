@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Display/Crc32.h"
+#include "Crc32.h"
 
 // crc32.cnx - Memory-safe CRC32 checksum calculation
 // Requires C-Next v0.1.12+ for full C++ mode support
-#include "AppConfig.h"
+#include "../AppConfig.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -57,10 +57,10 @@ uint32_t Crc32_calculateChecksum(const AppConfig* config) {
         crc = Crc32_crcByte(crc, ((config->pressureInputs[i].assignedSpn >> 8) & 0xFFU));
         crc = Crc32_crcByte(crc, ((config->pressureInputs[i].maxPressure) & 0xFFU));
         crc = Crc32_crcByte(crc, ((config->pressureInputs[i].maxPressure >> 8) & 0xFFU));
-        crc = Crc32_crcByte(crc, static_cast<uint8_t>(config->pressureInputs[i].pressureType));
+        crc = Crc32_crcByte(crc, config->pressureInputs[i].pressureType);
     }
     crc = Crc32_crcByte(crc, config->egtEnabled);
-    crc = Crc32_crcByte(crc, static_cast<uint8_t>(config->thermocoupleType));
+    crc = Crc32_crcByte(crc, config->thermocoupleType);
     crc = Crc32_crcByte(crc, config->bme280Enabled);
     return ~crc;
 }

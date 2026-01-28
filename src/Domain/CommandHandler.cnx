@@ -1,0 +1,334 @@
+// CommandHandler.cnx - Command processing for OSSM configuration
+// Handles SPN enable/disable, presets, parameters, and queries
+
+#include <Arduino.h>
+#include <AppConfig.cnx>
+#include <Data/ConfigStorage.cnx>
+#include <Data/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
+#include <Display/Presets.cnx>
+#include <Display/SpnCategory.cnx>
+#include <Display/InputValid.cnx>
+#include <Display/AppData.cnx>
+#include <Domain/TCommandResult.cnx>
+
+// Error codes for command responses
+enum ECommandError {
+    OK <- 0,
+    UNKNOWN_COMMAND <- 1,
+    PARSE_FAILED <- 2,
+    UNKNOWN_SPN <- 3,
+    INVALID_TEMP_INPUT <- 4,
+    INVALID_PRESSURE_INPUT <- 5,
+    INVALID_NTC_PARAM <- 6,
+    INVALID_TC_TYPE <- 7,
+    INVALID_QUERY_TYPE <- 8,
+    SAVE_FAILED <- 9,
+    INVALID_PRESET <- 10
+}
+
+scope CommandHandler {
+    // Enable an SPN on a specific input
+    // Clears any existing assignment of this SPN first (move, not duplicate)
+    // Then assigns to the specified input and initializes hardware
+    public u8 enableSpn(AppConfig cfg, u16 spn, u8 input) {
+        global.ESpnCategory category <- global.SpnCategory.getCategory(spn);
+
+        if (category = global.ESpnCategory.SPN_CAT_UNKNOWN) {
+            return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
+        }
+
+        switch (category) {
+            case SPN_CAT_TEMPERATURE {
+                bool validInput <- global.InputValid.isValidTempInput(input);
+                if (!validInput) {
+                    return global.TCommandResult.error((u8)global.ECommandError.INVALID_TEMP_INPUT);
+                }
+
+                // Clear any existing assignment of this SPN (move, not duplicate)
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+                    if (cfg.tempInputs[i].assignedSpn = spn) {
+                        cfg.tempInputs[i].assignedSpn <- 0;
+                    }
+                }
+
+                // Assign to new input
+                cfg.tempInputs[input - 1].assignedSpn <- spn;
+
+                // Initialize hardware immediately
+                global.ADS1115Manager.initialize(cfg);
+            }
+            case SPN_CAT_PRESSURE {
+                bool validInput <- global.InputValid.isValidPressureInput(input);
+                if (!validInput) {
+                    return global.TCommandResult.error((u8)global.ECommandError.INVALID_PRESSURE_INPUT);
+                }
+
+                // Clear any existing assignment of this SPN (move, not duplicate)
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+                    if (cfg.pressureInputs[i].assignedSpn = spn) {
+                        cfg.pressureInputs[i].assignedSpn <- 0;
+                    }
+                }
+
+                // Assign to new input
+                cfg.pressureInputs[input - 1].assignedSpn <- spn;
+
+                // Initialize hardware immediately
+                global.ADS1115Manager.initialize(cfg);
+            }
+            case SPN_CAT_EGT {
+                cfg.egtEnabled <- true;
+                global.MAX31856Manager.initialize(cfg);
+            }
+            case SPN_CAT_BME280 {
+                cfg.bme280Enabled <- true;
+                global.BME280Manager.initialize(cfg);
+            }
+            default {
+                return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
+            }
+        }
+
+        return global.TCommandResult.ok();
+    }
+
+    // Disable an SPN (finds and clears its assignment)
+    public u8 disableSpn(AppConfig cfg, u16 spn) {
+        global.ESpnCategory category <- global.SpnCategory.getCategory(spn);
+
+        if (category = global.ESpnCategory.SPN_CAT_UNKNOWN) {
+            return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
+        }
+
+        switch (category) {
+            case SPN_CAT_TEMPERATURE {
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+                    if (cfg.tempInputs[i].assignedSpn = spn) {
+                        cfg.tempInputs[i].assignedSpn <- 0;
+                    }
+                }
+            }
+            case SPN_CAT_PRESSURE {
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+                    if (cfg.pressureInputs[i].assignedSpn = spn) {
+                        cfg.pressureInputs[i].assignedSpn <- 0;
+                    }
+                }
+            }
+            case SPN_CAT_EGT {
+                cfg.egtEnabled <- false;
+            }
+            case SPN_CAT_BME280 {
+                cfg.bme280Enabled <- false;
+            }
+            default {
+                return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
+            }
+        }
+
+        return global.TCommandResult.ok();
+    }
+
+    // Set pressure range for a pressure input
+    public u8 setPressureRange(AppConfig cfg, u8 input, u16 maxPressure) {
+        bool valid <- global.InputValid.isValidPressureInput(input);
+        if (!valid) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_PRESSURE_INPUT);
+        }
+
+        cfg.pressureInputs[input - 1].maxPressure <- maxPressure;
+        return global.TCommandResult.ok();
+    }
+
+    // Set thermocouple type for EGT
+    public u8 setTcType(AppConfig cfg, u8 tcType) {
+        bool valid <- global.Presets.isValidTcType(tcType);
+        if (!valid) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_TC_TYPE);
+        }
+
+        cfg.thermocoupleType <- (EThermocoupleType)tcType;
+        return global.TCommandResult.ok();
+    }
+
+    // Apply NTC preset to a temperature input
+    public u8 applyNtcPreset(AppConfig cfg, u8 input, u8 preset) {
+        bool validInput <- global.InputValid.isValidTempInput(input);
+        if (!validInput) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_TEMP_INPUT);
+        }
+
+        bool validPreset <- global.Presets.isValidNtcPreset(preset);
+        if (!validPreset) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_PRESET);
+        }
+
+        u8 idx <- input - 1;
+        cfg.tempInputs[idx].coeffA <- global.Presets.ntcCoeffA(preset);
+        cfg.tempInputs[idx].coeffB <- global.Presets.ntcCoeffB(preset);
+        cfg.tempInputs[idx].coeffC <- global.Presets.ntcCoeffC(preset);
+        cfg.tempInputs[idx].resistorValue <- global.Presets.ntcResistor(preset);
+
+        return global.TCommandResult.ok();
+    }
+
+    // Apply pressure preset to a pressure input
+    public u8 applyPressurePreset(AppConfig cfg, u8 input, u8 preset) {
+        bool validInput <- global.InputValid.isValidPressureInput(input);
+        if (!validInput) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_PRESSURE_INPUT);
+        }
+
+        bool validPreset <- global.Presets.isValidPressurePreset(preset);
+        if (!validPreset) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_PRESET);
+        }
+
+        u8 idx <- input - 1;
+        bool isBar <- global.Presets.isBarPreset(preset);
+
+        if (isBar) {
+            // Bar presets (PSIA) - value is centibar
+            cfg.pressureInputs[idx].maxPressure <- global.Presets.barPresetValue(preset);
+            cfg.pressureInputs[idx].pressureType <- PRESSURE_TYPE_PSIA;
+        } else {
+            // PSI presets (PSIG)
+            cfg.pressureInputs[idx].maxPressure <- global.Presets.psiPresetValue(preset);
+            cfg.pressureInputs[idx].pressureType <- PRESSURE_TYPE_PSIG;
+        }
+
+        return global.TCommandResult.ok();
+    }
+
+    // Set individual NTC parameter
+    public u8 setNtcParam(AppConfig cfg, u8 input, u8 param, f32 value) {
+        bool validInput <- global.InputValid.isValidTempInput(input);
+        if (!validInput) {
+            return global.TCommandResult.error((u8)global.ECommandError.INVALID_TEMP_INPUT);
+        }
+
+        u8 idx <- input - 1;
+
+        switch (param) {
+            case 0 {
+                cfg.tempInputs[idx].coeffA <- value;
+            }
+            case 1 {
+                cfg.tempInputs[idx].coeffB <- value;
+            }
+            case 2 {
+                cfg.tempInputs[idx].coeffC <- value;
+            }
+            case 3 {
+                cfg.tempInputs[idx].resistorValue <- value;
+            }
+            default {
+                return global.TCommandResult.error((u8)global.ECommandError.INVALID_NTC_PARAM);
+            }
+        }
+
+        return global.TCommandResult.ok();
+    }
+
+    // Save configuration to EEPROM
+    public u8 save(AppConfig cfg) {
+        bool saved <- global.ConfigStorage.saveConfig(cfg);
+        if (saved) {
+            return global.TCommandResult.ok();
+        }
+        return global.TCommandResult.error((u8)global.ECommandError.SAVE_FAILED);
+    }
+
+    // Reset configuration to defaults
+    public u8 reset(AppConfig cfg) {
+        global.ConfigStorage.loadDefaults(cfg);
+        return global.TCommandResult.ok();
+    }
+
+    // Query SPN counts - returns data in result struct
+    public u8 querySpnCounts(AppConfig cfg, TQueryResult out) {
+        u8 tempCount <- 0;
+        u8 presCount <- 0;
+
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            if (cfg.tempInputs[i].assignedSpn != 0) {
+                tempCount +<- 1;
+            }
+        }
+
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+            if (cfg.pressureInputs[i].assignedSpn != 0) {
+                presCount +<- 1;
+            }
+        }
+
+        out.data[0] <- tempCount;
+        out.data[1] <- presCount;
+        if (cfg.egtEnabled) {
+            out.data[2] <- 1;
+        } else {
+            out.data[2] <- 0;
+        }
+        if (cfg.bme280Enabled) {
+            out.data[3] <- 1;
+        } else {
+            out.data[3] <- 0;
+        }
+        out.len <- 4;
+
+        return global.TCommandResult.ok();
+    }
+
+    // Query full config - returns data in result struct
+    public u8 queryFullConfig(AppConfig cfg, TQueryResult out) {
+        out.data[0] <- cfg.j1939SourceAddress;
+        out.data[1] <- (u8)cfg.thermocoupleType;
+        out.len <- 2;
+
+        return global.TCommandResult.ok();
+    }
+
+    // Query temperature SPN assignments
+    // subQuery 0: temp1-3, subQuery 1: temp4-6, subQuery 2: temp7-8
+    public u8 queryTempSpns(AppConfig cfg, u8 subQuery, TQueryResult out) {
+        u8 startIdx <- subQuery * 3;
+
+        for (u8 i <- 0; i < 3; i +<- 1) {
+            u8 idx <- startIdx + i;
+            if (idx < TEMP_INPUT_COUNT) {
+                u16 spn <- cfg.tempInputs[idx].assignedSpn;
+                out.data[i * 2] <- spn[8, 8];      // high byte
+                out.data[i * 2 + 1] <- spn[0, 8];  // low byte
+            } else {
+                out.data[i * 2] <- 0xFF;
+                out.data[i * 2 + 1] <- 0xFF;
+            }
+        }
+        out.len <- 6;
+
+        return global.TCommandResult.ok();
+    }
+
+    // Query pressure SPN assignments
+    // subQuery 0: pres1-3, subQuery 1: pres4-6, subQuery 2: pres7
+    public u8 queryPresSpns(AppConfig cfg, u8 subQuery, TQueryResult out) {
+        u8 startIdx <- subQuery * 3;
+
+        for (u8 i <- 0; i < 3; i +<- 1) {
+            u8 idx <- startIdx + i;
+            if (idx < PRESSURE_INPUT_COUNT) {
+                u16 spn <- cfg.pressureInputs[idx].assignedSpn;
+                out.data[i * 2] <- spn[8, 8];      // high byte
+                out.data[i * 2 + 1] <- spn[0, 8];  // low byte
+            } else {
+                out.data[i * 2] <- 0xFF;
+                out.data[i * 2 + 1] <- 0xFF;
+            }
+        }
+        out.len <- 6;
+
+        return global.TCommandResult.ok();
+    }
+}

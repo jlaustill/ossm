@@ -3,16 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "Display/SpnInfo.h"
-
-// SPN Information Lookup
-// Provides SPN metadata without string handling
-// String labels are kept in C++ code, this module returns indices
-#include <stdint.h>
+#include "SpnInfo.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// SPN Information Lookup
+// Provides SPN metadata without string handling
+// String labels are kept in C++ code, this module returns indices
 /* Scope: SpnInfo */
 const uint8_t SpnInfo_IDX_OIL_TEMP = 0;
 const uint8_t SpnInfo_IDX_COOLANT_TEMP = 1;

@@ -2,8 +2,6 @@
 // Centralizes all input range checking for commands
 // Supports both 1-indexed (user-facing) and 0-indexed (internal) inputs
 
-#include <stdint.h>
-
 scope InputValid {
     // Input counts (matching AppConfig.h)
     public const u8 TEMP_COUNT <- 8;

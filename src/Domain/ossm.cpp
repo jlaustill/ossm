@@ -3,27 +3,28 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/ossm.h"
+#include "ossm.h"
 
 // Main OSSM application logic
 // Handles sensor polling, J1939 messaging, and command processing
 #include <Arduino.h>
 #include <Display/AppData.h>
 #include <AppConfig.h>
-#include "Data/ConfigStorage/ConfigStorage.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
-#include "SensorProcessor/SensorProcessor.h"
-#include "Domain/CommandHandler/CommandHandler.h"
+#include "../Data/ConfigStorage.h"
+#include "../Data/ADS1115Manager.h"
+#include "../Data/MAX31856Manager.h"
+#include "../Data/BME280Manager.h"
+#include "SensorProcessor.h"
+#include "CommandHandler.h"
 #include <Display/J1939Bus.h>
-#include "Interface/SerialCommandHandler/SerialCommandHandler.h"
+#include "SerialCommandHandler.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 
 /* Scope: Ossm */
 static AppData Ossm_appData = {0};
-static AppConfig Ossm_appConfig = {};
+static AppConfig Ossm_appConfig = {0};
 static IntervalTimer Ossm_sensorTimer = {};
 static bool Ossm_sensorUpdateReady = false;
 static elapsedMillis Ossm_halfSecondMillis = {};
@@ -34,9 +35,9 @@ void Ossm_sensorTimerCallback(void) {
 }
 
 void Ossm_processSensorUpdates(void) {
-    ADS1115Manager::update();
-    MAX31856Manager::update();
-    BME280Manager::update();
+    ADS1115Manager_update();
+    MAX31856Manager_update();
+    BME280Manager_update();
     SensorProcessor_processAllInputs(&Ossm_appData);
 }
 
@@ -59,21 +60,26 @@ void Ossm_sendJ1939Messages(void) {
 
 void Ossm_setup(void) {
     Serial.begin(115200);
+    uint32_t startTime = millis();
+    uint32_t elapsed = millis() - startTime;
+    while (!Serial && elapsed < 3000) {
+        elapsed = millis() - startTime;
+    }
     Serial.println("OSSM Initializing...");
-    if (!ConfigStorage_loadConfig(&Ossm_appConfig)) {
+    bool configLoaded = ConfigStorage_loadConfig(&Ossm_appConfig);
+    if (!configLoaded) {
         Serial.println("Loading default configuration");
         ConfigStorage_loadDefaults(&Ossm_appConfig);
         ConfigStorage_saveConfig(&Ossm_appConfig);
     } else {
         Serial.println("Configuration loaded from EEPROM");
     }
-    ADS1115Manager::initialize(&Ossm_appConfig);
-    MAX31856Manager::initialize(&Ossm_appConfig);
-    BME280Manager::initialize(&Ossm_appConfig);
+    ADS1115Manager_initialize(&Ossm_appConfig);
+    MAX31856Manager_initialize(&Ossm_appConfig);
+    BME280Manager_initialize(&Ossm_appConfig);
     SensorProcessor_initialize(&Ossm_appConfig);
-    CommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
     J1939Bus_initialize(&Ossm_appData, &Ossm_appConfig);
-    SerialCommandHandler::initialize(&Ossm_appConfig, &Ossm_appData);
+    SerialCommandHandler_initialize();
     Ossm_sensorTimer.begin(Ossm_sensorTimerCallback, 50000);
     Serial.println("OSSM Ready");
 }
@@ -83,6 +89,6 @@ void Ossm_loop(void) {
         Ossm_processSensorUpdates();
         Ossm_sensorUpdateReady = false;
     }
-    SerialCommandHandler::update();
+    SerialCommandHandler_update(&Ossm_appConfig, &Ossm_appData);
     Ossm_sendJ1939Messages();
 }

@@ -2,8 +2,6 @@
 // MAX31856 thermocouple fault bit interpretation
 // Provides pure functions for checking individual fault conditions
 
-#include <stdint.h>
-
 scope FaultDecode {
     // MAX31856 fault bit masks
     public const u8 FAULT_OPEN <- 0x01;      // Open thermocouple

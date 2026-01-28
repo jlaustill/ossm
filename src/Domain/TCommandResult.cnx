@@ -1,0 +1,20 @@
+// TCommandResult.cnx - Command result helpers for OSSM
+// Provides factory functions for creating command responses
+
+// Query result struct - holds response data for query commands
+struct TQueryResult {
+    u8 data[6];
+    u8 len;
+}
+
+scope TCommandResult {
+    // Success result (error code 0)
+    public u8 ok() {
+        return 0;
+    }
+
+    // Error result with specific code
+    public u8 error(u8 code) {
+        return code;
+    }
+}

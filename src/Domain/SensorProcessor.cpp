@@ -3,15 +3,15 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/SensorProcessor/SensorProcessor.h"
+#include "SensorProcessor.h"
 
 // Sensor processing logic
 // Reads from hardware managers and updates AppData
 #include <Arduino.h>
-#include "AppConfig.h"
-#include "Data/ADS1115Manager/ADS1115Manager.h"
-#include "Data/MAX31856Manager/MAX31856Manager.h"
-#include "Data/BME280Manager/BME280Manager.h"
+#include <AppConfig.h>
+#include <Data/ADS1115Manager.h>
+#include <Data/MAX31856Manager.h>
+#include <Data/BME280Manager.h>
 #include <Display/SensorConvert.h>
 #include <Display/HardwareMap.h>
 #include <Display/AppData.h>
@@ -20,7 +20,7 @@
 #include <stdbool.h>
 
 /* Scope: SensorProcessor */
-static AppConfig SensorProcessor_config = {};
+static AppConfig SensorProcessor_config = {0};
 static bool SensorProcessor_initialized = false;
 
 void SensorProcessor_initialize(const AppConfig* cfg) {
@@ -123,7 +123,7 @@ static void SensorProcessor_processTempInputs(AppData* appData) {
         }
         uint8_t device = HardwareMap_tempDevice(i);
         uint8_t channel = HardwareMap_tempChannel(i);
-        float voltage = ADS1115Manager::getVoltage(device, channel);
+        float voltage = ADS1115Manager_getVoltage(device, channel);
         float tempC = SensorConvert_ntcTemperature(voltage, &SensorProcessor_config.tempInputs[i]);
         SensorProcessor_updateAppDataForSpn(appData, assignedSpn, tempC);
     }
@@ -137,25 +137,25 @@ static void SensorProcessor_processPressureInputs(AppData* appData) {
         }
         uint8_t device = HardwareMap_pressureDevice(i);
         uint8_t channel = HardwareMap_pressureChannel(i);
-        float voltage = ADS1115Manager::getVoltage(device, channel);
+        float voltage = ADS1115Manager_getVoltage(device, channel);
         float pressurekPa = SensorConvert_pressure(voltage, &SensorProcessor_config.pressureInputs[i], SensorProcessor_getAtmosphericPressurekPa(appData));
         SensorProcessor_updateAppDataForSpn(appData, assignedSpn, pressurekPa);
     }
 }
 
 static void SensorProcessor_processEgt(AppData* appData) {
-    bool egtReady = MAX31856Manager::isEnabled();
+    bool egtReady = MAX31856Manager_isEnabled();
     if (SensorProcessor_config.egtEnabled && egtReady) {
-        appData->egtTemperatureC = MAX31856Manager::getTemperatureC();
+        appData->egtTemperatureC = MAX31856Manager_getTemperatureC();
     }
 }
 
 static void SensorProcessor_processBme280(AppData* appData) {
-    bool bmeReady = BME280Manager::isEnabled();
+    bool bmeReady = BME280Manager_isEnabled();
     if (SensorProcessor_config.bme280Enabled && bmeReady) {
-        appData->ambientTemperatureC = BME280Manager::getTemperatureC();
-        appData->humidity = BME280Manager::getHumidity();
-        appData->absoluteBarometricpressurekPa = BME280Manager::getPressurekPa();
+        appData->ambientTemperatureC = BME280Manager_getTemperatureC();
+        appData->humidity = BME280Manager_getHumidity();
+        appData->absoluteBarometricpressurekPa = BME280Manager_getPressurekPa();
     }
 }
 

@@ -3,19 +3,20 @@
  * A safer C for embedded systems
  */
 
-#include "Display/J1939Bus.h"
+#include "J1939Bus.h"
 
 // J1939 CAN Bus Communication
 // Handles J1939 message transmission and configuration commands
-#include <Display/AppData.h>
-#include "AppConfig.h"
+#include <AppData.h>
+#include "../AppConfig.h"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include "Domain/CommandHandler/CommandHandler.h"
-#include <Display/J1939Encode.h>
-#include <Display/J1939Decode.h>
-#include <Display/SpnCheck.h>
-#include <Display/FloatBytes.h>
+#include <Domain/CommandHandler.h>
+#include <Domain/TCommandResult.h>
+#include "J1939Encode.h"
+#include "J1939Decode.h"
+#include "SpnCheck.h"
+#include "FloatBytes.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -23,7 +24,7 @@
 /* Scope: J1939Bus */
 static FlexCAN_T4<CAN1,RX_SIZE_256,TX_SIZE_16> J1939Bus_canBus = {};
 static AppData J1939Bus_appData = {0};
-static AppConfig J1939Bus_config = {};
+static AppConfig J1939Bus_config = {0};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
     uint32_t id = (static_cast<uint32_t>(priority) << 26) | (static_cast<uint32_t>(pgn) << 8) | static_cast<uint32_t>(sourceAddr);
@@ -72,82 +73,96 @@ static void J1939Bus_handleEnableSpn(const uint8_t data[8]) {
     uint16_t spn = J1939Decode_getSpn(data);
     bool enable = J1939Decode_getEnable(data);
     uint8_t input = J1939Decode_getInput(data);
-    TCommandResult result = CommandHandler::enableSpn(spn, enable, input);
-    J1939Bus_sendConfigResponse(1, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = 0;
+    if (enable) {
+        errorCode = CommandHandler_enableSpn(&J1939Bus_config, spn, input);
+    } else {
+        errorCode = CommandHandler_disableSpn(&J1939Bus_config, spn);
+    }
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(1, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleSetNtcParam(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getNtcInput(data);
     uint8_t param = J1939Decode_getNtcParam(data);
     float value = FloatBytes_fromBytesLE(data[3], data[4], data[5], data[6]);
-    TCommandResult result = CommandHandler::setNtcParam(input, param, value);
-    J1939Bus_sendConfigResponse(2, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_setNtcParam(&J1939Bus_config, input, param, value);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(2, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleSetPressureRange(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPressureInput(data);
     uint16_t maxPsi = J1939Decode_getMaxPressure(data);
-    TCommandResult result = CommandHandler::setPressureRange(input, maxPsi);
-    J1939Bus_sendConfigResponse(3, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_setPressureRange(&J1939Bus_config, input, maxPsi);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(3, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleSetTcType(const uint8_t data[8]) {
     uint8_t tcType = J1939Decode_getTcType(data);
-    TCommandResult result = CommandHandler::setTcType(tcType);
-    J1939Bus_sendConfigResponse(4, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_setTcType(&J1939Bus_config, tcType);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(4, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleQuery(const uint8_t data[8]) {
     uint8_t queryType = J1939Decode_getQueryType(data);
     uint8_t subQuery = J1939Decode_getSubQuery(data);
-    TCommandResult result = {};
+    TQueryResult queryResult = {0};
+    uint8_t errorCode = 0;
     switch (queryType) {
         case 0: {
-            result = CommandHandler::querySpnCounts();
+            errorCode = CommandHandler_querySpnCounts(&J1939Bus_config, &queryResult);
             break;
         }
         case 1: {
-            result = CommandHandler::queryTempSpns(subQuery);
+            errorCode = CommandHandler_queryTempSpns(&J1939Bus_config, subQuery, &queryResult);
             break;
         }
         case 2: {
-            result = CommandHandler::queryPresSpns(subQuery);
+            errorCode = CommandHandler_queryPresSpns(&J1939Bus_config, subQuery, &queryResult);
             break;
         }
         case 4: {
-            result = CommandHandler::queryFullConfig();
+            errorCode = CommandHandler_queryFullConfig(&J1939Bus_config, &queryResult);
             break;
         }
         default: {
-            result = TCommandResult::error(ECommandError::INVALID_QUERY_TYPE);
+            errorCode = 8;
             break;
         }
     }
-    J1939Bus_sendConfigResponse(5, result.errorCode, result.data, result.dataLen);
+    J1939Bus_sendConfigResponse(5, errorCode, queryResult.data, queryResult.len);
 }
 
 static void J1939Bus_handleSave(void) {
-    TCommandResult result = CommandHandler::save();
-    J1939Bus_sendConfigResponse(6, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_save(&J1939Bus_config);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(6, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleReset(void) {
-    TCommandResult result = CommandHandler::reset();
-    J1939Bus_sendConfigResponse(7, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_reset(&J1939Bus_config);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(7, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleNtcPreset(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPresetInput(data);
     uint8_t preset = J1939Decode_getPresetId(data);
-    TCommandResult result = CommandHandler::applyNtcPreset(input, preset);
-    J1939Bus_sendConfigResponse(8, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_applyNtcPreset(&J1939Bus_config, input, preset);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(8, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handlePressurePreset(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPresetInput(data);
     uint8_t preset = J1939Decode_getPresetId(data);
-    TCommandResult result = CommandHandler::applyPressurePreset(input, preset);
-    J1939Bus_sendConfigResponse(9, result.errorCode, result.data, result.dataLen);
+    uint8_t errorCode = CommandHandler_applyPressurePreset(&J1939Bus_config, input, preset);
+    uint8_t emptyData[8] = {0};
+    J1939Bus_sendConfigResponse(9, errorCode, emptyData, 0);
 }
 
 void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len) {
@@ -202,6 +217,7 @@ void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len) {
 
 static void J1939Bus_sniffDataPrivate(const CAN_message_t* msg) {
     J1939Message message = {};
+    message.pgn = 0;
     message.setCanId(msg->id);
     message.setData(msg->buf);
     if (message.pgn == 65280) {

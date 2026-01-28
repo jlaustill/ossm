@@ -2,80 +2,47 @@
 // IEEE 754 float reconstruction from byte arrays
 // Used in J1939 command parsing for float parameter values
 
-#include <stdint.h>
-#include <string.h>
-
 scope FloatBytes {
     // Reconstruct float from 4 bytes (little-endian)
     // Bytes are ordered: b0=LSB, b3=MSB
     public f32 fromBytesLE(u8 b0, u8 b1, u8 b2, u8 b3) {
-        u8 buf[4];
-        buf[0] <- b0;
-        buf[1] <- b1;
-        buf[2] <- b2;
-        buf[3] <- b3;
-
         f32 result <- 0.0;
-        memcpy(&result, &buf[0], 4);
+        result[0,8] <- b0;
+        result[8,8] <- b1;
+        result[16,8] <- b2;
+        result[24,8] <- b3;
         return result;
     }
 
     // Reconstruct float from 4 bytes (big-endian)
     // Bytes are ordered: b0=MSB, b3=LSB
     public f32 fromBytesBE(u8 b0, u8 b1, u8 b2, u8 b3) {
-        u8 buf[4];
-        buf[0] <- b3;
-        buf[1] <- b2;
-        buf[2] <- b1;
-        buf[3] <- b0;
-
         f32 result <- 0.0;
-        memcpy(&result, &buf[0], 4);
+        result[0,8] <- b3;
+        result[8,8] <- b2;
+        result[16,8] <- b1;
+        result[24,8] <- b0;
         return result;
     }
 
     // Extract byte 0 (LSB) from float
     public u8 getByte0(f32 value) {
-        u8 buf[4];
-        buf[0] <- 0;
-        buf[1] <- 0;
-        buf[2] <- 0;
-        buf[3] <- 0;
-        memcpy(&buf[0], &value, 4);
-        return buf[0];
+        return value[0,8];
     }
 
     // Extract byte 1 from float
     public u8 getByte1(f32 value) {
-        u8 buf[4];
-        buf[0] <- 0;
-        buf[1] <- 0;
-        buf[2] <- 0;
-        buf[3] <- 0;
-        memcpy(&buf[0], &value, 4);
-        return buf[1];
+        return value[8,8];
     }
 
     // Extract byte 2 from float
     public u8 getByte2(f32 value) {
-        u8 buf[4];
-        buf[0] <- 0;
-        buf[1] <- 0;
-        buf[2] <- 0;
-        buf[3] <- 0;
-        memcpy(&buf[0], &value, 4);
-        return buf[2];
+        return value[16,8];
     }
 
     // Extract byte 3 (MSB) from float
     public u8 getByte3(f32 value) {
-        u8 buf[4];
-        buf[0] <- 0;
-        buf[1] <- 0;
-        buf[2] <- 0;
-        buf[3] <- 0;
-        memcpy(&buf[0], &value, 4);
-        return buf[3];
+        return value[24,8];
     }
 
     // Check if float is valid (not NaN or Inf)
