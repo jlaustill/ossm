@@ -6,7 +6,7 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
 #include "../AppConfig.cnx"
-#include "Data/types/TAdcReading.h"
+#include "types/TAdcReading.cnx"
 #include <Display/HardwareMap.cnx>
 
 scope ADS1115Manager {

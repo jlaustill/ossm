@@ -19,6 +19,7 @@
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 
 /* Scope: Ossm */
@@ -59,6 +60,11 @@ void Ossm_sendJ1939Messages(void) {
 
 void Ossm_setup(void) {
     Serial.begin(115200);
+    uint32_t startTime = millis();
+    uint32_t elapsed = millis() - startTime;
+    while (!Serial && elapsed < 3000) {
+        elapsed = millis() - startTime;
+    }
     Serial.println("OSSM Initializing...");
     bool configLoaded = ConfigStorage_loadConfig(&Ossm_appConfig);
     if (!configLoaded) {

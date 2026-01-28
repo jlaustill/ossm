@@ -107,6 +107,12 @@ scope Ossm {
 
     public void setup() {
         global.Serial.begin(115200);
+        // Wait for USB serial connection (up to 3 seconds)
+        u32 startTime <- global.millis();
+        u32 elapsed <- global.millis() - startTime;
+        while (!global.Serial && elapsed < 3000) {
+            elapsed <- global.millis() - startTime;
+        }
 
         global.Serial.println("OSSM Initializing...");
 

@@ -106,6 +106,11 @@ include/
 ### Include Paths
 - Use angle brackets for includes: `#include <AppConfig.cnx>` not `"../../AppConfig.cnx"`
 - Transpiler resolves paths relative to `src/` directory
+- Include files in subdirectories use relative paths from file location: `#include "types/TAdcReading.cnx"`
+
+### Output Format
+- C-Next generates `.cpp` when C++ is in use, `cnext.config.json` has `cppRequired: true`, or `--cpp` flag passed; otherwise `.c`
+- Use `cnext --clean` to remove stale generated files when output format changes
 
 ### Bug Reproducers
 - Create minimal reproducers in `~/code/c-next2/bugs/issue-<name>/` before filing

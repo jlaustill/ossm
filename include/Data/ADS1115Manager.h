@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../AppConfig.h"
+#include "types/TAdcReading.h"
 #include <Display/HardwareMap.h>
-#include "Data/types/TAdcReading.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +18,7 @@ extern "C" {
 
 /* External type dependencies - include appropriate headers */
 typedef struct AppConfig AppConfig;
+typedef struct TAdcReading TAdcReading;
 
 /* Function prototypes */
 void ADS1115Manager_initialize(const AppConfig* config);

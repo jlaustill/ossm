@@ -12,7 +12,7 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
 #include "../AppConfig.h"
-#include "Data/types/TAdcReading.h"
+#include "types/TAdcReading.h"
 #include <Display/HardwareMap.h>
 
 #include <stdint.h>
