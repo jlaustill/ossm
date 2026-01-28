@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/SerialCommandHandler.h"
+#include "SerialCommandHandler.h"
 
 /**
  * Serial Command Handler
@@ -11,13 +11,14 @@
  */
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <Parse.hpp>
 #include <AppConfig.h>
 #include <Display/AppData.h>
-#include <Data/ConfigStorage/ConfigStorage.h>
-#include <Data/MAX31856Manager/MAX31856Manager.h>
-#include <Data/BME280Manager/BME280Manager.h>
-#include <Domain/CommandHandler/CommandHandler.h>
-#include <Domain/CommandHandler/TCommandResult.h>
+#include <Data/ConfigStorage.h>
+#include <Data/MAX31856Manager.h>
+#include <Data/BME280Manager.h>
+#include <Domain/CommandHandler.h>
+#include <Domain/TCommandResult.h>
 #include <Display/SpnCategory.h>
 #include <Display/SpnInfo.h>
 #include <Display/FaultDecode.h>
@@ -29,14 +30,14 @@
 #include <string.h>
 
 // SPN labels indexed by SpnInfo_getIndex()
-const char SPN_LABELS[20][33] = {"Oil Temp(SPN 175)", "Coolant Temp(SPN 110)", "Fuel Temp(SPN 174)", "Boost Temp(SPN 105)", "CAC Inlet Temp(SPN 1131)", "Xfer Pipe Temp(SPN 1132)", "Air Inlet Temp 4(SPN 1133)", "Air Inlet Temp(SPN 172)", "Eng Bay Temp(SPN 441)", "Oil Pres(SPN 100)", "Coolant Pres(SPN 109)", "Fuel Pres(SPN 94)", "Boost Pres(SPN 102)", "Air Inlet Pres(SPN 106)", "CAC Inlet Pres(SPN 1127)", "Xfer Pipe Pres(SPN 1128)", "EGT(SPN 173)", "Ambient Temp(SPN 171)", "Baro Pres(SPN 108)", "Humidity(SPN 354)"};
+extern const char SPN_LABELS[20][33] = {"Oil Temp(SPN 175)", "Coolant Temp(SPN 110)", "Fuel Temp(SPN 174)", "Boost Temp(SPN 105)", "CAC Inlet Temp(SPN 1131)", "Xfer Pipe Temp(SPN 1132)", "Air Inlet Temp 4(SPN 1133)", "Air Inlet Temp(SPN 172)", "Eng Bay Temp(SPN 441)", "Oil Pres(SPN 100)", "Coolant Pres(SPN 109)", "Fuel Pres(SPN 94)", "Boost Pres(SPN 102)", "Air Inlet Pres(SPN 106)", "CAC Inlet Pres(SPN 1127)", "Xfer Pipe Pres(SPN 1128)", "EGT(SPN 173)", "Ambient Temp(SPN 171)", "Baro Pres(SPN 108)", "Humidity(SPN 354)"};
 
 // Module state for command buffer
 char cmdBuffer[129] = "";
 
 uint8_t cmdIndex = 0;
 
-SeaDash_Parse_ParseResult parsed = (SeaDash_Parse_ParseResult){ .data = {0}, .count = 0, .success = false };
+SeaDash::Parse::ParseResult parsed = (SeaDash::Parse::ParseResult){ .data = {0}, .count = 0, .success = false };
 
 /* Scope: SerialCommandHandler */
 
@@ -208,15 +209,15 @@ static void SerialCommandHandler_handleEnableSpn(const AppConfig* config) {
     } else {
         errorCode = CommandHandler_disableSpn(config, spn);
     }
-    if (errorCode != static_cast<uint8_t>(ECommandError.OK)) {
+    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
         Serial.print("ERR,");
         Serial.print(errorCode);
-        if (errorCode == static_cast<uint8_t>(ECommandError.UNKNOWN_SPN)) {
+        if (errorCode == static_cast<uint8_t>(ECommandError_UNKNOWN_SPN)) {
             Serial.print(",Unknown SPN: ");
             Serial.println(spn);
-        } else if (errorCode == static_cast<uint8_t>(ECommandError.INVALID_TEMP_INPUT)) {
+        } else if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT)) {
             Serial.println(",Input 1-8 required for temp SPN");
-        } else if (errorCode == static_cast<uint8_t>(ECommandError.INVALID_PRESSURE_INPUT)) {
+        } else if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT)) {
             Serial.println(",Input 1-7 required for pressure SPN");
         } else {
             Serial.println();
@@ -265,7 +266,7 @@ static void SerialCommandHandler_handleSetPressureRange(const AppConfig* config)
     uint16_t valueLo = parsed.data[3];
     uint16_t maxPressure = (valueHi << 8) | valueLo;
     uint8_t errorCode = CommandHandler_setPressureRange(config, input, maxPressure);
-    if (errorCode != static_cast<uint8_t>(ECommandError.OK)) {
+    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
         Serial.println("ERR,5,Input must be 1-7");
         return;
     }
@@ -282,7 +283,7 @@ static void SerialCommandHandler_handleSetTcType(const AppConfig* config) {
     }
     uint8_t tcType = parsed.data[1];
     uint8_t errorCode = CommandHandler_setTcType(config, tcType);
-    if (errorCode != static_cast<uint8_t>(ECommandError.OK)) {
+    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
         Serial.println("ERR,7,Type must be 0-7");
         return;
     }
@@ -365,7 +366,7 @@ static void SerialCommandHandler_handleQuery(const AppConfig* config) {
 static void SerialCommandHandler_handleSave(const AppConfig* config) {
     Serial.print("Saving configuration... ");
     uint8_t errorCode = CommandHandler_save(config);
-    if (errorCode == static_cast<uint8_t>(ECommandError.OK)) {
+    if (errorCode == static_cast<uint8_t>(ECommandError_OK)) {
         Serial.println("OK");
     } else {
         Serial.println("ERR,9,Save failed");
@@ -386,8 +387,8 @@ static void SerialCommandHandler_handleNtcPreset(const AppConfig* config) {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
     uint8_t errorCode = CommandHandler_applyNtcPreset(config, input, preset);
-    if (errorCode != static_cast<uint8_t>(ECommandError.OK)) {
-        if (errorCode == static_cast<uint8_t>(ECommandError.INVALID_TEMP_INPUT)) {
+    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
+        if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT)) {
             Serial.println("ERR,4,Input must be 1-8");
         } else {
             Serial.println("ERR,10,Preset must be 0-2");
@@ -410,8 +411,8 @@ static void SerialCommandHandler_handlePressurePreset(const AppConfig* config) {
     uint8_t input = parsed.data[1];
     uint8_t preset = parsed.data[2];
     uint8_t errorCode = CommandHandler_applyPressurePreset(config, input, preset);
-    if (errorCode != static_cast<uint8_t>(ECommandError.OK)) {
-        if (errorCode == static_cast<uint8_t>(ECommandError.INVALID_PRESSURE_INPUT)) {
+    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
+        if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT)) {
             Serial.println("ERR,5,Input must be 1-7");
         } else {
             Serial.println("ERR,10,Preset must be 0-15 (bar) or 20-30 (PSIG)");
@@ -576,7 +577,7 @@ static void SerialCommandHandler_processCommand(const AppConfig* config, const A
     if (len == 0) {
         return;
     }
-    parsed = SeaDash.Parse.parse(cmdBuffer, ',');
+    parsed = SeaDash::Parse::parse(cmdBuffer, ',');
     if (!parsed.success || parsed.count < 1) {
         Serial.println("ERR,1,Parse failed");
         return;

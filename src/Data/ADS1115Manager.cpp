@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Data/ADS1115Manager.h"
+#include "ADS1115Manager.h"
 
 /**
  * ADS1115 ADC Manager
@@ -23,18 +23,19 @@ static Adafruit_ADS1115 ADS1115Manager_ads[4] = {};
 static uint8_t ADS1115Manager_drdyPins[4] = {0, 0, 0, 0};
 static bool ADS1115Manager_deviceEnabled[4] = {false, false, false, false};
 static bool ADS1115Manager_deviceInitialized[4] = {false, false, false, false};
-static TAdcReading ADS1115Manager_readings[ADS1115Manager_ADS_DEVICE_COUNT][4] = {};
+static TAdcReading ADS1115Manager_readings[4][4] = {0};
 static uint8_t ADS1115Manager_currentDevice = 0;
 static uint8_t ADS1115Manager_currentChannel = 0;
 static bool ADS1115Manager_conversionStarted = false;
 static uint32_t ADS1115Manager_conversionStartTime = 0;
+static const uint16_t ADS1115Manager_MUX_SINGLE[4] = {ADS1X15_REG_CONFIG_MUX_SINGLE_0, ADS1X15_REG_CONFIG_MUX_SINGLE_1, ADS1X15_REG_CONFIG_MUX_SINGLE_2, ADS1X15_REG_CONFIG_MUX_SINGLE_3};
 
 static void ADS1115Manager_startConversion(void) {
-    if (ADS1115Manager_currentDevice >= ADS1115Manager_ADS_DEVICE_COUNT || !ADS1115Manager_deviceInitialized[ADS1115Manager_currentDevice]) {
+    if (ADS1115Manager_currentDevice >= ADS_DEVICE_COUNT || !ADS1115Manager_deviceInitialized[ADS1115Manager_currentDevice]) {
         ADS1115Manager_conversionStarted = false;
         return;
     }
-    ADS1115Manager_ads[ADS1115Manager_currentDevice].startADCReading([ADS1X15_REG_CONFIG_MUX_SINGLE_0,ADS1X15_REG_CONFIG_MUX_SINGLE_1,ADS1X15_REG_CONFIG_MUX_SINGLE_2,ADS1X15_REG_CONFIG_MUX_SINGLE_3][ADS1115Manager_currentChannel], false);
+    ADS1115Manager_ads[ADS1115Manager_currentDevice].startADCReading(ADS1115Manager_MUX_SINGLE[ADS1115Manager_currentChannel], false);
     ADS1115Manager_conversionStarted = true;
     ADS1115Manager_conversionStartTime = millis();
 }

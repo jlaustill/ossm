@@ -3,15 +3,15 @@
 
 #include <Arduino.h>
 #include <AppConfig.cnx>
-#include <Data/ConfigStorage/ConfigStorage.cnx>
-#include <Data/ADS1115Manager/ADS1115Manager.cnx>
-#include <Data/MAX31856Manager/MAX31856Manager.cnx>
-#include <Data/BME280Manager/BME280Manager.cnx>
+#include <Data/ConfigStorage.cnx>
+#include <Data/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
 #include <Display/Presets.cnx>
 #include <Display/SpnCategory.cnx>
 #include <Display/InputValid.cnx>
 #include <Display/AppData.cnx>
-#include <Domain/CommandHandler/TCommandResult.cnx>
+#include <Domain/TCommandResult.cnx>
 
 // Error codes for command responses
 enum ECommandError {

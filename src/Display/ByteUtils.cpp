@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/ByteUtils.h"
+#include "ByteUtils.h"
 
 #include <stdint.h>
 #include <stdbool.h>

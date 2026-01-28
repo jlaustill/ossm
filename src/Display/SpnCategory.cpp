@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/SpnCategory.h"
+#include "SpnCategory.h"
 
 // SPN Category Lookup Functions
 // Maps SPNs to their sensor category (temperature, pressure, EGT, BME280)

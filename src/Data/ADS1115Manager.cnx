@@ -25,7 +25,7 @@ scope ADS1115Manager {
 
     // Reading buffers
     // TODO: Re-enable atomic when C-Next supports Arduino/Teensy critical sections
-    volatile TAdcReading readings[this.ADS_DEVICE_COUNT][this.ADS_CHANNEL_COUNT];
+    volatile TAdcReading readings[ADS_DEVICE_COUNT][this.ADS_CHANNEL_COUNT];
 
     // State machine for round-robin cycling
     u8 currentDevice <- 0;
@@ -44,7 +44,7 @@ scope ADS1115Manager {
     // Private functions
 
     void startConversion() {
-        if (this.currentDevice >= this.ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
+        if (this.currentDevice >= ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
             this.conversionStarted <- false;
             return;
         }

@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/SensorConvert.h"
+#include "SensorConvert.h"
 
 // Sensor Conversion Functions
 // Physics calculations for NTC thermistors and pressure sensors

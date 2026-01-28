@@ -10,11 +10,11 @@
 #include <stdbool.h>
 #include <AppConfig.h>
 #include <Display/AppData.h>
-#include <Data/ConfigStorage/ConfigStorage.h>
-#include <Data/MAX31856Manager/MAX31856Manager.h>
-#include <Data/BME280Manager/BME280Manager.h>
-#include <Domain/CommandHandler/CommandHandler.h>
-#include <Domain/CommandHandler/TCommandResult.h>
+#include <Data/ConfigStorage.h>
+#include <Data/MAX31856Manager.h>
+#include <Data/BME280Manager.h>
+#include <Domain/CommandHandler.h>
+#include <Domain/TCommandResult.h>
 #include <Display/SpnCategory.h>
 #include <Display/SpnInfo.h>
 #include <Display/FaultDecode.h>
@@ -28,13 +28,11 @@ extern "C" {
 /* External type dependencies - include appropriate headers */
 typedef struct AppConfig AppConfig;
 typedef struct AppData AppData;
-typedef struct SeaDash_Parse_ParseResult SeaDash_Parse_ParseResult;
 
 /* External variables */
 extern const char SPN_LABELS[20][33];
 extern char cmdBuffer[129];
 extern uint8_t cmdIndex;
-extern SeaDash_Parse_ParseResult parsed;
 
 /* Function prototypes */
 void SerialCommandHandler_initialize(void);

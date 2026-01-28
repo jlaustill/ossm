@@ -10,10 +10,12 @@
 #include <stdbool.h>
 #include <AppData.h>
 #include "../AppConfig.h"
-#include <J1939Encode.h>
-#include <J1939Decode.h>
-#include <SpnCheck.h>
-#include <FloatBytes.h>
+#include <Domain/CommandHandler.h>
+#include <Domain/TCommandResult.h>
+#include "J1939Encode.h"
+#include "J1939Decode.h"
+#include "SpnCheck.h"
+#include "FloatBytes.h"
 
 #ifdef __cplusplus
 extern "C" {

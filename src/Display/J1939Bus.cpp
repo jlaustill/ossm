@@ -3,20 +3,20 @@
  * A safer C for embedded systems
  */
 
-#include "Display/J1939Bus.h"
+#include "J1939Bus.h"
 
 // J1939 CAN Bus Communication
 // Handles J1939 message transmission and configuration commands
-#include <Display/AppData.h>
+#include <AppData.h>
 #include "../AppConfig.h"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include "Domain/CommandHandler/CommandHandler.h"
-#include "Domain/CommandHandler/TCommandResult.h"
-#include <Display/J1939Encode.h>
-#include <Display/J1939Decode.h>
-#include <Display/SpnCheck.h>
-#include <Display/FloatBytes.h>
+#include <Domain/CommandHandler.h>
+#include <Domain/TCommandResult.h>
+#include "J1939Encode.h"
+#include "J1939Decode.h"
+#include "SpnCheck.h"
+#include "FloatBytes.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -217,6 +217,7 @@ void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len) {
 
 static void J1939Bus_sniffDataPrivate(const CAN_message_t* msg) {
     J1939Message message = {};
+    message.pgn = 0;
     message.setCanId(msg->id);
     message.setData(msg->buf);
     if (message.pgn == 65280) {

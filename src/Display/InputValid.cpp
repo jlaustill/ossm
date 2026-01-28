@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/InputValid.h"
+#include "InputValid.h"
 
 #include <stdint.h>
 #include <stdbool.h>

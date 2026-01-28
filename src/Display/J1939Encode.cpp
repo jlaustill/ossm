@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/J1939Encode.h"
+#include "J1939Encode.h"
 
 #include <stdint.h>
 

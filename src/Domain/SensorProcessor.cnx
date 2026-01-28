@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 #include <AppConfig.cnx>
-#include <Data/ADS1115Manager/ADS1115Manager.cnx>
-#include <Data/MAX31856Manager/MAX31856Manager.cnx>
-#include <Data/BME280Manager/BME280Manager.cnx>
+#include <Data/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
 #include <Display/SensorConvert.cnx>
 #include <Display/HardwareMap.cnx>
 #include <Display/AppData.cnx>

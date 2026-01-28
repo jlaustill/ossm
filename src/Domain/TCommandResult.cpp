@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/TCommandResult.h"
+#include "TCommandResult.h"
 
 #include <stdint.h>
 

@@ -8,19 +8,19 @@
 
 // AppConfig.cnx - Main configuration types and constants for OSSM
 // Configuration magic number and version
-const uint32_t CONFIG_MAGIC = 0x4F53534D;
+extern const uint32_t CONFIG_MAGIC = 0x4F53534D;
 
 // "OSSM" in ASCII
-const uint8_t CONFIG_VERSION = 3;
+extern const uint8_t CONFIG_VERSION = 3;
 
 // Bumped for pressure type support
 // Number of user-facing inputs
-const uint8_t TEMP_INPUT_COUNT = 8;
+extern const uint8_t TEMP_INPUT_COUNT = 8;
 
-const uint8_t PRESSURE_INPUT_COUNT = 7;
+extern const uint8_t PRESSURE_INPUT_COUNT = 7;
 
 // ADS1115 device count (internal, fixed)
-const uint8_t ADS_DEVICE_COUNT = 4;
+extern const uint8_t ADS_DEVICE_COUNT = 4;
 
 // Thermocouple types (MAX31856)
 typedef enum {
@@ -136,48 +136,48 @@ typedef struct AppConfig {
 } AppConfig;
 
 // Default AEM temperature sensor Steinhart-Hart coefficients
-const float AEM_TEMP_COEFF_A = 1.485995686e-03;
+extern const float AEM_TEMP_COEFF_A = 1.485995686e-03;
 
-const float AEM_TEMP_COEFF_B = 2.279654266e-04;
+extern const float AEM_TEMP_COEFF_B = 2.279654266e-04;
 
-const float AEM_TEMP_COEFF_C = 1.197578033e-07;
+extern const float AEM_TEMP_COEFF_C = 1.197578033e-07;
 
-const float AEM_TEMP_RESISTOR = 10050.0;
+extern const float AEM_TEMP_RESISTOR = 10050.0;
 
 // Bosch NTC coefficients (placeholder - need real values)
-const float BOSCH_TEMP_COEFF_A = 1.40e-03;
+extern const float BOSCH_TEMP_COEFF_A = 1.40e-03;
 
-const float BOSCH_TEMP_COEFF_B = 2.37e-04;
+extern const float BOSCH_TEMP_COEFF_B = 2.37e-04;
 
-const float BOSCH_TEMP_COEFF_C = 9.90e-08;
+extern const float BOSCH_TEMP_COEFF_C = 9.90e-08;
 
-const float BOSCH_TEMP_RESISTOR = 2490.0;
+extern const float BOSCH_TEMP_RESISTOR = 2490.0;
 
 // GM NTC coefficients (placeholder - need real values)
-const float GM_TEMP_COEFF_A = 1.29e-03;
+extern const float GM_TEMP_COEFF_A = 1.29e-03;
 
-const float GM_TEMP_COEFF_B = 2.35e-04;
+extern const float GM_TEMP_COEFF_B = 2.35e-04;
 
-const float GM_TEMP_COEFF_C = 9.00e-08;
+extern const float GM_TEMP_COEFF_C = 9.00e-08;
 
-const float GM_TEMP_RESISTOR = 3000.0;
+extern const float GM_TEMP_RESISTOR = 3000.0;
 
 // Temperature input hardware mappings (fixed)
 // Index 0 = temp1, Index 7 = temp8
-const THardwareMapping TEMP_HARDWARE_MAP[8] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 2 }};
+extern const THardwareMapping TEMP_HARDWARE_MAP[8] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 2 }};
 
 // Pressure input hardware mappings (fixed)
 // Index 0 = pres1, Index 6 = pres7
-const THardwareMapping PRESSURE_HARDWARE_MAP[7] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 0 }};
+extern const THardwareMapping PRESSURE_HARDWARE_MAP[7] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 0 }};
 
 // ADS1115 device I2C addresses (fixed)
-const uint8_t ADS_I2C_ADDRESSES[4] = {0x48, 0x49, 0x4A, 0x4B};
+extern const uint8_t ADS_I2C_ADDRESSES[4] = {0x48, 0x49, 0x4A, 0x4B};
 
 // ADS1115 DRDY pins (fixed)
-const uint8_t ADS_DRDY_PINS[4] = {0, 1, 4, 5};
+extern const uint8_t ADS_DRDY_PINS[4] = {0, 1, 4, 5};
 
 // D0, D1, D4, D5
 // Known SPNs lookup table
-const TSpnInfo KNOWN_SPNS[20] = {(TSpnInfo){ .spn = 175, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 110, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1637 }, (TSpnInfo){ .spn = 174, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 105, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1363 }, (TSpnInfo){ .spn = 1131, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1132, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1133, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 172, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 441, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 100, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 109, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 94, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 102, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 106, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1127, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1128, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 173, .category = ESpnCategory_SPN_CAT_EGT, .hiResSpn = 0 }, (TSpnInfo){ .spn = 171, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 108, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 354, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }};
+extern const TSpnInfo KNOWN_SPNS[20] = {(TSpnInfo){ .spn = 175, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 110, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1637 }, (TSpnInfo){ .spn = 174, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 105, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1363 }, (TSpnInfo){ .spn = 1131, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1132, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1133, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 172, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 441, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 100, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 109, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 94, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 102, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 106, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1127, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1128, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 173, .category = ESpnCategory_SPN_CAT_EGT, .hiResSpn = 0 }, (TSpnInfo){ .spn = 171, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 108, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 354, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }};
 
-const uint8_t KNOWN_SPN_COUNT = 20;
+extern const uint8_t KNOWN_SPN_COUNT = 20;

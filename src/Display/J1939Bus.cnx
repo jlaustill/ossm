@@ -5,12 +5,12 @@
 #include "../AppConfig.cnx"
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include "Domain/CommandHandler/CommandHandler.h"
-#include "Domain/CommandHandler/TCommandResult.h"
-#include <J1939Encode.cnx>
-#include <J1939Decode.cnx>
-#include <SpnCheck.cnx>
-#include <FloatBytes.cnx>
+#include <Domain/CommandHandler.cnx>
+#include <Domain/TCommandResult.cnx>
+#include "J1939Encode.cnx"
+#include "J1939Decode.cnx"
+#include "SpnCheck.cnx"
+#include "FloatBytes.cnx"
 
 scope J1939Bus {
     // CAN bus instance - OSSM v0.0.2 uses CAN1 (D22/D23)
@@ -203,7 +203,7 @@ scope J1939Bus {
     // ========================================================================
 
     void sniffDataPrivate(const CAN_message_t msg) {
-        J1939Message message;
+        J1939Message message <- { pgn: 0 };
         message.setCanId(msg.id);
         message.setData(msg.buf);
 

@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/FloatBytes.h"
+#include "FloatBytes.h"
 
 #include <stdint.h>
 #include <stdbool.h>

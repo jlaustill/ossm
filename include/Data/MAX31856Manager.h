@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <Adafruit_MAX31856.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +16,6 @@ extern "C" {
 
 /* External type dependencies - include appropriate headers */
 typedef struct AppConfig AppConfig;
-typedef struct Adafruit_MAX31856 Adafruit_MAX31856;
 
 /* External variables */
 extern const uint8_t thermoCoupleCs;

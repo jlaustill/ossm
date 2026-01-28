@@ -5,13 +5,14 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <Parse.hpp>
 #include <AppConfig.cnx>
 #include <Display/AppData.cnx>
-#include <Data/ConfigStorage/ConfigStorage.cnx>
-#include <Data/MAX31856Manager/MAX31856Manager.cnx>
-#include <Data/BME280Manager/BME280Manager.cnx>
-#include <Domain/CommandHandler/CommandHandler.cnx>
-#include <Domain/CommandHandler/TCommandResult.cnx>
+#include <Data/ConfigStorage.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
+#include <Domain/CommandHandler.cnx>
+#include <Domain/TCommandResult.cnx>
 #include <Display/SpnCategory.cnx>
 #include <Display/SpnInfo.cnx>
 #include <Display/FaultDecode.cnx>

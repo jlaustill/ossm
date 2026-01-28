@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Display/HardwareMap.h"
+#include "HardwareMap.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,10 +12,10 @@
 // Maps logical sensor inputs to physical ADS1115 device/channel pairs
 // Tests lookup table patterns with multiple return values
 // Temperature input count (8 inputs)
-const uint8_t TEMP_COUNT = 8;
+extern const uint8_t TEMP_COUNT = 8;
 
 // Pressure input count (7 inputs)
-const uint8_t PRES_COUNT = 7;
+extern const uint8_t PRES_COUNT = 7;
 
 /* Scope: HardwareMap */
 

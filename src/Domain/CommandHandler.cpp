@@ -3,21 +3,21 @@
  * A safer C for embedded systems
  */
 
-#include "Domain/CommandHandler.h"
+#include "CommandHandler.h"
 
 // CommandHandler.cnx - Command processing for OSSM configuration
 // Handles SPN enable/disable, presets, parameters, and queries
 #include <Arduino.h>
 #include <AppConfig.h>
-#include <Data/ConfigStorage/ConfigStorage.h>
-#include <Data/ADS1115Manager/ADS1115Manager.h>
-#include <Data/MAX31856Manager/MAX31856Manager.h>
-#include <Data/BME280Manager/BME280Manager.h>
+#include <Data/ConfigStorage.h>
+#include <Data/ADS1115Manager.h>
+#include <Data/MAX31856Manager.h>
+#include <Data/BME280Manager.h>
 #include <Display/Presets.h>
 #include <Display/SpnCategory.h>
 #include <Display/InputValid.h>
 #include <Display/AppData.h>
-#include <Domain/CommandHandler/TCommandResult.h>
+#include <Domain/TCommandResult.h>
 
 #include <stdint.h>
 #include <stdbool.h>

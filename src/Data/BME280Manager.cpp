@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "Data/BME280Manager.h"
+#include "BME280Manager.h"
 
 // BME280 Ambient Sensor Manager
 // Handles temperature, humidity, and barometric pressure readings
