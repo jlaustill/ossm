@@ -80,7 +80,7 @@ static void ADS1115Manager_advanceChannel(void) {
     }
 }
 
-void ADS1115Manager_initialize(const AppConfig* config) {
+void ADS1115Manager_initialize(const AppConfig& config) {
     for (uint8_t d = 0; d < ADS_DEVICE_COUNT; d = d + 1) {
         for (uint8_t c = 0; c < 4; c = c + 1) {
             ADS1115Manager_readings[d][c].rawValue = 0;
@@ -89,13 +89,13 @@ void ADS1115Manager_initialize(const AppConfig* config) {
         }
     }
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-        if (config->tempInputs[i].assignedSpn != 0) {
+        if (config.tempInputs[i].assignedSpn != 0) {
             uint8_t dev = HardwareMap_tempDevice(i);
             ADS1115Manager_deviceEnabled[dev] = true;
         }
     }
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-        if (config->pressureInputs[i].assignedSpn != 0) {
+        if (config.pressureInputs[i].assignedSpn != 0) {
             uint8_t dev = HardwareMap_pressureDevice(i);
             ADS1115Manager_deviceEnabled[dev] = true;
         }

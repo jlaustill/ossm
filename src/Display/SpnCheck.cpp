@@ -14,25 +14,25 @@
 
 /* Scope: SpnCheck */
 
-bool SpnCheck_isTempSpnEnabled(const AppConfig* cfg, uint16_t spn) {
+bool SpnCheck_isTempSpnEnabled(const AppConfig& cfg, uint16_t spn) {
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        if (cfg->tempInputs[i].assignedSpn == spn) {
+        if (cfg.tempInputs[i].assignedSpn == spn) {
             return true;
         }
     }
     return false;
 }
 
-bool SpnCheck_isPressureSpnEnabled(const AppConfig* cfg, uint16_t spn) {
+bool SpnCheck_isPressureSpnEnabled(const AppConfig& cfg, uint16_t spn) {
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        if (cfg->pressureInputs[i].assignedSpn == spn) {
+        if (cfg.pressureInputs[i].assignedSpn == spn) {
             return true;
         }
     }
     return false;
 }
 
-bool SpnCheck_isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
+bool SpnCheck_isSpnEnabled(const AppConfig& cfg, uint16_t spn) {
     bool tempEnabled = SpnCheck_isTempSpnEnabled(cfg, spn);
     if (tempEnabled) {
         return true;
@@ -42,22 +42,22 @@ bool SpnCheck_isSpnEnabled(const AppConfig* cfg, uint16_t spn) {
         return true;
     }
     if (spn == 173) {
-        if (cfg->egtEnabled) {
+        if (cfg.egtEnabled) {
             return true;
         }
     }
     if (spn == 171) {
-        if (cfg->bme280Enabled) {
+        if (cfg.bme280Enabled) {
             return true;
         }
     }
     if (spn == 108) {
-        if (cfg->bme280Enabled) {
+        if (cfg.bme280Enabled) {
             return true;
         }
     }
     if (spn == 354) {
-        if (cfg->bme280Enabled) {
+        if (cfg.bme280Enabled) {
             return true;
         }
     }

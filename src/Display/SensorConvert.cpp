@@ -25,22 +25,22 @@ float SensorConvert_defaultAtmosphericPressure(void) {
     return 101.325;
 }
 
-float SensorConvert_ntcTemperature(float voltage, const TTempInputConfig* cfg) {
+float SensorConvert_ntcTemperature(float voltage, const TTempInputConfig& cfg) {
     if (voltage <= 0.0) {
         return -273.15;
     }
     if (voltage >= 5.0) {
         return -273.15;
     }
-    float r_ntc = cfg->resistorValue * voltage / (5.0 - voltage);
+    float r_ntc = cfg.resistorValue * voltage / (5.0 - voltage);
     float lnR = log(r_ntc);
     float lnR3 = lnR * lnR * lnR;
-    float invT = cfg->coeffA + cfg->coeffB * lnR + cfg->coeffC * lnR3;
+    float invT = cfg.coeffA + cfg.coeffB * lnR + cfg.coeffC * lnR3;
     float tempK = 1.0 / invT;
     return tempK - 273.15;
 }
 
-float SensorConvert_pressure(float voltage, const TPressureInputConfig* cfg, float atmosphericPressurekPa) {
+float SensorConvert_pressure(float voltage, const TPressureInputConfig& cfg, float atmosphericPressurekPa) {
     if (voltage < 0.5) {
         return 0.0;
     }
@@ -49,17 +49,17 @@ float SensorConvert_pressure(float voltage, const TPressureInputConfig* cfg, flo
         clampedVoltage = 4.5;
     }
     float ratio = (clampedVoltage - 0.5) / (4.5 - 0.5);
-    if (cfg->pressureType == EPressureType_PRESSURE_TYPE_PSIA) {
-        if (cfg->maxPressure > 20000) {
-            float maxBar = static_cast<float>((cfg->maxPressure - 20000));
+    if (cfg.pressureType == EPressureType_PRESSURE_TYPE_PSIA) {
+        if (cfg.maxPressure > 20000) {
+            float maxBar = static_cast<float>((cfg.maxPressure - 20000));
             float bar = ratio * maxBar;
             return SensorConvert_clampPositive(bar * 100.0);
         } else {
-            float maxkPa = static_cast<float>(cfg->maxPressure);
+            float maxkPa = static_cast<float>(cfg.maxPressure);
             return SensorConvert_clampPositive(ratio * maxkPa);
         }
     } else {
-        float maxPsi = static_cast<float>(cfg->maxPressure);
+        float maxPsi = static_cast<float>(cfg.maxPressure);
         float psi = ratio * maxPsi;
         float gaugekPa = psi * 6.894757;
         return SensorConvert_clampPositive(gaugekPa + atmosphericPressurekPa);

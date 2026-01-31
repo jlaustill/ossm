@@ -75,9 +75,9 @@ static void J1939Bus_handleEnableSpn(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getInput(data);
     uint8_t errorCode = 0;
     if (enable) {
-        errorCode = CommandHandler_enableSpn(&J1939Bus_config, spn, input);
+        errorCode = CommandHandler_enableSpn(J1939Bus_config, spn, input);
     } else {
-        errorCode = CommandHandler_disableSpn(&J1939Bus_config, spn);
+        errorCode = CommandHandler_disableSpn(J1939Bus_config, spn);
     }
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(1, errorCode, emptyData, 0);
@@ -87,7 +87,7 @@ static void J1939Bus_handleSetNtcParam(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getNtcInput(data);
     uint8_t param = J1939Decode_getNtcParam(data);
     float value = FloatBytes_fromBytesLE(data[3], data[4], data[5], data[6]);
-    uint8_t errorCode = CommandHandler_setNtcParam(&J1939Bus_config, input, param, value);
+    uint8_t errorCode = CommandHandler_setNtcParam(J1939Bus_config, input, param, value);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(2, errorCode, emptyData, 0);
 }
@@ -95,14 +95,14 @@ static void J1939Bus_handleSetNtcParam(const uint8_t data[8]) {
 static void J1939Bus_handleSetPressureRange(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPressureInput(data);
     uint16_t maxPsi = J1939Decode_getMaxPressure(data);
-    uint8_t errorCode = CommandHandler_setPressureRange(&J1939Bus_config, input, maxPsi);
+    uint8_t errorCode = CommandHandler_setPressureRange(J1939Bus_config, input, maxPsi);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(3, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleSetTcType(const uint8_t data[8]) {
     uint8_t tcType = J1939Decode_getTcType(data);
-    uint8_t errorCode = CommandHandler_setTcType(&J1939Bus_config, tcType);
+    uint8_t errorCode = CommandHandler_setTcType(J1939Bus_config, tcType);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(4, errorCode, emptyData, 0);
 }
@@ -114,19 +114,19 @@ static void J1939Bus_handleQuery(const uint8_t data[8]) {
     uint8_t errorCode = 0;
     switch (queryType) {
         case 0: {
-            errorCode = CommandHandler_querySpnCounts(&J1939Bus_config, &queryResult);
+            errorCode = CommandHandler_querySpnCounts(J1939Bus_config, queryResult);
             break;
         }
         case 1: {
-            errorCode = CommandHandler_queryTempSpns(&J1939Bus_config, subQuery, &queryResult);
+            errorCode = CommandHandler_queryTempSpns(J1939Bus_config, subQuery, queryResult);
             break;
         }
         case 2: {
-            errorCode = CommandHandler_queryPresSpns(&J1939Bus_config, subQuery, &queryResult);
+            errorCode = CommandHandler_queryPresSpns(J1939Bus_config, subQuery, queryResult);
             break;
         }
         case 4: {
-            errorCode = CommandHandler_queryFullConfig(&J1939Bus_config, &queryResult);
+            errorCode = CommandHandler_queryFullConfig(J1939Bus_config, queryResult);
             break;
         }
         default: {
@@ -138,13 +138,13 @@ static void J1939Bus_handleQuery(const uint8_t data[8]) {
 }
 
 static void J1939Bus_handleSave(void) {
-    uint8_t errorCode = CommandHandler_save(&J1939Bus_config);
+    uint8_t errorCode = CommandHandler_save(J1939Bus_config);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(6, errorCode, emptyData, 0);
 }
 
 static void J1939Bus_handleReset(void) {
-    uint8_t errorCode = CommandHandler_reset(&J1939Bus_config);
+    uint8_t errorCode = CommandHandler_reset(J1939Bus_config);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(7, errorCode, emptyData, 0);
 }
@@ -152,7 +152,7 @@ static void J1939Bus_handleReset(void) {
 static void J1939Bus_handleNtcPreset(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPresetInput(data);
     uint8_t preset = J1939Decode_getPresetId(data);
-    uint8_t errorCode = CommandHandler_applyNtcPreset(&J1939Bus_config, input, preset);
+    uint8_t errorCode = CommandHandler_applyNtcPreset(J1939Bus_config, input, preset);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(8, errorCode, emptyData, 0);
 }
@@ -160,7 +160,7 @@ static void J1939Bus_handleNtcPreset(const uint8_t data[8]) {
 static void J1939Bus_handlePressurePreset(const uint8_t data[8]) {
     uint8_t input = J1939Decode_getPresetInput(data);
     uint8_t preset = J1939Decode_getPresetId(data);
-    uint8_t errorCode = CommandHandler_applyPressurePreset(&J1939Bus_config, input, preset);
+    uint8_t errorCode = CommandHandler_applyPressurePreset(J1939Bus_config, input, preset);
     uint8_t emptyData[8] = {0};
     J1939Bus_sendConfigResponse(9, errorCode, emptyData, 0);
 }
@@ -215,13 +215,13 @@ void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len) {
     }
 }
 
-static void J1939Bus_sniffDataPrivate(const CAN_message_t* msg) {
+static void J1939Bus_sniffDataPrivate(const CAN_message_t& msg) {
     J1939Message message = {};
     message.pgn = 0;
-    message.setCanId(msg->id);
-    message.setData(msg->buf);
+    message.setCanId(msg.id);
+    message.setData(msg.buf);
     if (message.pgn == 65280) {
-        J1939Bus_processConfigCommand(msg->buf, 8);
+        J1939Bus_processConfigCommand(msg.buf, 8);
         return;
     }
     if (message.pgn == 59904) {
@@ -229,7 +229,7 @@ static void J1939Bus_sniffDataPrivate(const CAN_message_t* msg) {
     }
 }
 
-void J1939Bus_initialize(const AppData* currentData, const AppConfig* cfg) {
+void J1939Bus_initialize(const AppData& currentData, const AppConfig& cfg) {
     J1939Bus_appData = (*currentData);
     J1939Bus_config = (*cfg);
     Serial.println("J1939 Bus initializing");
@@ -247,8 +247,8 @@ void J1939Bus_initialize(const AppData* currentData, const AppConfig* cfg) {
 void J1939Bus_sendPgn65129(float intakeTemp, float coolantTemp) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn1363 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1363);
-    bool spn1637 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1637);
+    bool spn1363 = SpnCheck_isSpnEnabled(J1939Bus_config, 1363);
+    bool spn1637 = SpnCheck_isSpnEnabled(J1939Bus_config, 1637);
     if (spn1363) {
         uint16_t encoded = J1939Encode_temp16bit(intakeTemp);
         buf[0] = ((encoded) & 0xFFU);
@@ -265,8 +265,8 @@ void J1939Bus_sendPgn65129(float intakeTemp, float coolantTemp) {
 void J1939Bus_sendPgn65164(void) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn441 = SpnCheck_isSpnEnabled(&J1939Bus_config, 441);
-    bool spn354 = SpnCheck_isSpnEnabled(&J1939Bus_config, 354);
+    bool spn441 = SpnCheck_isSpnEnabled(J1939Bus_config, 441);
+    bool spn354 = SpnCheck_isSpnEnabled(J1939Bus_config, 354);
     if (spn441) {
         buf[0] = J1939Encode_temp8bit(J1939Bus_appData.engineBayTemperatureC);
     }
@@ -279,9 +279,9 @@ void J1939Bus_sendPgn65164(void) {
 void J1939Bus_sendPgn65189(float intake2Temp, float intake3Temp, float intake4Temp) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn1131 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1131);
-    bool spn1132 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1132);
-    bool spn1133 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1133);
+    bool spn1131 = SpnCheck_isSpnEnabled(J1939Bus_config, 1131);
+    bool spn1132 = SpnCheck_isSpnEnabled(J1939Bus_config, 1132);
+    bool spn1133 = SpnCheck_isSpnEnabled(J1939Bus_config, 1133);
     if (spn1131) {
         buf[0] = J1939Encode_temp8bit(intake2Temp);
     }
@@ -297,8 +297,8 @@ void J1939Bus_sendPgn65189(float intake2Temp, float intake3Temp, float intake4Te
 void J1939Bus_sendPgn65190(float boost1kPa, float boost2kPa) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn1127 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1127);
-    bool spn1128 = SpnCheck_isSpnEnabled(&J1939Bus_config, 1128);
+    bool spn1127 = SpnCheck_isSpnEnabled(J1939Bus_config, 1127);
+    bool spn1128 = SpnCheck_isSpnEnabled(J1939Bus_config, 1128);
     if (spn1127) {
         uint16_t encoded = J1939Encode_boost16bit(boost1kPa);
         buf[0] = ((encoded) & 0xFFU);
@@ -315,9 +315,9 @@ void J1939Bus_sendPgn65190(float boost1kPa, float boost2kPa) {
 void J1939Bus_sendPgn65262(float coolantTemp, float fuelTemp, float oilTemp) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn110 = SpnCheck_isSpnEnabled(&J1939Bus_config, 110);
-    bool spn174 = SpnCheck_isSpnEnabled(&J1939Bus_config, 174);
-    bool spn175 = SpnCheck_isSpnEnabled(&J1939Bus_config, 175);
+    bool spn110 = SpnCheck_isSpnEnabled(J1939Bus_config, 110);
+    bool spn174 = SpnCheck_isSpnEnabled(J1939Bus_config, 174);
+    bool spn175 = SpnCheck_isSpnEnabled(J1939Bus_config, 175);
     if (spn110) {
         buf[0] = J1939Encode_temp8bit(coolantTemp);
     }
@@ -335,9 +335,9 @@ void J1939Bus_sendPgn65262(float coolantTemp, float fuelTemp, float oilTemp) {
 void J1939Bus_sendPgn65263(float fuelPres, float oilPres, float coolantPres) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn94 = SpnCheck_isSpnEnabled(&J1939Bus_config, 94);
-    bool spn100 = SpnCheck_isSpnEnabled(&J1939Bus_config, 100);
-    bool spn109 = SpnCheck_isSpnEnabled(&J1939Bus_config, 109);
+    bool spn94 = SpnCheck_isSpnEnabled(J1939Bus_config, 94);
+    bool spn100 = SpnCheck_isSpnEnabled(J1939Bus_config, 100);
+    bool spn109 = SpnCheck_isSpnEnabled(J1939Bus_config, 109);
     if (spn94) {
         buf[0] = J1939Encode_pressure4kPa(fuelPres);
     }
@@ -353,9 +353,9 @@ void J1939Bus_sendPgn65263(float fuelPres, float oilPres, float coolantPres) {
 void J1939Bus_sendPgn65269(float ambientTemp, float airInletTemp, float baroPress) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn108 = SpnCheck_isSpnEnabled(&J1939Bus_config, 108);
-    bool spn171 = SpnCheck_isSpnEnabled(&J1939Bus_config, 171);
-    bool spn172 = SpnCheck_isSpnEnabled(&J1939Bus_config, 172);
+    bool spn108 = SpnCheck_isSpnEnabled(J1939Bus_config, 108);
+    bool spn171 = SpnCheck_isSpnEnabled(J1939Bus_config, 171);
+    bool spn172 = SpnCheck_isSpnEnabled(J1939Bus_config, 172);
     if (spn108) {
         buf[0] = J1939Encode_barometric(baroPress);
     }
@@ -373,10 +373,10 @@ void J1939Bus_sendPgn65269(float ambientTemp, float airInletTemp, float baroPres
 void J1939Bus_sendPgn65270(float airInletPres, float airInletTemp, float egtTemp, float boostPres) {
     uint8_t buf[8] = {0};
     J1939Bus_fillBuffer(buf);
-    bool spn102 = SpnCheck_isSpnEnabled(&J1939Bus_config, 102);
-    bool spn105 = SpnCheck_isSpnEnabled(&J1939Bus_config, 105);
-    bool spn106 = SpnCheck_isSpnEnabled(&J1939Bus_config, 106);
-    bool spn173 = SpnCheck_isSpnEnabled(&J1939Bus_config, 173);
+    bool spn102 = SpnCheck_isSpnEnabled(J1939Bus_config, 102);
+    bool spn105 = SpnCheck_isSpnEnabled(J1939Bus_config, 105);
+    bool spn106 = SpnCheck_isSpnEnabled(J1939Bus_config, 106);
+    bool spn173 = SpnCheck_isSpnEnabled(J1939Bus_config, 173);
     if (spn102) {
         buf[1] = J1939Encode_pressure2kPa(boostPres);
     }

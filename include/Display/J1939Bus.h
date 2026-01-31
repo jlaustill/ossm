@@ -28,7 +28,7 @@ typedef struct AppConfig AppConfig;
 /* Function prototypes */
 void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t data[8], uint8_t dataLen);
 void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len);
-void J1939Bus_initialize(const AppData* currentData, const AppConfig* cfg);
+void J1939Bus_initialize(const AppData& currentData, const AppConfig& cfg);
 void J1939Bus_sendPgn65129(float intakeTemp, float coolantTemp);
 void J1939Bus_sendPgn65164(void);
 void J1939Bus_sendPgn65189(float intake2Temp, float intake3Temp, float intake4Temp);

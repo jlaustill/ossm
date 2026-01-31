@@ -21,7 +21,7 @@ typedef struct AppConfig AppConfig;
 typedef struct TAdcReading TAdcReading;
 
 /* Function prototypes */
-void ADS1115Manager_initialize(const AppConfig* config);
+void ADS1115Manager_initialize(const AppConfig& config);
 bool ADS1115Manager_update(void);
 TAdcReading ADS1115Manager_getReading(uint8_t device, uint8_t channel);
 float ADS1115Manager_getVoltage(uint8_t device, uint8_t channel);

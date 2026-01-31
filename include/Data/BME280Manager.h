@@ -19,7 +19,7 @@ typedef struct AppConfig AppConfig;
 
 /* Function prototypes */
 bool BME280Manager_update(void);
-void BME280Manager_initialize(const AppConfig* config);
+void BME280Manager_initialize(const AppConfig& config);
 float BME280Manager_getTemperatureC(void);
 float BME280Manager_getHumidity(void);
 float BME280Manager_getPressurekPa(void);

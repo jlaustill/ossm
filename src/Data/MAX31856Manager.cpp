@@ -67,8 +67,8 @@ static void MAX31856Manager_readResult(void) {
     MAX31856Manager_conversionStarted = false;
 }
 
-void MAX31856Manager_initialize(const AppConfig* config) {
-    MAX31856Manager_enabled = (*config).egtEnabled;
+void MAX31856Manager_initialize(const AppConfig config) {
+    MAX31856Manager_enabled = config.egtEnabled;
     if (!MAX31856Manager_enabled) {
         Serial.println("MAX31856 disabled in config");
         return;
@@ -78,7 +78,7 @@ void MAX31856Manager_initialize(const AppConfig* config) {
     bool began = thermocouple.begin();
     if (began) {
         MAX31856Manager_initialized = true;
-        thermocouple.setThermocoupleType(static_cast<uint8_t>((*config).thermocoupleType));
+        thermocouple.setThermocoupleType(static_cast<uint8_t>(config.thermocoupleType));
         thermocouple.setNoiseFilter(0);
         thermocouple.setConversionMode(0);
         Serial.println("MAX31856 initialized");

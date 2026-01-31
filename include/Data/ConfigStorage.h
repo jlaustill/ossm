@@ -19,10 +19,10 @@ extern "C" {
 typedef struct AppConfig AppConfig;
 
 /* Function prototypes */
-bool ConfigStorage_validateConfig(const AppConfig* config);
-void ConfigStorage_loadDefaults(AppConfig* config);
-bool ConfigStorage_saveConfig(const AppConfig* config);
-bool ConfigStorage_loadConfig(AppConfig* config);
+bool ConfigStorage_validateConfig(const AppConfig& config);
+void ConfigStorage_loadDefaults(AppConfig& config);
+bool ConfigStorage_saveConfig(const AppConfig& config);
+bool ConfigStorage_loadConfig(AppConfig& config);
 
 #ifdef __cplusplus
 }

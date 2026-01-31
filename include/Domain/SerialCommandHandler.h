@@ -36,7 +36,7 @@ extern uint8_t cmdIndex;
 
 /* Function prototypes */
 void SerialCommandHandler_initialize(void);
-void SerialCommandHandler_update(const AppConfig* config, const AppData* appData);
+void SerialCommandHandler_update(const AppConfig& config, const AppData& appData);
 
 #ifdef __cplusplus
 }

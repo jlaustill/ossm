@@ -16,21 +16,21 @@
 
 /* Scope: ConfigStorage */
 
-bool ConfigStorage_validateConfig(const AppConfig* config) {
-    if (config->magic != CONFIG_MAGIC) {
+bool ConfigStorage_validateConfig(const AppConfig& config) {
+    if (config.magic != CONFIG_MAGIC) {
         return false;
     }
-    if (config->version != CONFIG_VERSION) {
+    if (config.version != CONFIG_VERSION) {
         return false;
     }
     uint32_t calculatedChecksum = Crc32_calculateChecksum(config);
-    if (calculatedChecksum != config->checksum) {
+    if (calculatedChecksum != config.checksum) {
         return false;
     }
     return true;
 }
 
-void ConfigStorage_loadDefaults(AppConfig* config) {
+void ConfigStorage_loadDefaults(AppConfig& config) {
     config->magic = CONFIG_MAGIC;
     config->version = CONFIG_VERSION;
     config->j1939SourceAddress = 149;
@@ -53,14 +53,14 @@ void ConfigStorage_loadDefaults(AppConfig* config) {
     config->checksum = Crc32_calculateChecksum(config);
 }
 
-bool ConfigStorage_saveConfig(const AppConfig* config) {
+bool ConfigStorage_saveConfig(const AppConfig& config) {
     AppConfig configToSave = (*config);
     configToSave.checksum = Crc32_calculateChecksum(config);
     EEPROM.put(0, configToSave);
     return true;
 }
 
-bool ConfigStorage_loadConfig(AppConfig* config) {
+bool ConfigStorage_loadConfig(AppConfig& config) {
     EEPROM.get(0, (*config));
     bool isValid = ConfigStorage_validateConfig(config);
     if (!isValid) {
