@@ -6,7 +6,6 @@
 #include "ByteUtils.h"
 
 #include <stdint.h>
-#include <stdbool.h>
 
 // Byte Utility Functions
 // Common byte manipulation operations for embedded systems
@@ -67,29 +66,6 @@ uint8_t ByteUtils_byte2(uint32_t value) {
 
 uint8_t ByteUtils_byte3(uint32_t value) {
     return ((value >> 24) & 0xFFU);
-}
-
-bool ByteUtils_isBitSet(uint8_t value, uint8_t bit) {
-    if (bit > 7) {
-        return false;
-    }
-    return ((value >> bit) & ((1U << 1) - 1)) != 0;
-}
-
-uint8_t ByteUtils_setBit(uint8_t value, uint8_t bit) {
-    if (bit > 7) {
-        return value;
-    }
-    value = (value & ~(((1U << 1) - 1) << bit)) | ((1 & ((1U << 1) - 1)) << bit);
-    return value;
-}
-
-uint8_t ByteUtils_clearBit(uint8_t value, uint8_t bit) {
-    if (bit > 7) {
-        return value;
-    }
-    value = (value & ~(((1U << 1) - 1) << bit)) | ((0 & ((1U << 1) - 1)) << bit);
-    return value;
 }
 
 uint8_t ByteUtils_clampU8(uint8_t value, uint8_t minVal, uint8_t maxVal) {

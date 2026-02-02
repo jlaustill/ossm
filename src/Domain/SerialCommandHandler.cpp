@@ -190,7 +190,7 @@ static void SerialCommandHandler_reportFaults(void) {
     }
 }
 
-static void SerialCommandHandler_handleEnableSpn(const AppConfig& config) {
+static void SerialCommandHandler_handleEnableSpn(AppConfig& config) {
     if (parsed.count < 4) {
         Serial.println("ERR,2,Usage: 1,spnHi,spnLo,enable[,input]");
         return;
@@ -256,7 +256,7 @@ static void SerialCommandHandler_handleEnableSpn(const AppConfig& config) {
     }
 }
 
-static void SerialCommandHandler_handleSetPressureRange(const AppConfig& config) {
+static void SerialCommandHandler_handleSetPressureRange(AppConfig& config) {
     if (parsed.count < 4) {
         Serial.println("ERR,2,Usage: 3,input,valueHi,valueLo (use preset cmd 9)");
         return;
@@ -276,7 +276,7 @@ static void SerialCommandHandler_handleSetPressureRange(const AppConfig& config)
     Serial.println(maxPressure);
 }
 
-static void SerialCommandHandler_handleSetTcType(const AppConfig& config) {
+static void SerialCommandHandler_handleSetTcType(AppConfig& config) {
     if (parsed.count < 2) {
         Serial.println("ERR,2,Usage: 4,type (0-7)");
         return;
@@ -373,13 +373,13 @@ static void SerialCommandHandler_handleSave(const AppConfig& config) {
     }
 }
 
-static void SerialCommandHandler_handleReset(const AppConfig& config) {
+static void SerialCommandHandler_handleReset(AppConfig& config) {
     Serial.println("Resetting to defaults...");
     CommandHandler_reset(config);
     Serial.println("OK,Use '6' to save");
 }
 
-static void SerialCommandHandler_handleNtcPreset(const AppConfig& config) {
+static void SerialCommandHandler_handleNtcPreset(AppConfig& config) {
     if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 8,input,preset (0=AEM,1=Bosch,2=GM)");
         return;
@@ -403,7 +403,7 @@ static void SerialCommandHandler_handleNtcPreset(const AppConfig& config) {
     Serial.println(" preset");
 }
 
-static void SerialCommandHandler_handlePressurePreset(const AppConfig& config) {
+static void SerialCommandHandler_handlePressurePreset(AppConfig& config) {
     if (parsed.count < 3) {
         Serial.println("ERR,2,Usage: 9,input,preset (0-15=bar, 20-30=PSIG)");
         return;
@@ -572,7 +572,7 @@ static void SerialCommandHandler_handleDumpEeprom(void) {
     Serial.println("END");
 }
 
-static void SerialCommandHandler_processCommand(const AppConfig& config, const AppData& appData) {
+static void SerialCommandHandler_processCommand(AppConfig& config, const AppData& appData) {
     uint32_t len = strlen(cmdBuffer);
     if (len == 0) {
         return;
@@ -639,7 +639,7 @@ void SerialCommandHandler_initialize(void) {
     Serial.println("Commands: 1,spnHi,spnLo,en,input | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
 }
 
-void SerialCommandHandler_update(const AppConfig& config, const AppData& appData) {
+void SerialCommandHandler_update(AppConfig& config, const AppData& appData) {
     int32_t available = Serial.available();
     while (available > 0) {
         int32_t readResult = Serial.read();

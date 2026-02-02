@@ -67,7 +67,7 @@ static void MAX31856Manager_readResult(void) {
     MAX31856Manager_conversionStarted = false;
 }
 
-void MAX31856Manager_initialize(const AppConfig config) {
+void MAX31856Manager_initialize(const AppConfig& config) {
     MAX31856Manager_enabled = config.egtEnabled;
     if (!MAX31856Manager_enabled) {
         Serial.println("MAX31856 disabled in config");

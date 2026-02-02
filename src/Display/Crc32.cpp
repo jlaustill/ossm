@@ -29,11 +29,11 @@ static uint32_t Crc32_crcByte(uint32_t crc, uint8_t byte) {
 static uint32_t Crc32_crcFloat(uint32_t& crc, float value) {
     char buf[5] = "";
     memcpy(&buf[0], &value, 4);
-    (*crc) = Crc32_crcByte((*crc), buf[0]);
-    (*crc) = Crc32_crcByte((*crc), buf[1]);
-    (*crc) = Crc32_crcByte((*crc), buf[2]);
-    (*crc) = Crc32_crcByte((*crc), buf[3]);
-    return (*crc);
+    crc = Crc32_crcByte(crc, buf[0]);
+    crc = Crc32_crcByte(crc, buf[1]);
+    crc = Crc32_crcByte(crc, buf[2]);
+    crc = Crc32_crcByte(crc, buf[3]);
+    return crc;
 }
 
 uint32_t Crc32_calculateChecksum(const AppConfig& config) {
