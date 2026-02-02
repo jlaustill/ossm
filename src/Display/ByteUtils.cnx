@@ -69,26 +69,6 @@ scope ByteUtils {
         return value[24,8];
     }
 
-    // Check if bit is set in byte
-    public bool isBitSet(u8 value, u8 bit) {
-        if (bit > 7) { return false; }
-        return value[bit,1] != 0;
-    }
-
-    // Set bit in byte (returns new value)
-    public u8 setBit(u8 value, u8 bit) {
-        if (bit > 7) { return value; }
-        value[bit,1] <- 1;
-        return value;
-    }
-
-    // Clear bit in byte (returns new value)
-    public u8 clearBit(u8 value, u8 bit) {
-        if (bit > 7) { return value; }
-        value[bit,1] <- 0;
-        return value;
-    }
-
     // Clamp value to range
     public u8 clampU8(u8 value, u8 minVal, u8 maxVal) {
         if (value < minVal) { return minVal; }
