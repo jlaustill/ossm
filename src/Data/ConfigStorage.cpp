@@ -16,52 +16,52 @@
 
 /* Scope: ConfigStorage */
 
-bool ConfigStorage_validateConfig(const AppConfig* config) {
-    if (config->magic != CONFIG_MAGIC) {
+bool ConfigStorage_validateConfig(const AppConfig& config) {
+    if (config.magic != CONFIG_MAGIC) {
         return false;
     }
-    if (config->version != CONFIG_VERSION) {
+    if (config.version != CONFIG_VERSION) {
         return false;
     }
     uint32_t calculatedChecksum = Crc32_calculateChecksum(config);
-    if (calculatedChecksum != config->checksum) {
+    if (calculatedChecksum != config.checksum) {
         return false;
     }
     return true;
 }
 
-void ConfigStorage_loadDefaults(AppConfig* config) {
-    config->magic = CONFIG_MAGIC;
-    config->version = CONFIG_VERSION;
-    config->j1939SourceAddress = 149;
+void ConfigStorage_loadDefaults(AppConfig& config) {
+    config.magic = CONFIG_MAGIC;
+    config.version = CONFIG_VERSION;
+    config.j1939SourceAddress = 149;
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        config->tempInputs[i].assignedSpn = 0;
-        config->tempInputs[i].coeffA = AEM_TEMP_COEFF_A;
-        config->tempInputs[i].coeffB = AEM_TEMP_COEFF_B;
-        config->tempInputs[i].coeffC = AEM_TEMP_COEFF_C;
-        config->tempInputs[i].resistorValue = AEM_TEMP_RESISTOR;
+        config.tempInputs[i].assignedSpn = 0;
+        config.tempInputs[i].coeffA = AEM_TEMP_COEFF_A;
+        config.tempInputs[i].coeffB = AEM_TEMP_COEFF_B;
+        config.tempInputs[i].coeffC = AEM_TEMP_COEFF_C;
+        config.tempInputs[i].resistorValue = AEM_TEMP_RESISTOR;
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        config->pressureInputs[i].assignedSpn = 0;
-        config->pressureInputs[i].maxPressure = 100;
-        config->pressureInputs[i].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
-        config->pressureInputs[i].reserved = 0;
+        config.pressureInputs[i].assignedSpn = 0;
+        config.pressureInputs[i].maxPressure = 100;
+        config.pressureInputs[i].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
+        config.pressureInputs[i].reserved = 0;
     }
-    config->egtEnabled = false;
-    config->thermocoupleType = EThermocoupleType_TC_TYPE_K;
-    config->bme280Enabled = false;
-    config->checksum = Crc32_calculateChecksum(config);
+    config.egtEnabled = false;
+    config.thermocoupleType = EThermocoupleType_TC_TYPE_K;
+    config.bme280Enabled = false;
+    config.checksum = Crc32_calculateChecksum(config);
 }
 
-bool ConfigStorage_saveConfig(const AppConfig* config) {
-    AppConfig configToSave = (*config);
+bool ConfigStorage_saveConfig(const AppConfig& config) {
+    AppConfig configToSave = config;
     configToSave.checksum = Crc32_calculateChecksum(config);
     EEPROM.put(0, configToSave);
     return true;
 }
 
-bool ConfigStorage_loadConfig(AppConfig* config) {
-    EEPROM.get(0, (*config));
+bool ConfigStorage_loadConfig(AppConfig& config) {
+    EEPROM.get(0, config);
     bool isValid = ConfigStorage_validateConfig(config);
     if (!isValid) {
         ConfigStorage_loadDefaults(config);

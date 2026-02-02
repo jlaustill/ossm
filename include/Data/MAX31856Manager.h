@@ -22,7 +22,7 @@ extern const uint8_t thermoCoupleCs;
 extern Adafruit_MAX31856 thermocouple;
 
 /* Function prototypes */
-void MAX31856Manager_initialize(const AppConfig* config);
+void MAX31856Manager_initialize(const AppConfig& config);
 bool MAX31856Manager_update(void);
 float MAX31856Manager_getTemperatureC(void);
 float MAX31856Manager_getColdJunctionC(void);

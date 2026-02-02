@@ -43,19 +43,19 @@ typedef enum {
 } ECommandError;
 
 /* Function prototypes */
-uint8_t CommandHandler_enableSpn(AppConfig* cfg, uint16_t spn, uint8_t input);
-uint8_t CommandHandler_disableSpn(AppConfig* cfg, uint16_t spn);
-uint8_t CommandHandler_setPressureRange(AppConfig* cfg, uint8_t input, uint16_t maxPressure);
-uint8_t CommandHandler_setTcType(AppConfig* cfg, uint8_t tcType);
-uint8_t CommandHandler_applyNtcPreset(AppConfig* cfg, uint8_t input, uint8_t preset);
-uint8_t CommandHandler_applyPressurePreset(AppConfig* cfg, uint8_t input, uint8_t preset);
-uint8_t CommandHandler_setNtcParam(AppConfig* cfg, uint8_t input, uint8_t param, float value);
-uint8_t CommandHandler_save(const AppConfig* cfg);
-uint8_t CommandHandler_reset(const AppConfig* cfg);
-uint8_t CommandHandler_querySpnCounts(const AppConfig* cfg, TQueryResult* out);
-uint8_t CommandHandler_queryFullConfig(const AppConfig* cfg, TQueryResult* out);
-uint8_t CommandHandler_queryTempSpns(const AppConfig* cfg, uint8_t subQuery, TQueryResult* out);
-uint8_t CommandHandler_queryPresSpns(const AppConfig* cfg, uint8_t subQuery, TQueryResult* out);
+uint8_t CommandHandler_enableSpn(AppConfig& cfg, uint16_t spn, uint8_t input);
+uint8_t CommandHandler_disableSpn(AppConfig& cfg, uint16_t spn);
+uint8_t CommandHandler_setPressureRange(AppConfig& cfg, uint8_t input, uint16_t maxPressure);
+uint8_t CommandHandler_setTcType(AppConfig& cfg, uint8_t tcType);
+uint8_t CommandHandler_applyNtcPreset(AppConfig& cfg, uint8_t input, uint8_t preset);
+uint8_t CommandHandler_applyPressurePreset(AppConfig& cfg, uint8_t input, uint8_t preset);
+uint8_t CommandHandler_setNtcParam(AppConfig& cfg, uint8_t input, uint8_t param, float value);
+uint8_t CommandHandler_save(const AppConfig& cfg);
+uint8_t CommandHandler_reset(AppConfig& cfg);
+uint8_t CommandHandler_querySpnCounts(const AppConfig& cfg, TQueryResult& out);
+uint8_t CommandHandler_queryFullConfig(const AppConfig& cfg, TQueryResult& out);
+uint8_t CommandHandler_queryTempSpns(const AppConfig& cfg, uint8_t subQuery, TQueryResult& out);
+uint8_t CommandHandler_queryPresSpns(const AppConfig& cfg, uint8_t subQuery, TQueryResult& out);
 
 #ifdef __cplusplus
 }

@@ -18,7 +18,7 @@ extern "C" {
 typedef struct AppConfig AppConfig;
 
 /* Function prototypes */
-uint32_t Crc32_calculateChecksum(const AppConfig* config);
+uint32_t Crc32_calculateChecksum(const AppConfig& config);
 
 #ifdef __cplusplus
 }

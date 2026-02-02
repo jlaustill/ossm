@@ -23,90 +23,90 @@
 static AppConfig SensorProcessor_config = {0};
 static bool SensorProcessor_initialized = false;
 
-void SensorProcessor_initialize(const AppConfig* cfg) {
-    SensorProcessor_config = (*cfg);
+void SensorProcessor_initialize(const AppConfig& cfg) {
+    SensorProcessor_config = cfg;
     SensorProcessor_initialized = true;
 }
 
-static float SensorProcessor_getAtmosphericPressurekPa(const AppData* appData) {
-    if (appData->absoluteBarometricpressurekPa > 0.0) {
-        return appData->absoluteBarometricpressurekPa;
+static float SensorProcessor_getAtmosphericPressurekPa(const AppData& appData) {
+    if (appData.absoluteBarometricpressurekPa > 0.0) {
+        return appData.absoluteBarometricpressurekPa;
     }
     return SensorConvert_defaultAtmosphericPressure();
 }
 
-static void SensorProcessor_updateAppDataForSpn(AppData* appData, uint16_t spn, float value) {
+static void SensorProcessor_updateAppDataForSpn(AppData& appData, uint16_t spn, float value) {
     switch (spn) {
         case 175: {
-            appData->oilTemperatureC = value;
+            appData.oilTemperatureC = value;
             break;
         }
         case 110: {
-            appData->coolantTemperatureC = value;
+            appData.coolantTemperatureC = value;
             break;
         }
         case 1637: {
-            appData->coolantTemperatureC = value;
+            appData.coolantTemperatureC = value;
             break;
         }
         case 174: {
-            appData->fuelTemperatureC = value;
+            appData.fuelTemperatureC = value;
             break;
         }
         case 105: {
-            appData->boostTemperatureC = value;
+            appData.boostTemperatureC = value;
             break;
         }
         case 1363: {
-            appData->boostTemperatureC = value;
+            appData.boostTemperatureC = value;
             break;
         }
         case 1131: {
-            appData->cacInletTemperatureC = value;
+            appData.cacInletTemperatureC = value;
             break;
         }
         case 1132: {
-            appData->transferPipeTemperatureC = value;
+            appData.transferPipeTemperatureC = value;
             break;
         }
         case 1133: {
-            appData->airInletTemperatureC = value;
+            appData.airInletTemperatureC = value;
             break;
         }
         case 172: {
-            appData->airInletTemperatureC = value;
+            appData.airInletTemperatureC = value;
             break;
         }
         case 441: {
-            appData->engineBayTemperatureC = value;
+            appData.engineBayTemperatureC = value;
             break;
         }
         case 100: {
-            appData->oilPressurekPa = value;
+            appData.oilPressurekPa = value;
             break;
         }
         case 109: {
-            appData->coolantPressurekPa = value;
+            appData.coolantPressurekPa = value;
             break;
         }
         case 94: {
-            appData->fuelPressurekPa = value;
+            appData.fuelPressurekPa = value;
             break;
         }
         case 102: {
-            appData->boostPressurekPa = value;
+            appData.boostPressurekPa = value;
             break;
         }
         case 106: {
-            appData->airInletPressurekPa = value;
+            appData.airInletPressurekPa = value;
             break;
         }
         case 1127: {
-            appData->cacInletPressurekPa = value;
+            appData.cacInletPressurekPa = value;
             break;
         }
         case 1128: {
-            appData->transferPipePressurekPa = value;
+            appData.transferPipePressurekPa = value;
             break;
         }
         default: {
@@ -115,7 +115,7 @@ static void SensorProcessor_updateAppDataForSpn(AppData* appData, uint16_t spn, 
     }
 }
 
-static void SensorProcessor_processTempInputs(AppData* appData) {
+static void SensorProcessor_processTempInputs(AppData& appData) {
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
         uint16_t assignedSpn = SensorProcessor_config.tempInputs[i].assignedSpn;
         if (assignedSpn == 0) {
@@ -124,12 +124,12 @@ static void SensorProcessor_processTempInputs(AppData* appData) {
         uint8_t device = HardwareMap_tempDevice(i);
         uint8_t channel = HardwareMap_tempChannel(i);
         float voltage = ADS1115Manager_getVoltage(device, channel);
-        float tempC = SensorConvert_ntcTemperature(voltage, &SensorProcessor_config.tempInputs[i]);
+        float tempC = SensorConvert_ntcTemperature(voltage, SensorProcessor_config.tempInputs[i]);
         SensorProcessor_updateAppDataForSpn(appData, assignedSpn, tempC);
     }
 }
 
-static void SensorProcessor_processPressureInputs(AppData* appData) {
+static void SensorProcessor_processPressureInputs(AppData& appData) {
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
         uint16_t assignedSpn = SensorProcessor_config.pressureInputs[i].assignedSpn;
         if (assignedSpn == 0) {
@@ -138,28 +138,28 @@ static void SensorProcessor_processPressureInputs(AppData* appData) {
         uint8_t device = HardwareMap_pressureDevice(i);
         uint8_t channel = HardwareMap_pressureChannel(i);
         float voltage = ADS1115Manager_getVoltage(device, channel);
-        float pressurekPa = SensorConvert_pressure(voltage, &SensorProcessor_config.pressureInputs[i], SensorProcessor_getAtmosphericPressurekPa(appData));
+        float pressurekPa = SensorConvert_pressure(voltage, SensorProcessor_config.pressureInputs[i], SensorProcessor_getAtmosphericPressurekPa(appData));
         SensorProcessor_updateAppDataForSpn(appData, assignedSpn, pressurekPa);
     }
 }
 
-static void SensorProcessor_processEgt(AppData* appData) {
+static void SensorProcessor_processEgt(AppData& appData) {
     bool egtReady = MAX31856Manager_isEnabled();
     if (SensorProcessor_config.egtEnabled && egtReady) {
-        appData->egtTemperatureC = MAX31856Manager_getTemperatureC();
+        appData.egtTemperatureC = MAX31856Manager_getTemperatureC();
     }
 }
 
-static void SensorProcessor_processBme280(AppData* appData) {
+static void SensorProcessor_processBme280(AppData& appData) {
     bool bmeReady = BME280Manager_isEnabled();
     if (SensorProcessor_config.bme280Enabled && bmeReady) {
-        appData->ambientTemperatureC = BME280Manager_getTemperatureC();
-        appData->humidity = BME280Manager_getHumidity();
-        appData->absoluteBarometricpressurekPa = BME280Manager_getPressurekPa();
+        appData.ambientTemperatureC = BME280Manager_getTemperatureC();
+        appData.humidity = BME280Manager_getHumidity();
+        appData.absoluteBarometricpressurekPa = BME280Manager_getPressurekPa();
     }
 }
 
-void SensorProcessor_processAllInputs(AppData* appData) {
+void SensorProcessor_processAllInputs(AppData& appData) {
     if (!SensorProcessor_initialized) {
         return;
     }

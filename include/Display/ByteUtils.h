@@ -24,9 +24,6 @@ uint8_t ByteUtils_byte0(uint32_t value);
 uint8_t ByteUtils_byte1(uint32_t value);
 uint8_t ByteUtils_byte2(uint32_t value);
 uint8_t ByteUtils_byte3(uint32_t value);
-bool ByteUtils_isBitSet(uint8_t value, uint8_t bit);
-uint8_t ByteUtils_setBit(uint8_t value, uint8_t bit);
-uint8_t ByteUtils_clearBit(uint8_t value, uint8_t bit);
 uint8_t ByteUtils_clampU8(uint8_t value, uint8_t minVal, uint8_t maxVal);
 uint16_t ByteUtils_clampU16(uint16_t value, uint16_t minVal, uint16_t maxVal);
 

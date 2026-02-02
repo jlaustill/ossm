@@ -25,8 +25,8 @@ typedef struct AppConfig AppConfig;
 typedef struct AppData AppData;
 
 /* Function prototypes */
-void SensorProcessor_initialize(const AppConfig* cfg);
-void SensorProcessor_processAllInputs(AppData* appData);
+void SensorProcessor_initialize(const AppConfig& cfg);
+void SensorProcessor_processAllInputs(AppData& appData);
 
 #ifdef __cplusplus
 }

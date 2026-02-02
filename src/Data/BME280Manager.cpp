@@ -49,8 +49,8 @@ bool BME280Manager_update(void) {
     return true;
 }
 
-void BME280Manager_initialize(const AppConfig* config) {
-    BME280Manager_enabled = config->bme280Enabled;
+void BME280Manager_initialize(const AppConfig& config) {
+    BME280Manager_enabled = config.bme280Enabled;
     if (!BME280Manager_enabled) {
         Serial.println("BME280 disabled in config");
         return;

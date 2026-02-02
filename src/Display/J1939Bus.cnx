@@ -31,14 +31,14 @@ scope J1939Bus {
     }
 
     // Fill buffer with 0xFF (unused bytes)
-    void fillBuffer(u8 buf) {
+    void fillBuffer(u8 buf[8]) {
         for (u8 i <- 0; i < 8; i +<- 1) {
             buf[i] <- 0xFF;
         }
     }
 
     // Helper to send a CAN message with priority 6
-    void sendMessage(u16 pgn, const u8 buf) {
+    void sendMessage(u16 pgn, const u8 buf[8]) {
         CAN_message_t msg;
         msg.flags.extended <- 1;
         msg.id <- this.buildCanId(pgn, 6, this.config.j1939SourceAddress);

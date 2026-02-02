@@ -21,8 +21,8 @@ typedef struct TPressureInputConfig TPressureInputConfig;
 /* Function prototypes */
 float SensorConvert_clampPositive(float x);
 float SensorConvert_defaultAtmosphericPressure(void);
-float SensorConvert_ntcTemperature(float voltage, const TTempInputConfig* cfg);
-float SensorConvert_pressure(float voltage, const TPressureInputConfig* cfg, float atmosphericPressurekPa);
+float SensorConvert_ntcTemperature(float voltage, const TTempInputConfig& cfg);
+float SensorConvert_pressure(float voltage, const TPressureInputConfig& cfg, float atmosphericPressurekPa);
 
 #ifdef __cplusplus
 }
