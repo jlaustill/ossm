@@ -22,13 +22,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// ADR-044: Overflow helper functions
+// ADR-044: Debug overflow helper functions (panic on overflow)
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static inline uint8_t cnx_clamp_add_u8(uint8_t a, uint32_t b) {
-    if (b > (uint32_t)(UINT8_MAX - a)) return UINT8_MAX;
+    if (b > (uint32_t)(UINT8_MAX - a)) {
+        fprintf(stderr, "PANIC: Integer overflow in u8 addition\n");
+        abort();
+    }
     uint8_t result;
-    if (__builtin_add_overflow(a, (uint8_t)b, &result)) return UINT8_MAX;
+    if (__builtin_add_overflow(a, (uint8_t)b, &result)) {
+        fprintf(stderr, "PANIC: Integer overflow in u8 addition\n");
+        abort();
+    }
     return result;
 }
 
@@ -48,10 +56,10 @@ uint8_t CommandHandler_enableSpn(AppConfig& cfg, uint16_t spn, uint8_t input) {
             }
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
                 if (cfg.tempInputs[i].assignedSpn == spn) {
-                    cfg->tempInputs[i].assignedSpn = 0;
+                    cfg.tempInputs[i].assignedSpn = 0;
                 }
             }
-            cfg->tempInputs[input - 1].assignedSpn = spn;
+            cfg.tempInputs[input - 1].assignedSpn = spn;
             ADS1115Manager_initialize(cfg);
             break;
         }
@@ -62,20 +70,20 @@ uint8_t CommandHandler_enableSpn(AppConfig& cfg, uint16_t spn, uint8_t input) {
             }
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
                 if (cfg.pressureInputs[i].assignedSpn == spn) {
-                    cfg->pressureInputs[i].assignedSpn = 0;
+                    cfg.pressureInputs[i].assignedSpn = 0;
                 }
             }
-            cfg->pressureInputs[input - 1].assignedSpn = spn;
+            cfg.pressureInputs[input - 1].assignedSpn = spn;
             ADS1115Manager_initialize(cfg);
             break;
         }
         case ESpnCategory_SPN_CAT_EGT: {
-            cfg->egtEnabled = true;
+            cfg.egtEnabled = true;
             MAX31856Manager_initialize(cfg);
             break;
         }
         case ESpnCategory_SPN_CAT_BME280: {
-            cfg->bme280Enabled = true;
+            cfg.bme280Enabled = true;
             BME280Manager_initialize(cfg);
             break;
         }
@@ -96,7 +104,7 @@ uint8_t CommandHandler_disableSpn(AppConfig& cfg, uint16_t spn) {
         case ESpnCategory_SPN_CAT_TEMPERATURE: {
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
                 if (cfg.tempInputs[i].assignedSpn == spn) {
-                    cfg->tempInputs[i].assignedSpn = 0;
+                    cfg.tempInputs[i].assignedSpn = 0;
                 }
             }
             break;
@@ -104,17 +112,17 @@ uint8_t CommandHandler_disableSpn(AppConfig& cfg, uint16_t spn) {
         case ESpnCategory_SPN_CAT_PRESSURE: {
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
                 if (cfg.pressureInputs[i].assignedSpn == spn) {
-                    cfg->pressureInputs[i].assignedSpn = 0;
+                    cfg.pressureInputs[i].assignedSpn = 0;
                 }
             }
             break;
         }
         case ESpnCategory_SPN_CAT_EGT: {
-            cfg->egtEnabled = false;
+            cfg.egtEnabled = false;
             break;
         }
         case ESpnCategory_SPN_CAT_BME280: {
-            cfg->bme280Enabled = false;
+            cfg.bme280Enabled = false;
             break;
         }
         default: {
@@ -130,7 +138,7 @@ uint8_t CommandHandler_setPressureRange(AppConfig& cfg, uint8_t input, uint16_t 
     if (!valid) {
         return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT));
     }
-    cfg->pressureInputs[input - 1].maxPressure = maxPressure;
+    cfg.pressureInputs[input - 1].maxPressure = maxPressure;
     return TCommandResult_ok();
 }
 
@@ -139,7 +147,7 @@ uint8_t CommandHandler_setTcType(AppConfig& cfg, uint8_t tcType) {
     if (!valid) {
         return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_TC_TYPE));
     }
-    cfg->thermocoupleType = static_cast<EThermocoupleType>(tcType);
+    cfg.thermocoupleType = static_cast<EThermocoupleType>(tcType);
     return TCommandResult_ok();
 }
 
@@ -153,10 +161,10 @@ uint8_t CommandHandler_applyNtcPreset(AppConfig& cfg, uint8_t input, uint8_t pre
         return TCommandResult_error(static_cast<uint8_t>(ECommandError_INVALID_PRESET));
     }
     uint8_t idx = input - 1;
-    cfg->tempInputs[idx].coeffA = Presets_ntcCoeffA(preset);
-    cfg->tempInputs[idx].coeffB = Presets_ntcCoeffB(preset);
-    cfg->tempInputs[idx].coeffC = Presets_ntcCoeffC(preset);
-    cfg->tempInputs[idx].resistorValue = Presets_ntcResistor(preset);
+    cfg.tempInputs[idx].coeffA = Presets_ntcCoeffA(preset);
+    cfg.tempInputs[idx].coeffB = Presets_ntcCoeffB(preset);
+    cfg.tempInputs[idx].coeffC = Presets_ntcCoeffC(preset);
+    cfg.tempInputs[idx].resistorValue = Presets_ntcResistor(preset);
     return TCommandResult_ok();
 }
 
@@ -172,11 +180,11 @@ uint8_t CommandHandler_applyPressurePreset(AppConfig& cfg, uint8_t input, uint8_
     uint8_t idx = input - 1;
     bool isBar = Presets_isBarPreset(preset);
     if (isBar) {
-        cfg->pressureInputs[idx].maxPressure = Presets_barPresetValue(preset);
-        cfg->pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIA;
+        cfg.pressureInputs[idx].maxPressure = Presets_barPresetValue(preset);
+        cfg.pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIA;
     } else {
-        cfg->pressureInputs[idx].maxPressure = Presets_psiPresetValue(preset);
-        cfg->pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
+        cfg.pressureInputs[idx].maxPressure = Presets_psiPresetValue(preset);
+        cfg.pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
     }
     return TCommandResult_ok();
 }
@@ -189,19 +197,19 @@ uint8_t CommandHandler_setNtcParam(AppConfig& cfg, uint8_t input, uint8_t param,
     uint8_t idx = input - 1;
     switch (param) {
         case 0: {
-            cfg->tempInputs[idx].coeffA = value;
+            cfg.tempInputs[idx].coeffA = value;
             break;
         }
         case 1: {
-            cfg->tempInputs[idx].coeffB = value;
+            cfg.tempInputs[idx].coeffB = value;
             break;
         }
         case 2: {
-            cfg->tempInputs[idx].coeffC = value;
+            cfg.tempInputs[idx].coeffC = value;
             break;
         }
         case 3: {
-            cfg->tempInputs[idx].resistorValue = value;
+            cfg.tempInputs[idx].resistorValue = value;
             break;
         }
         default: {
@@ -220,7 +228,7 @@ uint8_t CommandHandler_save(const AppConfig& cfg) {
     return TCommandResult_error(static_cast<uint8_t>(ECommandError_SAVE_FAILED));
 }
 
-uint8_t CommandHandler_reset(const AppConfig& cfg) {
+uint8_t CommandHandler_reset(AppConfig& cfg) {
     ConfigStorage_loadDefaults(cfg);
     return TCommandResult_ok();
 }
@@ -238,26 +246,26 @@ uint8_t CommandHandler_querySpnCounts(const AppConfig& cfg, TQueryResult& out) {
             presCount = cnx_clamp_add_u8(presCount, 1);
         }
     }
-    out->data[0] = tempCount;
-    out->data[1] = presCount;
+    out.data[0] = tempCount;
+    out.data[1] = presCount;
     if (cfg.egtEnabled) {
-        out->data[2] = 1;
+        out.data[2] = 1;
     } else {
-        out->data[2] = 0;
+        out.data[2] = 0;
     }
     if (cfg.bme280Enabled) {
-        out->data[3] = 1;
+        out.data[3] = 1;
     } else {
-        out->data[3] = 0;
+        out.data[3] = 0;
     }
-    out->len = 4;
+    out.len = 4;
     return TCommandResult_ok();
 }
 
 uint8_t CommandHandler_queryFullConfig(const AppConfig& cfg, TQueryResult& out) {
-    out->data[0] = cfg.j1939SourceAddress;
-    out->data[1] = static_cast<uint8_t>(cfg.thermocoupleType);
-    out->len = 2;
+    out.data[0] = cfg.j1939SourceAddress;
+    out.data[1] = static_cast<uint8_t>(cfg.thermocoupleType);
+    out.len = 2;
     return TCommandResult_ok();
 }
 
@@ -267,14 +275,14 @@ uint8_t CommandHandler_queryTempSpns(const AppConfig& cfg, uint8_t subQuery, TQu
         uint8_t idx = startIdx + i;
         if (idx < TEMP_INPUT_COUNT) {
             uint16_t spn = cfg.tempInputs[idx].assignedSpn;
-            out->data[i * 2] = ((spn >> 8) & 0xFFU);
-            out->data[i * 2 + 1] = ((spn) & 0xFFU);
+            out.data[i * 2] = ((spn >> 8) & 0xFFU);
+            out.data[i * 2 + 1] = ((spn) & 0xFFU);
         } else {
-            out->data[i * 2] = 0xFF;
-            out->data[i * 2 + 1] = 0xFF;
+            out.data[i * 2] = 0xFF;
+            out.data[i * 2 + 1] = 0xFF;
         }
     }
-    out->len = 6;
+    out.len = 6;
     return TCommandResult_ok();
 }
 
@@ -284,13 +292,13 @@ uint8_t CommandHandler_queryPresSpns(const AppConfig& cfg, uint8_t subQuery, TQu
         uint8_t idx = startIdx + i;
         if (idx < PRESSURE_INPUT_COUNT) {
             uint16_t spn = cfg.pressureInputs[idx].assignedSpn;
-            out->data[i * 2] = ((spn >> 8) & 0xFFU);
-            out->data[i * 2 + 1] = ((spn) & 0xFFU);
+            out.data[i * 2] = ((spn >> 8) & 0xFFU);
+            out.data[i * 2 + 1] = ((spn) & 0xFFU);
         } else {
-            out->data[i * 2] = 0xFF;
-            out->data[i * 2 + 1] = 0xFF;
+            out.data[i * 2] = 0xFF;
+            out.data[i * 2 + 1] = 0xFF;
         }
     }
-    out->len = 6;
+    out.len = 6;
     return TCommandResult_ok();
 }

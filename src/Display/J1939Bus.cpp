@@ -31,19 +31,19 @@ static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sour
     return id;
 }
 
-static void J1939Bus_fillBuffer(uint8_t buf) {
+static void J1939Bus_fillBuffer(uint8_t buf[8]) {
     for (uint8_t i = 0; i < 8; i += 1) {
-        buf = (buf & ~(1 << i)) | ((0xFF ? 1 : 0) << i);
+        buf[i] = 0xFF;
     }
 }
 
-static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf) {
+static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
     CAN_message_t msg = {};
     msg.flags.extended = 1;
     msg.id = J1939Bus_buildCanId(pgn, 6, J1939Bus_config.j1939SourceAddress);
     msg.len = 8;
     for (uint8_t i = 0; i < 8; i += 1) {
-        msg.buf[i] = ((buf >> i) & 1);
+        msg.buf[i] = buf[i];
     }
     J1939Bus_canBus.write(msg);
 }
@@ -225,13 +225,13 @@ static void J1939Bus_sniffDataPrivate(const CAN_message_t& msg) {
         return;
     }
     if (message.pgn == 59904) {
-        J1939Bus_canBus.write((*msg));
+        J1939Bus_canBus.write(msg);
     }
 }
 
 void J1939Bus_initialize(const AppData& currentData, const AppConfig& cfg) {
-    J1939Bus_appData = (*currentData);
-    J1939Bus_config = (*cfg);
+    J1939Bus_appData = currentData;
+    J1939Bus_config = cfg;
     Serial.println("J1939 Bus initializing");
     J1939Bus_canBus.begin();
     J1939Bus_canBus.setBaudRate(250000);
