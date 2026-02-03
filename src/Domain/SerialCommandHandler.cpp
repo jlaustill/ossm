@@ -24,6 +24,7 @@
 #include <Display/FaultDecode.h>
 #include <Display/J1939Bus.h>
 #include <Display/J1939Encode.h>
+#include <Data/ADS1115Manager.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -622,6 +623,10 @@ static void SerialCommandHandler_processCommand(AppConfig& config, const AppData
         }
         case 11: {
             SerialCommandHandler_handleDumpEeprom();
+            break;
+        }
+        case 12: {
+            ADS1115Manager_printDebugInfo();
             break;
         }
         default: {

@@ -111,7 +111,6 @@ void ADS1115Manager_initialize(const AppConfig& config) {
         bool beginResult = ADS1115Manager_ads[d].begin(addr);
         if (beginResult) {
             ADS1115Manager_deviceInitialized[d] = true;
-            ADS1115Manager_ads[d].setGain(1);
             ADS1115Manager_ads[d].setDataRate(0x0080);
             Serial.print("ADS1115 @ 0x");
             Serial.print(addr, HEX);
@@ -191,4 +190,35 @@ bool ADS1115Manager_isDeviceEnabled(uint8_t device) {
         return false;
     }
     return ADS1115Manager_deviceEnabled[device] && ADS1115Manager_deviceInitialized[device];
+}
+
+void ADS1115Manager_printDebugInfo(void) {
+    Serial.println("=== ADS1115 Debug ===");
+    for (uint8_t d = 0; d < ADS_DEVICE_COUNT; d = d + 1) {
+        Serial.print("Device ");
+        Serial.print(d);
+        Serial.print(" (0x");
+        Serial.print(ADS_I2C_ADDRESSES[d], HEX);
+        Serial.print("): enabled=");
+        Serial.print(ADS1115Manager_deviceEnabled[d]);
+        Serial.print(" init=");
+        Serial.println(ADS1115Manager_deviceInitialized[d]);
+        if (ADS1115Manager_deviceInitialized[d]) {
+            for (uint8_t c = 0; c < 4; c = c + 1) {
+                TAdcReading reading = ADS1115Manager_readings[d][c];
+                Serial.print("  Ch");
+                Serial.print(c);
+                Serial.print(": raw=");
+                Serial.print(reading.rawValue);
+                Serial.print(" valid=");
+                Serial.print(reading.valid);
+                if (reading.valid) {
+                    float volts = ADS1115Manager_ads[d].computeVolts(reading.rawValue);
+                    Serial.print(" volts=");
+                    Serial.print(volts, 3);
+                }
+                Serial.println();
+            }
+        }
+    }
 }

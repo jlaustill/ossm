@@ -318,6 +318,13 @@ scope J1939Bus {
             u16 encoded <- global.J1939Encode.boost16bit(boost1kPa);
             buf[0] <- encoded[0,8];
             buf[1] <- encoded[8,8];
+            Serial.print("Boost Pressure Sent: ");
+            Serial.print(boost1kPa);
+            Serial.print(" kPa, Encoded: ");
+            Serial.print(buf[0]);
+            Serial.print(" ");
+            Serial.print(buf[1]);
+            Serial.println(" kPa ");
         }
         if (spn1128) {
             u16 encoded <- global.J1939Encode.boost16bit(boost2kPa);

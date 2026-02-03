@@ -146,8 +146,8 @@ scope ADS1115Manager {
             bool beginResult <- this.ads[d].begin(addr);
             if (beginResult) {
                 this.deviceInitialized[d] <- true;
-                // GAIN_ONE = 1, RATE_ADS1115_128SPS = 0x0080
-                this.ads[d].setGain(1);
+                // GAIN_TWOTHIRDS is default (±6.144V, allows 0-5V with 5V VDD)
+                // RATE_ADS1115_128SPS = 0x0080
                 this.ads[d].setDataRate(0x0080);
 
                 Serial.print("ADS1115 @ 0x");
@@ -244,5 +244,38 @@ scope ADS1115Manager {
             return false;
         }
         return this.deviceEnabled[device] && this.deviceInitialized[device];
+    }
+
+    // Debug function to print all ADC readings
+    public void printDebugInfo() {
+        Serial.println("=== ADS1115 Debug ===");
+        for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
+            Serial.print("Device ");
+            Serial.print(d);
+            Serial.print(" (0x");
+            Serial.print(ADS_I2C_ADDRESSES[d], HEX);
+            Serial.print("): enabled=");
+            Serial.print(this.deviceEnabled[d]);
+            Serial.print(" init=");
+            Serial.println(this.deviceInitialized[d]);
+
+            if (this.deviceInitialized[d]) {
+                for (u8 c <- 0; c < this.ADS_CHANNEL_COUNT; c <- c + 1) {
+                    TAdcReading reading <- this.readings[d][c];
+                    Serial.print("  Ch");
+                    Serial.print(c);
+                    Serial.print(": raw=");
+                    Serial.print(reading.rawValue);
+                    Serial.print(" valid=");
+                    Serial.print(reading.valid);
+                    if (reading.valid) {
+                        f32 volts <- this.ads[d].computeVolts(reading.rawValue);
+                        Serial.print(" volts=");
+                        Serial.print(volts, 3);
+                    }
+                    Serial.println();
+                }
+            }
+        }
     }
 }

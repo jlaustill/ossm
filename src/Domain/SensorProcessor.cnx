@@ -84,7 +84,7 @@ scope SensorProcessor {
                 appData.airInletPressurekPa <- value;
             }
             case 1127 { // Turbocharger 1 Boost Pressure (CAC Inlet)
-                appData.cacInletPressurekPa <- value;
+                appData.boostPressurekPa <- value;
             }
             case 1128 { // Turbocharger 2 Boost Pressure (Transfer Pipe)
                 appData.transferPipePressurekPa <- value;

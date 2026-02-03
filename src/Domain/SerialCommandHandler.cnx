@@ -18,6 +18,7 @@
 #include <Display/FaultDecode.cnx>
 #include <Display/J1939Bus.cnx>
 #include <Display/J1939Encode.cnx>
+#include <Data/ADS1115Manager.cnx>
 
 // SPN labels indexed by SpnInfo_getIndex()
 const string<32> SPN_LABELS[20] <- [
@@ -566,6 +567,7 @@ scope SerialCommandHandler {
             case 9 { this.handlePressurePreset(config); }
             case 10 { this.handleReadSensors(config, appData); }
             case 11 { this.handleDumpEeprom(); }
+            case 12 { global.ADS1115Manager.printDebugInfo(); }
             default { Serial.println("ERR,1,Unknown command"); }
         }
 

@@ -102,7 +102,7 @@ static void SensorProcessor_updateAppDataForSpn(AppData& appData, uint16_t spn, 
             break;
         }
         case 1127: {
-            appData.cacInletPressurekPa = value;
+            appData.boostPressurekPa = value;
             break;
         }
         case 1128: {

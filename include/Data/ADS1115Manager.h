@@ -26,6 +26,7 @@ bool ADS1115Manager_update(void);
 TAdcReading ADS1115Manager_getReading(uint8_t device, uint8_t channel);
 float ADS1115Manager_getVoltage(uint8_t device, uint8_t channel);
 bool ADS1115Manager_isDeviceEnabled(uint8_t device);
+void ADS1115Manager_printDebugInfo(void);
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,7 @@
 #include <Display/FaultDecode.h>
 #include <Display/J1939Bus.h>
 #include <Display/J1939Encode.h>
+#include <Data/ADS1115Manager.h>
 
 #ifdef __cplusplus
 extern "C" {

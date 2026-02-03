@@ -303,6 +303,13 @@ void J1939Bus_sendPgn65190(float boost1kPa, float boost2kPa) {
         uint16_t encoded = J1939Encode_boost16bit(boost1kPa);
         buf[0] = ((encoded) & 0xFFU);
         buf[1] = ((encoded >> 8) & 0xFFU);
+        Serial.print("Boost Pressure Sent: ");
+        Serial.print(boost1kPa);
+        Serial.print(" kPa, Encoded: ");
+        Serial.print(buf[0]);
+        Serial.print(" ");
+        Serial.print(buf[1]);
+        Serial.println(" kPa ");
     }
     if (spn1128) {
         uint16_t encoded = J1939Encode_boost16bit(boost2kPa);
