@@ -40,6 +40,7 @@ void J1939Bus_sendPgn65262(float coolantTemp, float fuelTemp, float oilTemp);
 void J1939Bus_sendPgn65263(float fuelPres, float oilPres, float coolantPres);
 void J1939Bus_sendPgn65269(float ambientTemp, float airInletTemp, float baroPress);
 void J1939Bus_sendPgn65270(float airInletPres, float airInletTemp, float egtTemp, float boostPres);
+void J1939Bus_sendPgn65269Generic(void);
 
 #ifdef __cplusplus
 }

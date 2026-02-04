@@ -429,3 +429,7 @@ void J1939Bus_sendPgn65270(float airInletPres, float airInletTemp, float egtTemp
     }
     J1939Bus_sendMessage(65270, buf);
 }
+
+void J1939Bus_sendPgn65269Generic(void) {
+    J1939Bus_sendPgnGeneric(65269);
+}

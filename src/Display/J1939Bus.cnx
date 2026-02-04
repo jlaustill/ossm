@@ -473,4 +473,9 @@ scope J1939Bus {
 
         this.sendMessage(65270, buf);
     }
+
+    // Test: Send PGN 65269 using generic encoder
+    public void sendPgn65269Generic() {
+        this.sendPgnGeneric(65269);
+    }
 }
