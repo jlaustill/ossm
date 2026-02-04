@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 /* Function prototypes */
+uint16_t J1939Encode_encode(float value, float resolution, float offset);
 uint16_t J1939Encode_temp16bit(float temperatureC);
 uint8_t J1939Encode_temp8bit(float temperatureC);
 uint8_t J1939Encode_humidity(float humidityPercent);

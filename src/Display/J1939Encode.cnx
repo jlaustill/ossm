@@ -2,6 +2,14 @@
 // Converts sensor values to J1939 protocol format per SAE J1939-71
 
 scope J1939Encode {
+    // Generic encoding: (value + offset) / resolution
+    // Returns u16 to handle both 1-byte and 2-byte SPNs
+    // Clamping is handled by C-Next's default overflow behavior
+    public u16 encode(f32 value, f32 resolution, f32 offset) {
+        f32 scaled <- (value + offset) / resolution;
+        return (u16)scaled;
+    }
+
     // Temperature encoding: 16-bit with 0.03125 deg/bit resolution, +273 offset
     // Used for high-resolution temperature SPNs (1363, 1637)
     public u16 temp16bit(f32 temperatureC) {

@@ -6,50 +6,56 @@
 #include "J1939Encode.h"
 
 #include <stdint.h>
+#include <limits.h>
 
 // J1939 SPN Encoding Functions
 // Converts sensor values to J1939 protocol format per SAE J1939-71
 /* Scope: J1939Encode */
 
+uint16_t J1939Encode_encode(float value, float resolution, float offset) {
+    float scaled = (value + offset) / resolution;
+    return ((scaled) > ((float)UINT16_MAX) ? UINT16_MAX : (scaled) < 0.0f ? 0 : static_cast<uint16_t>((scaled)));
+}
+
 uint16_t J1939Encode_temp16bit(float temperatureC) {
     float offset = temperatureC + 273.0;
     float scaled = offset / 0.03125;
-    return static_cast<uint16_t>(scaled);
+    return ((scaled) > ((float)UINT16_MAX) ? UINT16_MAX : (scaled) < 0.0f ? 0 : static_cast<uint16_t>((scaled)));
 }
 
 uint8_t J1939Encode_temp8bit(float temperatureC) {
     float offset = temperatureC + 40.0;
-    return static_cast<uint8_t>(offset);
+    return ((offset) > ((float)UINT8_MAX) ? UINT8_MAX : (offset) < 0.0f ? 0 : static_cast<uint8_t>((offset)));
 }
 
 uint8_t J1939Encode_humidity(float humidityPercent) {
     float scaled = humidityPercent / 0.4;
-    return static_cast<uint8_t>(scaled);
+    return ((scaled) > ((float)UINT8_MAX) ? UINT8_MAX : (scaled) < 0.0f ? 0 : static_cast<uint8_t>((scaled)));
 }
 
 uint16_t J1939Encode_boost16bit(float pressurekPa) {
     float scaled = pressurekPa / 0.125;
-    return static_cast<uint16_t>(scaled);
+    return ((scaled) > ((float)UINT16_MAX) ? UINT16_MAX : (scaled) < 0.0f ? 0 : static_cast<uint16_t>((scaled)));
 }
 
 uint8_t J1939Encode_pressure4kPa(float pressurekPa) {
     float scaled = pressurekPa / 4.0;
-    return static_cast<uint8_t>(scaled);
+    return ((scaled) > ((float)UINT8_MAX) ? UINT8_MAX : (scaled) < 0.0f ? 0 : static_cast<uint8_t>((scaled)));
 }
 
 uint8_t J1939Encode_pressure2kPa(float pressurekPa) {
     float scaled = pressurekPa / 2.0;
-    return static_cast<uint8_t>(scaled);
+    return ((scaled) > ((float)UINT8_MAX) ? UINT8_MAX : (scaled) < 0.0f ? 0 : static_cast<uint8_t>((scaled)));
 }
 
 uint16_t J1939Encode_pressure16bit(float pressurekPa) {
     float scaled = pressurekPa / 0.5;
-    return static_cast<uint16_t>(scaled);
+    return ((scaled) > ((float)UINT16_MAX) ? UINT16_MAX : (scaled) < 0.0f ? 0 : static_cast<uint16_t>((scaled)));
 }
 
 uint8_t J1939Encode_barometric(float pressurekPa) {
     float scaled = pressurekPa / 0.5;
-    return static_cast<uint8_t>(scaled);
+    return ((scaled) > ((float)UINT8_MAX) ? UINT8_MAX : (scaled) < 0.0f ? 0 : static_cast<uint8_t>((scaled)));
 }
 
 uint8_t J1939Encode_lowByte(uint16_t value) {
