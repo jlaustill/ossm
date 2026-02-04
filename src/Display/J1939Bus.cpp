@@ -17,6 +17,8 @@
 #include "J1939Decode.h"
 #include "SpnCheck.h"
 #include "FloatBytes.h"
+#include <Data/J1939Config.h>
+#include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -37,6 +39,10 @@ static void J1939Bus_fillBuffer(uint8_t buf[8]) {
     }
 }
 
+static bool J1939Bus_isValueEnabled(EValueId valueId) {
+    return SensorValues_getHasHardware(valueId);
+}
+
 static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
     CAN_message_t msg = {};
     msg.flags.extended = 1;
@@ -46,6 +52,29 @@ static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
         msg.buf[i] = buf[i];
     }
     J1939Bus_canBus.write(msg);
+}
+
+void J1939Bus_sendPgnGeneric(uint16_t pgn) {
+    uint8_t buf[8] = {0};
+    J1939Bus_fillBuffer(buf);
+    for (uint8_t i = 0; i < SPN_CONFIG_COUNT; i = i + 1) {
+        TSpnConfig cfg = SPN_CONFIGS[i];
+        if (cfg.pgn != pgn) {
+            continue;
+        }
+        bool hasHw = J1939Bus_isValueEnabled(cfg.source);
+        if (!hasHw) {
+            continue;
+        }
+        float value = SensorValues_get(cfg.source);
+        uint16_t encoded = J1939Encode_encode(value, cfg.resolution, cfg.offset);
+        uint8_t pos = cfg.bytePos - 1;
+        buf[pos] = static_cast<uint8_t>((encoded & 0xFF));
+        if (cfg.dataLength == 2) {
+            buf[pos + 1] = static_cast<uint8_t>(((encoded >> 8) & 0xFF));
+        }
+    }
+    J1939Bus_sendMessage(pgn, buf);
 }
 
 void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t data[8], uint8_t dataLen) {

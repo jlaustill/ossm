@@ -16,6 +16,8 @@
 #include "J1939Decode.h"
 #include "SpnCheck.h"
 #include "FloatBytes.h"
+#include <Data/J1939Config.h>
+#include <Data/SensorValues.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +28,7 @@ typedef struct AppData AppData;
 typedef struct AppConfig AppConfig;
 
 /* Function prototypes */
+void J1939Bus_sendPgnGeneric(uint16_t pgn);
 void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t data[8], uint8_t dataLen);
 void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len);
 void J1939Bus_initialize(const AppData& currentData, const AppConfig& cfg);

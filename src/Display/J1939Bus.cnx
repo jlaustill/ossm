@@ -11,6 +11,8 @@
 #include "J1939Decode.cnx"
 #include "SpnCheck.cnx"
 #include "FloatBytes.cnx"
+#include <Data/J1939Config.cnx>
+#include <Data/SensorValues.cnx>
 
 scope J1939Bus {
     // CAN bus instance - OSSM v0.0.2 uses CAN1 (D22/D23)
@@ -37,6 +39,11 @@ scope J1939Bus {
         }
     }
 
+    // Check if a value has hardware assigned
+    bool isValueEnabled(EValueId valueId) {
+        return global.SensorValues.getHasHardware(valueId);
+    }
+
     // Helper to send a CAN message with priority 6
     void sendMessage(u16 pgn, const u8 buf[8]) {
         CAN_message_t msg;
@@ -49,6 +56,40 @@ scope J1939Bus {
         }
 
         this.canBus.write(msg);
+    }
+
+    // Generic PGN sender - finds all SPNs for this PGN and encodes them
+    public void sendPgnGeneric(u16 pgn) {
+        u8 buf[8];
+        this.fillBuffer(buf);
+
+        // Find and encode all SPNs belonging to this PGN
+        for (u8 i <- 0; i < SPN_CONFIG_COUNT; i <- i + 1) {
+            TSpnConfig cfg <- SPN_CONFIGS[i];
+
+            if (cfg.pgn != pgn) {
+                continue;
+            }
+
+            // Check if this value has hardware
+            bool hasHw <- this.isValueEnabled(cfg.source);
+            if (!hasHw) {
+                continue;
+            }
+
+            // Get source value and encode
+            f32 value <- global.SensorValues.get(cfg.source);
+            u16 encoded <- global.J1939Encode.encode(value, cfg.resolution, cfg.offset);
+
+            // Place in buffer (bytePos is 1-indexed per J1939 docs)
+            u8 pos <- cfg.bytePos - 1;
+            buf[pos] <- (u8)(encoded & 0xFF);
+            if (cfg.dataLength = 2) {
+                buf[pos + 1] <- (u8)((encoded >> 8) & 0xFF);
+            }
+        }
+
+        this.sendMessage(pgn, buf);
     }
 
     // Send configuration response on PGN 65281
