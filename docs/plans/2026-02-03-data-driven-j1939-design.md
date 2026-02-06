@@ -318,4 +318,8 @@ Commands change from SPN-based to value-based:
 
 ## Dependencies
 
-- Blocked on C-Next issue #632 (u8 clamp on cast) for safe encoding
+- ~~Blocked on C-Next issue #632 (u8 clamp on cast) for safe encoding~~ **RESOLVED in v0.1.55**
+
+## Status
+
+**Ready for implementation** - All blockers resolved as of 2026-02-04.

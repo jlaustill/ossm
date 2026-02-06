@@ -46,25 +46,24 @@ OSSM is an open-source automotive sensor module that reads temperature, pressure
 4. **Configure via J1939**: Send commands on PGN 65280 (see below)
 5. **Verify output**: Monitor PGNs for sensor data
 
-On first boot, all sensors are disabled. Enable SPNs and assign them to inputs using J1939 commands.
+On first boot, all sensors are disabled. Assign inputs to physical measurement locations (values) using J1939 commands. SPNs are automatically enabled based on which values have hardware assigned.
 
 ## J1939 Configuration
 
 OSSM accepts configuration commands on **PGN 65280 (0xFF00)** and responds on **PGN 65281 (0xFF01)**.
 
-### Enable SPN
+### Assign Input to Value
 
 ```
-Byte 0: 0x01 (Enable command)
-Byte 1: SPN high byte
-Byte 2: SPN low byte
-Byte 3: 1 = enable, 0 = disable
-Byte 4: Input number (1-8 for temp, 1-7 for pressure)
+Byte 0: 0x01 (Assign command)
+Byte 1: Input type (0 = temp, 1 = pressure)
+Byte 2: Input number (1-8 for temp, 1-7 for pressure)
+Byte 3: Value ID (see table below)
 ```
 
-**Example**: Enable SPN 175 (oil temp) on temp3:
+**Example**: Assign temp3 to OIL_TEMP (15):
 ```
-01 00 AF 01 03
+01 00 03 0F
 ```
 
 ### Save Configuration
@@ -75,18 +74,18 @@ Byte 0: 0x06 (Save command)
 
 Saves current configuration to EEPROM.
 
-### Common SPNs
+### Common Value IDs
 
-| SPN | Description | Input Type |
-|-----|-------------|------------|
-| 175 | Engine Oil Temperature | temp1-8 |
-| 110 | Coolant Temperature | temp1-8 |
-| 100 | Engine Oil Pressure | pres1-7 |
-| 102 | Boost Pressure | pres1-7 |
-| 173 | Exhaust Gas Temperature | EGT (no input) |
-| 171 | Ambient Temperature | BME280 (no input) |
+| ID | Name | Description | Auto-enabled SPNs |
+|----|------|-------------|-------------------|
+| 15 | OIL_TEMP | Engine oil temperature | 175 |
+| 17 | COOLANT_TEMP | Coolant temperature | 110, 1637 |
+| 14 | OIL_PRES | Engine oil pressure | 100 |
+| 12 | MANIFOLD1_ABS_PRES | Intake manifold pressure | 102 |
+| 7 | TURBO1_TURB_INLET_TEMP | EGT (turbine inlet) | 173 |
 
-See [SPN Reference](docs/SPN-REFERENCE.md) for complete list.
+See [Serial Commands](docs/SERIAL-COMMANDS.md) for complete EValueId table.
+See [SPN Reference](docs/SPN-REFERENCE.md) for value-to-SPN mappings.
 
 ## J1939 Output
 

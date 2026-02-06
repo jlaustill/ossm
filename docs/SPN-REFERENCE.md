@@ -6,76 +6,102 @@ Complete reference for all Suspect Parameter Numbers (SPNs) supported by OSSM.
 
 OSSM transmits sensor data using J1939 protocol over CAN bus. Each sensor reading is assigned a standardized SPN that other J1939 devices (gauges, ECUs, data loggers) can interpret.
 
-On first boot, **all SPNs are disabled**. Enable SPNs via serial commands or J1939 PGN 65280.
+On first boot, **all sensors are disabled**. Assign inputs to physical measurement locations (EValueId) via serial commands or J1939 PGN 65280. **SPNs are automatically enabled** when their source value has hardware assigned.
+
+## Value to SPN Mapping
+
+Each EValueId can enable one or more J1939 SPNs automatically:
+
+| EValueId | ID | Enabled SPNs |
+|----------|----|--------------|
+| AMBIENT_PRES | 0 | 108 (Barometric Pressure) |
+| AMBIENT_TEMP | 1 | 171 (Ambient Air Temperature) |
+| AMBIENT_HUMIDITY | 2 | 354 (Relative Humidity) |
+| TURBO1_COMP_INLET_PRES | 3 | 106 (Air Inlet Pressure) |
+| TURBO1_COMP_INLET_TEMP | 4 | 1131 (Turbo 1 Compressor Inlet Temp) |
+| TURBO1_COMP_OUTLET_PRES | 5 | 1127 (Turbo 1 Boost Pressure) |
+| TURBO1_COMP_OUTLET_TEMP | 6 | 1132 (Turbo 1 Compressor Outlet Temp) |
+| TURBO1_TURB_INLET_TEMP | 7 | 173 (EGT) |
+| CAC1_OUTLET_TEMP | 11 | 172 (Air Inlet Temperature) |
+| MANIFOLD1_ABS_PRES | 12 | 102 (Boost Pressure) |
+| MANIFOLD1_TEMP | 13 | 105, 1363 (Intake Manifold Temp + Hi-Res) |
+| OIL_PRES | 14 | 100 (Engine Oil Pressure) |
+| OIL_TEMP | 15 | 175 (Engine Oil Temperature) |
+| COOLANT_PRES | 16 | 109 (Coolant Pressure) |
+| COOLANT_TEMP | 17 | 110, 1637 (Coolant Temp + Hi-Res) |
+| FUEL_PRES | 18 | 94 (Fuel Delivery Pressure) |
+| FUEL_TEMP | 19 | 174 (Fuel Temperature) |
+| ENGINE_BAY_TEMP | 20 | 441 (Engine Bay Temperature) |
 
 ---
 
 ## Temperature SPNs
 
-Assign to temperature inputs `temp1` through `temp8`.
+Temperature SPNs are auto-enabled when their source EValueId has hardware assigned.
 
-| SPN | Name | Input | J1939 Scaling | PGN |
-|-----|------|-------|---------------|-----|
-| 175 | Engine Oil Temperature | temp1-8 | 1°C/bit, -40°C offset | 65262 |
-| 110 | Engine Coolant Temperature | temp1-8 | 1°C/bit, -40°C offset | 65262 |
-| 174 | Fuel Temperature | temp1-8 | 1°C/bit, -40°C offset | 65262 |
-| 105 | Intake Manifold 1 Temperature | temp1-8 | 1°C/bit, -40°C offset | 65270 |
-| 1131 | Intake Manifold 2 Temperature | temp1-8 | 1°C/bit, -40°C offset | 65189 |
-| 1132 | Intake Manifold 3 Temperature | temp1-8 | 1°C/bit, -40°C offset | 65189 |
-| 1133 | Intake Manifold 4 Temperature | temp1-8 | 1°C/bit, -40°C offset | 65189 |
-| 172 | Air Inlet Temperature | temp1-8 | 1°C/bit, -40°C offset | 65269 |
-| 441 | Auxiliary Temperature 1 | temp1-8 | 1°C/bit, -40°C offset | 65164 |
+| SPN | Name | Source EValueId | J1939 Scaling | PGN |
+|-----|------|-----------------|---------------|-----|
+| 175 | Engine Oil Temperature | OIL_TEMP (15) | 1°C/bit, +40°C offset | 65262 |
+| 110 | Engine Coolant Temperature | COOLANT_TEMP (17) | 1°C/bit, +40°C offset | 65262 |
+| 174 | Fuel Temperature | FUEL_TEMP (19) | 1°C/bit, +40°C offset | 65262 |
+| 105 | Intake Manifold 1 Temperature | MANIFOLD1_TEMP (13) | 1°C/bit, +40°C offset | 65270 |
+| 1131 | Turbo 1 Compressor Inlet Temp | TURBO1_COMP_INLET_TEMP (4) | 1°C/bit, +40°C offset | 65189 |
+| 1132 | Turbo 1 Compressor Outlet Temp | TURBO1_COMP_OUTLET_TEMP (6) | 1°C/bit, +40°C offset | 65189 |
+| 172 | Air Inlet Temperature | CAC1_OUTLET_TEMP (11) | 1°C/bit, +40°C offset | 65269 |
+| 441 | Engine Bay Temperature | ENGINE_BAY_TEMP (20) | 1°C/bit, +40°C offset | 65164 |
 
-### Auto-Enabled High-Resolution SPNs
+### High-Resolution Temperature SPNs
 
-| Primary SPN | Hi-Res SPN | Resolution | PGN |
-|-------------|------------|------------|-----|
-| 110 (Coolant) | 1637 | 0.03125°C/bit | 65129 |
-| 105 (Intake 1) | 1363 | 0.03125°C/bit | 65129 |
+These are auto-enabled alongside their standard-resolution counterparts:
 
-When SPN 110 or 105 is enabled, the corresponding high-resolution SPN is automatically enabled.
+| Hi-Res SPN | Source EValueId | Resolution | PGN |
+|------------|-----------------|------------|-----|
+| 1637 | COOLANT_TEMP (17) | 0.03125°C/bit, +273°C | 65129 |
+| 1363 | MANIFOLD1_TEMP (13) | 0.03125°C/bit, +273°C | 65129 |
+
+When you assign an input to COOLANT_TEMP or MANIFOLD1_TEMP, both standard and high-resolution SPNs transmit automatically.
 
 ---
 
 ## Pressure SPNs
 
-Assign to pressure inputs `pres1` through `pres7`.
+Pressure SPNs are auto-enabled when their source EValueId has hardware assigned.
 
-| SPN | Name | Input | J1939 Scaling | PGN |
-|-----|------|-------|---------------|-----|
-| 100 | Engine Oil Pressure | pres1-7 | 4 kPa/bit | 65263 |
-| 109 | Coolant Pressure | pres1-7 | 2 kPa/bit | 65263 |
-| 94 | Fuel Delivery Pressure | pres1-7 | 4 kPa/bit | 65263 |
-| 102 | Boost Pressure | pres1-7 | 2 kPa/bit | 65270 |
-| 106 | Air Inlet Pressure | pres1-7 | 2 kPa/bit | 65270 |
-| 1127 | Turbocharger 1 Boost Pressure | pres1-7 | 2 kPa/bit | 65190 |
-| 1128 | Turbocharger 2 Boost Pressure | pres1-7 | 2 kPa/bit | 65190 |
+| SPN | Name | Source EValueId | J1939 Scaling | PGN |
+|-----|------|-----------------|---------------|-----|
+| 100 | Engine Oil Pressure | OIL_PRES (14) | 4 kPa/bit | 65263 |
+| 109 | Coolant Pressure | COOLANT_PRES (16) | 2 kPa/bit | 65263 |
+| 94 | Fuel Delivery Pressure | FUEL_PRES (18) | 4 kPa/bit | 65263 |
+| 102 | Boost Pressure | MANIFOLD1_ABS_PRES (12) | 2 kPa/bit | 65270 |
+| 106 | Air Inlet Pressure | TURBO1_COMP_INLET_PRES (3) | 2 kPa/bit | 65270 |
+| 108 | Barometric Pressure | AMBIENT_PRES (0) | 0.5 kPa/bit | 65269 |
+| 1127 | Turbo 1 Compressor Outlet Pressure | TURBO1_COMP_OUTLET_PRES (5) | 0.125 kPa/bit | 65190 |
 
 ---
 
 ## EGT SPN
 
-No input assignment required - uses dedicated MAX31856 thermocouple input.
+The EGT sensor (MAX31856 thermocouple) maps to `TURBO1_TURB_INLET_TEMP` - the turbine inlet temperature, which is where exhaust gas enters the turbo.
 
-| SPN | Name | J1939 Scaling | PGN |
-|-----|------|---------------|-----|
-| 173 | Exhaust Gas Temperature | 0.03125°C/bit, -273°C offset | 65270 |
+| SPN | Name | Source EValueId | J1939 Scaling | PGN |
+|-----|------|-----------------|---------------|-----|
+| 173 | Exhaust Gas Temperature | TURBO1_TURB_INLET_TEMP (7) | 0.03125°C/bit, +273°C offset | 65270 |
 
-Enable with: `1,0,173,1`
+When the EGT sensor is enabled, `TURBO1_TURB_INLET_TEMP` is marked as having hardware, and SPN 173 is auto-enabled.
 
 ---
 
 ## BME280 SPNs
 
-No input assignment required - uses dedicated BME280 sensor. Enabling any one enables all three.
+The BME280 environmental sensor provides ambient conditions. When enabled, it marks three EValueId values as having hardware:
 
-| SPN | Name | J1939 Scaling | PGN |
-|-----|------|---------------|-----|
-| 171 | Ambient Air Temperature | 0.03125°C/bit, -273°C offset | 65269 |
-| 108 | Barometric Pressure | 0.5 kPa/bit | 65269 |
-| 354 | Relative Humidity | 0.5%/bit | 65164 |
+| SPN | Name | Source EValueId | J1939 Scaling | PGN |
+|-----|------|-----------------|---------------|-----|
+| 171 | Ambient Air Temperature | AMBIENT_TEMP (1) | 0.03125°C/bit, +273°C offset | 65269 |
+| 108 | Barometric Pressure | AMBIENT_PRES (0) | 0.5 kPa/bit | 65269 |
+| 354 | Relative Humidity | AMBIENT_HUMIDITY (2) | 0.4%/bit | 65164 |
 
-Enable with: `1,0,171,1`
+When BME280 is enabled, all three values have hardware, and all three SPNs are auto-enabled.
 
 ---
 
@@ -96,9 +122,9 @@ Parameter Group Numbers (PGNs) that OSSM transmits:
 
 ### Transmission Behavior
 
-- Only enabled SPNs are transmitted
-- Disabled SPNs are filled with `0xFF` (Not Available per J1939)
-- PGNs are only transmitted if at least one SPN in the group is enabled
+- SPNs are auto-enabled when their source EValueId has hardware assigned
+- SPNs without hardware are filled with `0xFF` (Not Available per J1939)
+- PGNs are transmitted at their configured intervals regardless of which SPNs are active
 
 ---
 
@@ -107,14 +133,14 @@ Parameter Group Numbers (PGNs) that OSSM transmits:
 ### Basic Engine Monitoring
 
 ```
-# Oil temperature on temp1
-1,0,175,1,1
+# Assign temp1 to OIL_TEMP (15) -> auto-enables SPN 175
+1,0,1,15
 
-# Coolant temperature on temp2 (auto-enables hi-res SPN 1637)
-1,0,110,1,2
+# Assign temp2 to COOLANT_TEMP (17) -> auto-enables SPN 110 and hi-res SPN 1637
+1,0,2,17
 
-# Oil pressure on pres1
-1,0,100,1,1
+# Assign pres1 to OIL_PRES (14) -> auto-enables SPN 100
+1,1,1,14
 
 # Save
 6
@@ -123,17 +149,16 @@ Parameter Group Numbers (PGNs) that OSSM transmits:
 ### Turbo Monitoring
 
 ```
-# Intake manifold temp on temp1
-1,0,105,1,1
+# Assign temp1 to MANIFOLD1_TEMP (13) -> auto-enables SPN 105 and hi-res SPN 1363
+1,0,1,13
 
-# EGT
-1,0,173,1
+# Enable EGT sensor (in AppConfig) -> TURBO1_TURB_INLET_TEMP (7) -> auto-enables SPN 173
 
-# Boost pressure on pres1
-1,0,102,1,1
+# Assign pres1 to MANIFOLD1_ABS_PRES (12) -> auto-enables SPN 102 (boost)
+1,1,1,12
 
-# Turbo 1 boost on pres2
-1,0,127,1,2
+# Assign pres2 to TURBO1_COMP_OUTLET_PRES (5) -> auto-enables SPN 1127 (hi-res boost)
+1,1,2,5
 
 # Save
 6
@@ -142,11 +167,11 @@ Parameter Group Numbers (PGNs) that OSSM transmits:
 ### Full Ambient
 
 ```
-# Enable BME280 (ambient temp, barometric, humidity)
-1,0,171,1
+# Enable BME280 sensor (in AppConfig) -> marks AMBIENT_PRES (0), AMBIENT_TEMP (1), AMBIENT_HUMIDITY (2) as having hardware
+# Auto-enables SPNs 108, 171, 354
 
-# Air inlet temp on temp1
-1,0,172,1,1
+# Assign temp1 to CAC1_OUTLET_TEMP (11) -> auto-enables SPN 172 (air inlet temp)
+1,0,1,11
 
 # Save
 6
@@ -160,13 +185,19 @@ Parameter Group Numbers (PGNs) that OSSM transmits:
 
 J1939 uses **little-endian** (LSB first) for multi-byte values.
 
-### Scaling Formula
+### Scaling Formulas
 
-To convert raw J1939 value to engineering units:
+**Encoding** (OSSM transmitting - converting engineering units to raw):
+```
+Raw Value = (Engineering Value + Offset) / Resolution
+```
 
+**Decoding** (other devices receiving - converting raw to engineering):
 ```
-Engineering Value = (Raw Value × Resolution) + Offset
+Engineering Value = (Raw Value × Resolution) - Offset
 ```
+
+The offset in TSpnConfig is the value **added** during encoding. For temperatures with "+40 offset", a 25°C reading encodes as `(25 + 40) / 1.0 = 65`.
 
 ### Source Address
 

@@ -1,0 +1,9 @@
+// PGN transmission configuration
+// Defines PGN timing and properties per J1939 spec
+
+struct TPgnConfig {
+    u16 pgn;             // PGN number
+    u16 intervalMs;      // Transmission interval (0 = on request only)
+    u8 dataLength;       // Usually 8
+    u8 priority;         // Default priority (usually 6)
+}

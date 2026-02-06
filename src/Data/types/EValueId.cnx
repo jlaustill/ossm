@@ -1,0 +1,40 @@
+// Physical measurement locations
+// Named by position in air/exhaust path, not by J1939 SPN names
+
+enum EValueId {
+    // ─── Ambient (atmospheric reference) ───
+    AMBIENT_PRES,
+    AMBIENT_TEMP,
+    AMBIENT_HUMIDITY,
+
+    // ─── Turbo 1 ───
+    TURBO1_COMP_INLET_PRES,
+    TURBO1_COMP_INLET_TEMP,
+    TURBO1_COMP_OUTLET_PRES,
+    TURBO1_COMP_OUTLET_TEMP,
+    TURBO1_TURB_INLET_TEMP,   // EGT - turbine inlet
+
+    // ─── Charge Air Cooler 1 ───
+    CAC1_INLET_PRES,
+    CAC1_INLET_TEMP,
+    CAC1_OUTLET_PRES,
+    CAC1_OUTLET_TEMP,
+
+    // ─── Intake Manifold 1 ───
+    MANIFOLD1_ABS_PRES,
+    MANIFOLD1_TEMP,
+
+    // ─── Engine fluids ───
+    OIL_PRES,
+    OIL_TEMP,
+    COOLANT_PRES,
+    COOLANT_TEMP,
+    FUEL_PRES,
+    FUEL_TEMP,
+
+    // ─── Engine bay ───
+    ENGINE_BAY_TEMP,
+
+    // Sentinel for array sizing
+    VALUE_ID_COUNT
+}

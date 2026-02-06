@@ -1,0 +1,82 @@
+// J1939 Configuration Tables
+// SPN and PGN definitions for data-driven encoding
+
+#include "types/EValueId.cnx"
+#include "types/TSpnConfig.cnx"
+#include "types/TPgnConfig.cnx"
+
+// SPN encoding configurations
+// Each entry maps a J1939 SPN to a physical value with encoding parameters
+const TSpnConfig SPN_CONFIGS[] <- [
+    // ─── PGN 65269 - Ambient Conditions ───
+    // SPN 108 - Barometric Pressure (0.5 kPa/bit)
+    { spn: 108, pgn: 65269, bytePos: 1, dataLength: 1, resolution: 0.5, offset: 0.0, source: EValueId.AMBIENT_PRES },
+    // SPN 171 - Ambient Air Temperature (0.03125°C/bit, +273 offset)
+    { spn: 171, pgn: 65269, bytePos: 4, dataLength: 2, resolution: 0.03125, offset: 273.0, source: EValueId.AMBIENT_TEMP },
+    // SPN 172 - Air Inlet Temperature (1°C/bit, +40 offset)
+    { spn: 172, pgn: 65269, bytePos: 6, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.CAC1_OUTLET_TEMP },
+
+    // ─── PGN 65270 - Inlet/Exhaust Conditions 1 ───
+    // SPN 102 - Boost Pressure (2 kPa/bit) - legacy, uses manifold pressure
+    { spn: 102, pgn: 65270, bytePos: 2, dataLength: 1, resolution: 2.0, offset: 0.0, source: EValueId.MANIFOLD1_ABS_PRES },
+    // SPN 105 - Intake Manifold Temperature (1°C/bit, +40 offset)
+    { spn: 105, pgn: 65270, bytePos: 3, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.MANIFOLD1_TEMP },
+    // SPN 106 - Air Inlet Pressure (2 kPa/bit)
+    { spn: 106, pgn: 65270, bytePos: 4, dataLength: 1, resolution: 2.0, offset: 0.0, source: EValueId.TURBO1_COMP_INLET_PRES },
+    // SPN 173 - Exhaust Gas Temperature (0.03125°C/bit, +273 offset)
+    { spn: 173, pgn: 65270, bytePos: 6, dataLength: 2, resolution: 0.03125, offset: 273.0, source: EValueId.TURBO1_TURB_INLET_TEMP },
+
+    // ─── PGN 65262 - Engine Temperature 1 ───
+    // SPN 110 - Coolant Temperature (1°C/bit, +40 offset)
+    { spn: 110, pgn: 65262, bytePos: 1, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.COOLANT_TEMP },
+    // SPN 174 - Fuel Temperature (1°C/bit, +40 offset)
+    { spn: 174, pgn: 65262, bytePos: 2, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.FUEL_TEMP },
+    // SPN 175 - Oil Temperature (1°C/bit, +40 offset)
+    { spn: 175, pgn: 65262, bytePos: 3, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.OIL_TEMP },
+
+    // ─── PGN 65263 - Engine Fluid Level/Pressure 1 ───
+    // SPN 94 - Fuel Delivery Pressure (4 kPa/bit)
+    { spn: 94, pgn: 65263, bytePos: 1, dataLength: 1, resolution: 4.0, offset: 0.0, source: EValueId.FUEL_PRES },
+    // SPN 100 - Oil Pressure (4 kPa/bit)
+    { spn: 100, pgn: 65263, bytePos: 4, dataLength: 1, resolution: 4.0, offset: 0.0, source: EValueId.OIL_PRES },
+    // SPN 109 - Coolant Pressure (2 kPa/bit)
+    { spn: 109, pgn: 65263, bytePos: 7, dataLength: 1, resolution: 2.0, offset: 0.0, source: EValueId.COOLANT_PRES },
+
+    // ─── PGN 65164 - Engine Temperature 3 ───
+    // SPN 441 - Engine Bay Temperature (1°C/bit, +40 offset)
+    { spn: 441, pgn: 65164, bytePos: 1, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.ENGINE_BAY_TEMP },
+    // SPN 354 - Relative Humidity (0.4%/bit)
+    { spn: 354, pgn: 65164, bytePos: 7, dataLength: 1, resolution: 0.4, offset: 0.0, source: EValueId.AMBIENT_HUMIDITY },
+
+    // ─── PGN 65190 - Turbocharger Information 5 ───
+    // SPN 1127 - Turbo 1 Compressor Outlet Pressure (0.125 kPa/bit)
+    { spn: 1127, pgn: 65190, bytePos: 1, dataLength: 2, resolution: 0.125, offset: 0.0, source: EValueId.TURBO1_COMP_OUTLET_PRES },
+
+    // ─── PGN 65129 - Engine Temperature 2 ───
+    // SPN 1363 - Intake Manifold 1 Temperature High Resolution (0.03125°C/bit, +273)
+    { spn: 1363, pgn: 65129, bytePos: 1, dataLength: 2, resolution: 0.03125, offset: 273.0, source: EValueId.MANIFOLD1_TEMP },
+    // SPN 1637 - Coolant Temperature High Resolution (0.03125°C/bit, +273)
+    { spn: 1637, pgn: 65129, bytePos: 3, dataLength: 2, resolution: 0.03125, offset: 273.0, source: EValueId.COOLANT_TEMP },
+
+    // ─── PGN 65189 - Turbocharger Information 4 ───
+    // SPN 1131 - Turbo 1 Compressor Inlet Temperature (1°C/bit, +40)
+    { spn: 1131, pgn: 65189, bytePos: 1, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.TURBO1_COMP_INLET_TEMP },
+    // SPN 1132 - Turbo 1 Compressor Outlet Temperature (1°C/bit, +40)
+    { spn: 1132, pgn: 65189, bytePos: 2, dataLength: 1, resolution: 1.0, offset: 40.0, source: EValueId.TURBO1_COMP_OUTLET_TEMP }
+];
+
+const u8 SPN_CONFIG_COUNT <- 20;
+
+// PGN transmission configurations
+const TPgnConfig PGN_CONFIGS[] <- [
+    { pgn: 65129, intervalMs: 1000, dataLength: 8, priority: 6 },  // Engine Temperature 2
+    { pgn: 65164, intervalMs: 1000, dataLength: 8, priority: 6 },  // Engine Temperature 3
+    { pgn: 65189, intervalMs: 500, dataLength: 8, priority: 6 },   // Turbocharger Info 4
+    { pgn: 65190, intervalMs: 500, dataLength: 8, priority: 6 },   // Turbocharger Info 5
+    { pgn: 65262, intervalMs: 1000, dataLength: 8, priority: 6 },  // Engine Temperature 1
+    { pgn: 65263, intervalMs: 500, dataLength: 8, priority: 6 },   // Engine Fluid Level/Pressure 1
+    { pgn: 65269, intervalMs: 1000, dataLength: 8, priority: 6 },  // Ambient Conditions
+    { pgn: 65270, intervalMs: 500, dataLength: 8, priority: 6 }    // Inlet/Exhaust Conditions 1
+];
+
+const u8 PGN_CONFIG_COUNT <- 8;

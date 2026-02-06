@@ -11,6 +11,7 @@
 #include "../Data/BME280Manager.cnx"
 #include "SensorProcessor.cnx"
 #include "CommandHandler.cnx"
+#include <Data/SensorValues.cnx>
 #include <Display/J1939Bus.cnx>
 #include "SerialCommandHandler.cnx"
 
@@ -46,6 +47,29 @@ scope Ossm {
 
         // Process all sensor readings and update AppData
         global.SensorProcessor.processAllInputs(this.appData);
+    }
+
+    // Copy current sensor readings to centralized storage
+    void updateSensorValues() {
+        global.SensorValues.set(global.EValueId.AMBIENT_PRES, this.appData.absoluteBarometricpressurekPa);
+        global.SensorValues.set(global.EValueId.AMBIENT_TEMP, this.appData.ambientTemperatureC);
+        global.SensorValues.set(global.EValueId.AMBIENT_HUMIDITY, this.appData.humidity);
+        global.SensorValues.set(global.EValueId.OIL_PRES, this.appData.oilPressurekPa);
+        global.SensorValues.set(global.EValueId.OIL_TEMP, this.appData.oilTemperatureC);
+        global.SensorValues.set(global.EValueId.COOLANT_PRES, this.appData.coolantPressurekPa);
+        global.SensorValues.set(global.EValueId.COOLANT_TEMP, this.appData.coolantTemperatureC);
+        global.SensorValues.set(global.EValueId.FUEL_PRES, this.appData.fuelPressurekPa);
+        global.SensorValues.set(global.EValueId.FUEL_TEMP, this.appData.fuelTemperatureC);
+        global.SensorValues.set(global.EValueId.ENGINE_BAY_TEMP, this.appData.engineBayTemperatureC);
+        global.SensorValues.set(global.EValueId.TURBO1_TURB_INLET_TEMP, this.appData.egtTemperatureC);
+        global.SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_PRES, this.appData.boostPressurekPa);
+        global.SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_TEMP, this.appData.boostTemperatureC);
+        global.SensorValues.set(global.EValueId.CAC1_INLET_PRES, this.appData.cacInletPressurekPa);
+        global.SensorValues.set(global.EValueId.CAC1_INLET_TEMP, this.appData.cacInletTemperatureC);
+        global.SensorValues.set(global.EValueId.CAC1_OUTLET_TEMP, this.appData.airInletTemperatureC);
+        global.SensorValues.set(global.EValueId.TURBO1_COMP_INLET_PRES, this.appData.airInletPressurekPa);
+        global.SensorValues.set(global.EValueId.MANIFOLD1_ABS_PRES, this.appData.boostPressurekPa);
+        global.SensorValues.set(global.EValueId.MANIFOLD1_TEMP, this.appData.boostTemperatureC);
     }
 
     // Send J1939 messages - defined before loop
@@ -106,6 +130,7 @@ scope Ossm {
     }
 
     public void setup() {
+        global.SensorValues.initialize();
         global.Serial.begin(115200);
         // Wait for USB serial connection (up to 3 seconds)
         u32 startTime <- global.millis();
@@ -155,6 +180,9 @@ scope Ossm {
 
         // Process serial commands
         global.SerialCommandHandler.update(this.appConfig, this.appData);
+
+        // Update centralized sensor values before J1939 transmission
+        this.updateSensorValues();
 
         // Send J1939 messages on their own timing
         this.sendJ1939Messages();

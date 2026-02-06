@@ -16,6 +16,7 @@
 #include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
 #include "CommandHandler.h"
+#include <Data/SensorValues.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 

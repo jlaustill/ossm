@@ -1,0 +1,14 @@
+// SPN encoding configuration
+// Maps J1939 SPNs to physical values with encoding parameters
+
+#include "EValueId.cnx"
+
+struct TSpnConfig {
+    u16 spn;              // SPN number (e.g., 4817)
+    u16 pgn;              // Which PGN this SPN belongs to
+    u8 bytePos;           // Start byte in PGN (1-indexed per J1939 docs)
+    u8 dataLength;        // Data length: 1 or 2 bytes
+    f32 resolution;       // kPa/bit, °C/bit, etc.
+    f32 offset;           // Added before scaling (e.g., +40 for temp)
+    EValueId source;      // Which value to encode
+}

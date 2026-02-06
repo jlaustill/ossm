@@ -1,0 +1,35 @@
+// Centralized sensor value storage
+// All values stored in standard units (kPa, °C, %)
+
+#include "types/EValueId.cnx"
+
+scope SensorValues {
+    // Runtime value storage
+    f32 values[global.EValueId.VALUE_ID_COUNT];
+
+    // Track which values have hardware assigned
+    bool hasHardware[global.EValueId.VALUE_ID_COUNT];
+
+    public void initialize() {
+        for (u8 i <- 0; i < global.EValueId.VALUE_ID_COUNT; i <- i + 1) {
+            this.values[i] <- 0.0;
+            this.hasHardware[i] <- false;
+        }
+    }
+
+    public f32 get(EValueId id) {
+        return this.values[id];
+    }
+
+    public void set(EValueId id, f32 value) {
+        this.values[id] <- value;
+    }
+
+    public void setHasHardware(EValueId id, bool has) {
+        this.hasHardware[id] <- has;
+    }
+
+    public bool getHasHardware(EValueId id) {
+        return this.hasHardware[id];
+    }
+}
