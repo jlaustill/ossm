@@ -17,6 +17,7 @@
 #include "SensorProcessor.h"
 #include "CommandHandler.h"
 #include <Data/SensorValues.h>
+#include <Data/J1939Config.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 

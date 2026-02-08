@@ -28,7 +28,10 @@ scope J1939Bus {
 
     // Helper to build CAN ID from J1939 parameters
     u32 buildCanId(u16 pgn, u8 priority, u8 sourceAddr) {
-        u32 id <- ((u32)priority << 26) | ((u32)pgn << 8) | (u32)sourceAddr;
+        u32 id <- 0;
+        id[26,3] <- priority;
+        id[8,18] <- pgn;
+        id[0,8] <- sourceAddr;
         return id;
     }
 

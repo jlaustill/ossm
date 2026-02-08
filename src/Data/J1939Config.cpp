@@ -3,6 +3,8 @@
  * A safer C for embedded systems
  */
 
+#include "J1939Config.h"
+
 // J1939 Configuration Tables
 // SPN and PGN definitions for data-driven encoding
 #include "types/EValueId.h"
@@ -21,3 +23,16 @@ extern const uint8_t SPN_CONFIG_COUNT = 20;
 extern const TPgnConfig PGN_CONFIGS[8] = {(TPgnConfig){ .pgn = 65129, .intervalMs = 1000, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65164, .intervalMs = 1000, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65189, .intervalMs = 500, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65190, .intervalMs = 500, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65262, .intervalMs = 1000, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65263, .intervalMs = 500, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65269, .intervalMs = 1000, .dataLength = 8, .priority = 6 }, (TPgnConfig){ .pgn = 65270, .intervalMs = 500, .dataLength = 8, .priority = 6 }};
 
 extern const uint8_t PGN_CONFIG_COUNT = 8;
+
+// Lookup helpers for SPN config tables
+/* Scope: J1939Config */
+
+EValueId J1939Config_findSourceForSpn(uint16_t spn) {
+    for (uint8_t i = 0; i < SPN_CONFIG_COUNT; i = i + 1) {
+        TSpnConfig cfg = SPN_CONFIGS[i];
+        if (cfg.spn == spn) {
+            return cfg.source;
+        }
+    }
+    return EValueId_VALUE_ID_COUNT;
+}

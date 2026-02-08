@@ -12,6 +12,7 @@
 #include "SensorProcessor.cnx"
 #include "CommandHandler.cnx"
 #include <Data/SensorValues.cnx>
+#include <Data/J1939Config.cnx>
 #include <Display/J1939Bus.cnx>
 #include "SerialCommandHandler.cnx"
 
@@ -20,9 +21,10 @@ scope Ossm {
     AppData appData;
     AppConfig appConfig;
     IntervalTimer sensorTimer;
-    volatile bool sensorUpdateReady <- false;
+    atomic bool sensorUpdateReady <- false;
     elapsedMillis halfSecondMillis;
     elapsedMillis oneSecondMillis;
+    
 
     // Timer interval in microseconds
     const u32 SENSOR_TIMER_INTERVAL_US <- 50000;  // 50ms
@@ -31,160 +33,200 @@ scope Ossm {
     public void sensorTimerCallback() {
         // This runs in interrupt context - keep it minimal
         // Just set a flag to process in main loop
-        this.sensorUpdateReady <- true;
+        sensorUpdateReady <- true;
     }
 
     // Process sensor updates - defined before loop
     public void processSensorUpdates() {
         // Poll ADS1115 devices (non-blocking, advances state machine)
-        global.ADS1115Manager.update();
+        ADS1115Manager.update();
 
         // Poll MAX31856 thermocouple (non-blocking)
-        global.MAX31856Manager.update();
+        MAX31856Manager.update();
 
         // Poll BME280 ambient sensor (reads every 1 second)
-        global.BME280Manager.update();
+        BME280Manager.update();
 
         // Process all sensor readings and update AppData
-        global.SensorProcessor.processAllInputs(this.appData);
+        SensorProcessor.processAllInputs(appData);
+    }
+
+    // Mark which EValueIds have hardware based on AppConfig
+    void populateHardwareFlags() {
+        // Temperature inputs
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
+            u16 spn <- appConfig.tempInputs[i].assignedSpn;
+            if (spn != 0) {
+                global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
+                if (source != global.EValueId.VALUE_ID_COUNT) {
+                    SensorValues.setHasHardware(source, true);
+                }
+            }
+        }
+
+        // Pressure inputs
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
+            u16 spn <- appConfig.pressureInputs[i].assignedSpn;
+            if (spn != 0) {
+                global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
+                if (source != global.EValueId.VALUE_ID_COUNT) {
+                    SensorValues.setHasHardware(source, true);
+                }
+            }
+        }
+
+        // EGT (thermocouple)
+        if (appConfig.egtEnabled) {
+            SensorValues.setHasHardware(global.EValueId.TURBO1_TURB_INLET_TEMP, true);
+        }
+
+        // BME280 (ambient sensors)
+        if (appConfig.bme280Enabled) {
+            SensorValues.setHasHardware(global.EValueId.AMBIENT_PRES, true);
+            SensorValues.setHasHardware(global.EValueId.AMBIENT_TEMP, true);
+            SensorValues.setHasHardware(global.EValueId.AMBIENT_HUMIDITY, true);
+        }
     }
 
     // Copy current sensor readings to centralized storage
     void updateSensorValues() {
-        global.SensorValues.set(global.EValueId.AMBIENT_PRES, this.appData.absoluteBarometricpressurekPa);
-        global.SensorValues.set(global.EValueId.AMBIENT_TEMP, this.appData.ambientTemperatureC);
-        global.SensorValues.set(global.EValueId.AMBIENT_HUMIDITY, this.appData.humidity);
-        global.SensorValues.set(global.EValueId.OIL_PRES, this.appData.oilPressurekPa);
-        global.SensorValues.set(global.EValueId.OIL_TEMP, this.appData.oilTemperatureC);
-        global.SensorValues.set(global.EValueId.COOLANT_PRES, this.appData.coolantPressurekPa);
-        global.SensorValues.set(global.EValueId.COOLANT_TEMP, this.appData.coolantTemperatureC);
-        global.SensorValues.set(global.EValueId.FUEL_PRES, this.appData.fuelPressurekPa);
-        global.SensorValues.set(global.EValueId.FUEL_TEMP, this.appData.fuelTemperatureC);
-        global.SensorValues.set(global.EValueId.ENGINE_BAY_TEMP, this.appData.engineBayTemperatureC);
-        global.SensorValues.set(global.EValueId.TURBO1_TURB_INLET_TEMP, this.appData.egtTemperatureC);
-        global.SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_PRES, this.appData.boostPressurekPa);
-        global.SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_TEMP, this.appData.boostTemperatureC);
-        global.SensorValues.set(global.EValueId.CAC1_INLET_PRES, this.appData.cacInletPressurekPa);
-        global.SensorValues.set(global.EValueId.CAC1_INLET_TEMP, this.appData.cacInletTemperatureC);
-        global.SensorValues.set(global.EValueId.CAC1_OUTLET_TEMP, this.appData.airInletTemperatureC);
-        global.SensorValues.set(global.EValueId.TURBO1_COMP_INLET_PRES, this.appData.airInletPressurekPa);
-        global.SensorValues.set(global.EValueId.MANIFOLD1_ABS_PRES, this.appData.boostPressurekPa);
-        global.SensorValues.set(global.EValueId.MANIFOLD1_TEMP, this.appData.boostTemperatureC);
+        SensorValues.set(global.EValueId.AMBIENT_PRES, appData.absoluteBarometricpressurekPa);
+        SensorValues.set(global.EValueId.AMBIENT_TEMP, appData.ambientTemperatureC);
+        SensorValues.set(global.EValueId.AMBIENT_HUMIDITY, appData.humidity);
+        SensorValues.set(global.EValueId.OIL_PRES, appData.oilPressurekPa);
+        SensorValues.set(global.EValueId.OIL_TEMP, appData.oilTemperatureC);
+        SensorValues.set(global.EValueId.COOLANT_PRES, appData.coolantPressurekPa);
+        SensorValues.set(global.EValueId.COOLANT_TEMP, appData.coolantTemperatureC);
+        SensorValues.set(global.EValueId.FUEL_PRES, appData.fuelPressurekPa);
+        SensorValues.set(global.EValueId.FUEL_TEMP, appData.fuelTemperatureC);
+        SensorValues.set(global.EValueId.ENGINE_BAY_TEMP, appData.engineBayTemperatureC);
+        SensorValues.set(global.EValueId.TURBO1_TURB_INLET_TEMP, appData.egtTemperatureC);
+        SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_PRES, appData.boostPressurekPa);
+        SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_TEMP, appData.boostTemperatureC);
+        SensorValues.set(global.EValueId.CAC1_INLET_PRES, appData.cacInletPressurekPa);
+        SensorValues.set(global.EValueId.CAC1_INLET_TEMP, appData.cacInletTemperatureC);
+        SensorValues.set(global.EValueId.CAC1_OUTLET_TEMP, appData.airInletTemperatureC);
+        SensorValues.set(global.EValueId.TURBO1_COMP_INLET_PRES, appData.airInletPressurekPa);
+        SensorValues.set(global.EValueId.MANIFOLD1_ABS_PRES, appData.boostPressurekPa);
+        SensorValues.set(global.EValueId.MANIFOLD1_TEMP, appData.boostTemperatureC);
     }
 
     // Send J1939 messages - defined before loop
     public void sendJ1939Messages() {
         // Every 500ms - send fast-updating data
-        if (this.halfSecondMillis >= 500) {
+        if (halfSecondMillis >= 500) {
             // PGN 65270 - Inlet/Exhaust Conditions 1
-            global.J1939Bus.sendPgn65270(
-                this.appData.airInletPressurekPa,
-                this.appData.airInletTemperatureC,
-                this.appData.egtTemperatureC,
-                this.appData.boostPressurekPa);
+            J1939Bus.sendPgn65270(
+                appData.airInletPressurekPa,
+                appData.airInletTemperatureC,
+                appData.egtTemperatureC,
+                appData.boostPressurekPa);
 
             // PGN 65263 - Engine Fluid Level/Pressure 1
-            global.J1939Bus.sendPgn65263(
-                this.appData.fuelPressurekPa,
-                this.appData.oilPressurekPa,
-                this.appData.coolantPressurekPa);
+            J1939Bus.sendPgn65263(
+                appData.fuelPressurekPa,
+                appData.oilPressurekPa,
+                appData.coolantPressurekPa);
 
             // PGN 65190 - Turbocharger Information 2
-            global.J1939Bus.sendPgn65190(
-                this.appData.boostPressurekPa,
-                this.appData.cacInletPressurekPa);
+            J1939Bus.sendPgn65190(
+                appData.boostPressurekPa,
+                appData.cacInletPressurekPa);
 
-            this.halfSecondMillis <- 0;
+            halfSecondMillis <- 0;
         }
 
         // Every 1000ms - send slower-updating data
-        if (this.oneSecondMillis >= 1000) {
+        if (oneSecondMillis >= 1000) {
             // PGN 65269 - Ambient Conditions
-            global.J1939Bus.sendPgn65269(
-                this.appData.ambientTemperatureC,
-                this.appData.airInletTemperatureC,
-                this.appData.absoluteBarometricpressurekPa);
+            J1939Bus.sendPgn65269(
+                appData.ambientTemperatureC,
+                appData.airInletTemperatureC,
+                appData.absoluteBarometricpressurekPa);
 
             // PGN 65262 - Engine Temperature 1
-            global.J1939Bus.sendPgn65262(
-                this.appData.coolantTemperatureC,
-                this.appData.fuelTemperatureC,
-                this.appData.oilTemperatureC);
+            J1939Bus.sendPgn65262(
+                appData.coolantTemperatureC,
+                appData.fuelTemperatureC,
+                appData.oilTemperatureC);
 
             // PGN 65129 - Engine Temperature 2
-            global.J1939Bus.sendPgn65129(
-                this.appData.boostTemperatureC,
-                this.appData.coolantTemperatureC);
+            J1939Bus.sendPgn65129(
+                appData.boostTemperatureC,
+                appData.coolantTemperatureC);
 
             // PGN 65189 - Turbocharger Information 1
-            global.J1939Bus.sendPgn65189(
-                this.appData.cacInletTemperatureC,
-                this.appData.transferPipeTemperatureC,
-                this.appData.engineBayTemperatureC);
+            J1939Bus.sendPgn65189(
+                appData.cacInletTemperatureC,
+                appData.transferPipeTemperatureC,
+                appData.engineBayTemperatureC);
 
             // PGN 65164 - Electronic Engine Controller 6
-            global.J1939Bus.sendPgn65164();
+            J1939Bus.sendPgn65164();
 
-            this.oneSecondMillis <- 0;
+            oneSecondMillis <- 0;
         }
     }
 
     public void setup() {
-        global.SensorValues.initialize();
-        global.Serial.begin(115200);
+        SensorValues.initialize();
+        Serial.begin(115200);
         // Wait for USB serial connection (up to 3 seconds)
-        u32 startTime <- global.millis();
-        u32 elapsed <- global.millis() - startTime;
-        while (!global.Serial && elapsed < 3000) {
-            elapsed <- global.millis() - startTime;
+        u32 startTime <- millis();
+        u32 elapsed <- millis() - startTime;
+        while (!Serial && elapsed < 3000) {
+            elapsed <- millis() - startTime;
         }
 
-        global.Serial.println("OSSM Initializing...");
+        Serial.println("OSSM Initializing...");
 
         // Load configuration from EEPROM (or use defaults)
-        bool configLoaded <- global.ConfigStorage.loadConfig(this.appConfig);
+        bool configLoaded <- ConfigStorage.loadConfig(appConfig);
         if (!configLoaded) {
-            global.Serial.println("Loading default configuration");
-            global.ConfigStorage.loadDefaults(this.appConfig);
+            Serial.println("Loading default configuration");
+            ConfigStorage.loadDefaults(appConfig);
             // Save defaults to EEPROM for next boot
-            global.ConfigStorage.saveConfig(this.appConfig);
+            ConfigStorage.saveConfig(appConfig);
         } else {
-            global.Serial.println("Configuration loaded from EEPROM");
+            Serial.println("Configuration loaded from EEPROM");
         }
 
+        // Populate hardware flags from loaded config
+        populateHardwareFlags();
+
         // Initialize managers with configuration
-        global.ADS1115Manager.initialize(this.appConfig);
-        global.MAX31856Manager.initialize(this.appConfig);
-        global.BME280Manager.initialize(this.appConfig);
-        global.SensorProcessor.initialize(this.appConfig);
+        ADS1115Manager.initialize(appConfig);
+        MAX31856Manager.initialize(appConfig);
+        BME280Manager.initialize(appConfig);
+        SensorProcessor.initialize(appConfig);
         // CommandHandler no longer needs initialization - config passed to each function
 
         // Initialize J1939 bus
-        global.J1939Bus.initialize(this.appData, this.appConfig);
+        J1939Bus.initialize(appData, appConfig);
 
         // Initialize serial command handler
-        global.SerialCommandHandler.initialize();
+        SerialCommandHandler.initialize();
 
         // Start sensor polling timer (50ms interval)
-        this.sensorTimer.begin(this.sensorTimerCallback, this.SENSOR_TIMER_INTERVAL_US);
+        sensorTimer.begin(sensorTimerCallback, SENSOR_TIMER_INTERVAL_US);
 
-        global.Serial.println("OSSM Ready");
+        Serial.println("OSSM Ready");
     }
 
     public void loop() {
         // Process sensor updates when timer fires
-        if (this.sensorUpdateReady) {
-            this.processSensorUpdates();
-            this.sensorUpdateReady <- false;
+        if (sensorUpdateReady) {
+            processSensorUpdates();
+            sensorUpdateReady <- false;
         }
 
         // Process serial commands
-        global.SerialCommandHandler.update(this.appConfig, this.appData);
+        SerialCommandHandler.update(appConfig, appData);
 
         // Update centralized sensor values before J1939 transmission
-        this.updateSensorValues();
+        updateSensorValues();
 
         // Send J1939 messages on their own timing
-        this.sendJ1939Messages();
+        sendJ1939Messages();
     }
 }

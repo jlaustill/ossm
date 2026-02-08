@@ -29,7 +29,10 @@ static AppData J1939Bus_appData = {0};
 static AppConfig J1939Bus_config = {0};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
-    uint32_t id = (static_cast<uint32_t>(priority) << 26) | (static_cast<uint32_t>(pgn) << 8) | static_cast<uint32_t>(sourceAddr);
+    uint32_t id = 0;
+    id = (id & ~(((1U << 3) - 1) << 26)) | ((priority & ((1U << 3) - 1)) << 26);
+    id = (id & ~(((1U << 18) - 1) << 8)) | ((pgn & ((1U << 18) - 1)) << 8);
+    id = (id & ~(0xFFU << 0)) | ((sourceAddr & 0xFFU) << 0);
     return id;
 }
 

@@ -80,3 +80,18 @@ const TPgnConfig PGN_CONFIGS[] <- [
 ];
 
 const u8 PGN_CONFIG_COUNT <- 8;
+
+// Lookup helpers for SPN config tables
+scope J1939Config {
+    // Look up the EValueId source for a given SPN number.
+    // Returns VALUE_ID_COUNT if the SPN is not found in the config table.
+    public EValueId findSourceForSpn(u16 spn) {
+        for (u8 i <- 0; i < SPN_CONFIG_COUNT; i <- i + 1) {
+            TSpnConfig cfg <- SPN_CONFIGS[i];
+            if (cfg.spn = spn) {
+                return cfg.source;
+            }
+        }
+        return global.EValueId.VALUE_ID_COUNT;
+    }
+}

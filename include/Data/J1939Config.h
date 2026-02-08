@@ -26,6 +26,9 @@ extern const uint8_t SPN_CONFIG_COUNT;
 extern const TPgnConfig PGN_CONFIGS[8];
 extern const uint8_t PGN_CONFIG_COUNT;
 
+/* Function prototypes */
+EValueId J1939Config_findSourceForSpn(uint16_t spn);
+
 #ifdef __cplusplus
 }
 #endif
