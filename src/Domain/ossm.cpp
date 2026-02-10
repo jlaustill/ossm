@@ -16,6 +16,8 @@
 #include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
 #include "CommandHandler.h"
+#include <Data/SensorValues.h>
+#include <Data/J1939Config.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 
@@ -41,6 +43,57 @@ void Ossm_processSensorUpdates(void) {
     SensorProcessor_processAllInputs(Ossm_appData);
 }
 
+static void Ossm_populateHardwareFlags(void) {
+    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
+        uint16_t spn = Ossm_appConfig.tempInputs[i].assignedSpn;
+        if (spn != 0) {
+            EValueId source = J1939Config_findSourceForSpn(spn);
+            if (source != EValueId_VALUE_ID_COUNT) {
+                SensorValues_setHasHardware(source, true);
+            }
+        }
+    }
+    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
+        uint16_t spn = Ossm_appConfig.pressureInputs[i].assignedSpn;
+        if (spn != 0) {
+            EValueId source = J1939Config_findSourceForSpn(spn);
+            if (source != EValueId_VALUE_ID_COUNT) {
+                SensorValues_setHasHardware(source, true);
+            }
+        }
+    }
+    if (Ossm_appConfig.egtEnabled) {
+        SensorValues_setHasHardware(EValueId_TURBO1_TURB_INLET_TEMP, true);
+    }
+    if (Ossm_appConfig.bme280Enabled) {
+        SensorValues_setHasHardware(EValueId_AMBIENT_PRES, true);
+        SensorValues_setHasHardware(EValueId_AMBIENT_TEMP, true);
+        SensorValues_setHasHardware(EValueId_AMBIENT_HUMIDITY, true);
+    }
+}
+
+static void Ossm_updateSensorValues(void) {
+    SensorValues_set(EValueId_AMBIENT_PRES, Ossm_appData.absoluteBarometricpressurekPa);
+    SensorValues_set(EValueId_AMBIENT_TEMP, Ossm_appData.ambientTemperatureC);
+    SensorValues_set(EValueId_AMBIENT_HUMIDITY, Ossm_appData.humidity);
+    SensorValues_set(EValueId_OIL_PRES, Ossm_appData.oilPressurekPa);
+    SensorValues_set(EValueId_OIL_TEMP, Ossm_appData.oilTemperatureC);
+    SensorValues_set(EValueId_COOLANT_PRES, Ossm_appData.coolantPressurekPa);
+    SensorValues_set(EValueId_COOLANT_TEMP, Ossm_appData.coolantTemperatureC);
+    SensorValues_set(EValueId_FUEL_PRES, Ossm_appData.fuelPressurekPa);
+    SensorValues_set(EValueId_FUEL_TEMP, Ossm_appData.fuelTemperatureC);
+    SensorValues_set(EValueId_ENGINE_BAY_TEMP, Ossm_appData.engineBayTemperatureC);
+    SensorValues_set(EValueId_TURBO1_TURB_INLET_TEMP, Ossm_appData.egtTemperatureC);
+    SensorValues_set(EValueId_TURBO1_COMP_OUTLET_PRES, Ossm_appData.boostPressurekPa);
+    SensorValues_set(EValueId_TURBO1_COMP_OUTLET_TEMP, Ossm_appData.boostTemperatureC);
+    SensorValues_set(EValueId_CAC1_INLET_PRES, Ossm_appData.cacInletPressurekPa);
+    SensorValues_set(EValueId_CAC1_INLET_TEMP, Ossm_appData.cacInletTemperatureC);
+    SensorValues_set(EValueId_CAC1_OUTLET_TEMP, Ossm_appData.airInletTemperatureC);
+    SensorValues_set(EValueId_TURBO1_COMP_INLET_PRES, Ossm_appData.airInletPressurekPa);
+    SensorValues_set(EValueId_MANIFOLD1_ABS_PRES, Ossm_appData.boostPressurekPa);
+    SensorValues_set(EValueId_MANIFOLD1_TEMP, Ossm_appData.boostTemperatureC);
+}
+
 void Ossm_sendJ1939Messages(void) {
     if (Ossm_halfSecondMillis >= 500) {
         J1939Bus_sendPgn65270(Ossm_appData.airInletPressurekPa, Ossm_appData.airInletTemperatureC, Ossm_appData.egtTemperatureC, Ossm_appData.boostPressurekPa);
@@ -59,6 +112,7 @@ void Ossm_sendJ1939Messages(void) {
 }
 
 void Ossm_setup(void) {
+    SensorValues_initialize();
     Serial.begin(115200);
     uint32_t startTime = millis();
     uint32_t elapsed = millis() - startTime;
@@ -74,6 +128,7 @@ void Ossm_setup(void) {
     } else {
         Serial.println("Configuration loaded from EEPROM");
     }
+    Ossm_populateHardwareFlags();
     ADS1115Manager_initialize(Ossm_appConfig);
     MAX31856Manager_initialize(Ossm_appConfig);
     BME280Manager_initialize(Ossm_appConfig);
@@ -90,5 +145,6 @@ void Ossm_loop(void) {
         Ossm_sensorUpdateReady = false;
     }
     SerialCommandHandler_update(Ossm_appConfig, Ossm_appData);
+    Ossm_updateSensorValues();
     Ossm_sendJ1939Messages();
 }

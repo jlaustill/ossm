@@ -18,6 +18,8 @@
 #include <Display/InputValid.h>
 #include <Display/AppData.h>
 #include <Domain/TCommandResult.h>
+#include <Data/J1939Config.h>
+#include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -92,6 +94,10 @@ uint8_t CommandHandler_enableSpn(AppConfig& cfg, uint16_t spn, uint8_t input) {
             break;
         }
     }
+    EValueId source = J1939Config_findSourceForSpn(spn);
+    if (source != EValueId_VALUE_ID_COUNT) {
+        SensorValues_setHasHardware(source, true);
+    }
     return TCommandResult_ok();
 }
 
@@ -129,6 +135,10 @@ uint8_t CommandHandler_disableSpn(AppConfig& cfg, uint16_t spn) {
             return TCommandResult_error(static_cast<uint8_t>(ECommandError_UNKNOWN_SPN));
             break;
         }
+    }
+    EValueId source = J1939Config_findSourceForSpn(spn);
+    if (source != EValueId_VALUE_ID_COUNT) {
+        SensorValues_setHasHardware(source, false);
     }
     return TCommandResult_ok();
 }

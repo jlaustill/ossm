@@ -12,6 +12,8 @@
 #include <Display/InputValid.cnx>
 #include <Display/AppData.cnx>
 #include <Domain/TCommandResult.cnx>
+#include <Data/J1939Config.cnx>
+#include <Data/SensorValues.cnx>
 
 // Error codes for command responses
 enum ECommandError {
@@ -91,6 +93,12 @@ scope CommandHandler {
             }
         }
 
+        // Mark the physical location as having hardware
+        global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
+        if (source != global.EValueId.VALUE_ID_COUNT) {
+            global.SensorValues.setHasHardware(source, true);
+        }
+
         return global.TCommandResult.ok();
     }
 
@@ -126,6 +134,12 @@ scope CommandHandler {
             default {
                 return global.TCommandResult.error((u8)global.ECommandError.UNKNOWN_SPN);
             }
+        }
+
+        // Clear the hardware flag for this physical location
+        global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
+        if (source != global.EValueId.VALUE_ID_COUNT) {
+            global.SensorValues.setHasHardware(source, false);
         }
 
         return global.TCommandResult.ok();

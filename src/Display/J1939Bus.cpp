@@ -17,6 +17,8 @@
 #include "J1939Decode.h"
 #include "SpnCheck.h"
 #include "FloatBytes.h"
+#include <Data/J1939Config.h>
+#include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,7 +29,10 @@ static AppData J1939Bus_appData = {0};
 static AppConfig J1939Bus_config = {0};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
-    uint32_t id = (static_cast<uint32_t>(priority) << 26) | (static_cast<uint32_t>(pgn) << 8) | static_cast<uint32_t>(sourceAddr);
+    uint32_t id = 0;
+    id = (id & ~(((1U << 3) - 1) << 26)) | ((priority & ((1U << 3) - 1)) << 26);
+    id = (id & ~(((1U << 18) - 1) << 8)) | ((pgn & ((1U << 18) - 1)) << 8);
+    id = (id & ~(0xFFU << 0)) | ((sourceAddr & 0xFFU) << 0);
     return id;
 }
 
@@ -35,6 +40,10 @@ static void J1939Bus_fillBuffer(uint8_t buf[8]) {
     for (uint8_t i = 0; i < 8; i += 1) {
         buf[i] = 0xFF;
     }
+}
+
+static bool J1939Bus_isValueEnabled(EValueId valueId) {
+    return SensorValues_getHasHardware(valueId);
 }
 
 static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
@@ -46,6 +55,29 @@ static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
         msg.buf[i] = buf[i];
     }
     J1939Bus_canBus.write(msg);
+}
+
+void J1939Bus_sendPgnGeneric(uint16_t pgn) {
+    uint8_t buf[8] = {0};
+    J1939Bus_fillBuffer(buf);
+    for (uint8_t i = 0; i < SPN_CONFIG_COUNT; i = i + 1) {
+        TSpnConfig cfg = SPN_CONFIGS[i];
+        if (cfg.pgn != pgn) {
+            continue;
+        }
+        bool hasHw = J1939Bus_isValueEnabled(cfg.source);
+        if (!hasHw) {
+            continue;
+        }
+        float value = SensorValues_get(cfg.source);
+        uint16_t encoded = J1939Encode_encode(value, cfg.resolution, cfg.offset);
+        uint8_t pos = cfg.bytePos - 1;
+        buf[pos] = static_cast<uint8_t>((encoded & 0xFF));
+        if (cfg.dataLength == 2) {
+            buf[pos + 1] = static_cast<uint8_t>(((encoded >> 8) & 0xFF));
+        }
+    }
+    J1939Bus_sendMessage(pgn, buf);
 }
 
 void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t data[8], uint8_t dataLen) {
@@ -399,4 +431,8 @@ void J1939Bus_sendPgn65270(float airInletPres, float airInletTemp, float egtTemp
         buf[6] = ((encoded >> 8) & 0xFFU);
     }
     J1939Bus_sendMessage(65270, buf);
+}
+
+void J1939Bus_sendPgn65269Generic(void) {
+    J1939Bus_sendPgnGeneric(65269);
 }

@@ -18,6 +18,8 @@
 #include <Display/InputValid.h>
 #include <Display/AppData.h>
 #include <Domain/TCommandResult.h>
+#include <Data/J1939Config.h>
+#include <Data/SensorValues.h>
 
 #ifdef __cplusplus
 extern "C" {
