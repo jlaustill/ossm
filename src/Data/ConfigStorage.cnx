@@ -42,7 +42,7 @@ scope ConfigStorage {
         // All temperature inputs disabled by default
         // Pre-load with AEM NTC coefficients so they're ready when enabled
         for (u32 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-            config.tempInputs[i].assignedSpn <- 0;
+            config.tempInputs[i].assignedValue <- global.EValueId.VALUE_UNASSIGNED;
             config.tempInputs[i].coeffA <- AEM_TEMP_COEFF_A;
             config.tempInputs[i].coeffB <- AEM_TEMP_COEFF_B;
             config.tempInputs[i].coeffC <- AEM_TEMP_COEFF_C;
@@ -52,15 +52,15 @@ scope ConfigStorage {
         // All pressure inputs disabled by default
         // Pre-load with 100 PSIG range (gauge pressure)
         for (u32 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-            config.pressureInputs[i].assignedSpn <- 0;
+            config.pressureInputs[i].assignedValue <- global.EValueId.VALUE_UNASSIGNED;
             config.pressureInputs[i].maxPressure <- 100;
-            config.pressureInputs[i].pressureType <- PRESSURE_TYPE_PSIG;
+            config.pressureInputs[i].pressureType <- global.EPressureType.PRESSURE_TYPE_PSIG;
             config.pressureInputs[i].reserved <- 0;
         }
 
         // EGT disabled by default
         config.egtEnabled <- false;
-        config.thermocoupleType <- TC_TYPE_K;
+        config.thermocoupleType <- global.EThermocoupleType.TC_TYPE_K;
 
         // BME280 disabled by default
         config.bme280Enabled <- false;

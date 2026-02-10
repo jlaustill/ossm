@@ -2,7 +2,6 @@
 // Handles sensor polling, J1939 messaging, and command processing
 
 #include <Arduino.h>
-#include <Display/AppData.cnx>
 #include <AppConfig.cnx>
 
 #include "../Data/ConfigStorage.cnx"
@@ -12,14 +11,11 @@
 #include "SensorProcessor.cnx"
 #include "CommandHandler.cnx"
 #include <Data/SensorValues.cnx>
-#include <Data/J1939Config.cnx>
 #include <Display/J1939Bus.cnx>
 #include "SerialCommandHandler.cnx"
 
 scope Ossm {
     // Static member variables
-    AppData appData;
-    AppConfig appConfig;
     IntervalTimer sensorTimer;
     atomic bool sensorUpdateReady <- false;
     elapsedMillis halfSecondMillis;
@@ -47,122 +43,59 @@ scope Ossm {
         // Poll BME280 ambient sensor (reads every 1 second)
         BME280Manager.update();
 
-        // Process all sensor readings and update AppData
-        SensorProcessor.processAllInputs(appData);
+        // Process all sensor readings into SensorValues
+        SensorProcessor.processAllInputs();
     }
 
     // Mark which EValueIds have hardware based on AppConfig
     void populateHardwareFlags() {
         // Temperature inputs
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-            u16 spn <- appConfig.tempInputs[i].assignedSpn;
-            if (spn != 0) {
-                global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
-                if (source != global.EValueId.VALUE_ID_COUNT) {
-                    SensorValues.setHasHardware(source, true);
-                }
+            EValueId val <- global.appConfig.tempInputs[i].assignedValue;
+            if (val != global.EValueId.VALUE_UNASSIGNED) {
+                SensorValues.setHasHardware(val, true);
             }
         }
 
         // Pressure inputs
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-            u16 spn <- appConfig.pressureInputs[i].assignedSpn;
-            if (spn != 0) {
-                global.EValueId source <- global.J1939Config.findSourceForSpn(spn);
-                if (source != global.EValueId.VALUE_ID_COUNT) {
-                    SensorValues.setHasHardware(source, true);
-                }
+            EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
+            if (val != global.EValueId.VALUE_UNASSIGNED) {
+                SensorValues.setHasHardware(val, true);
             }
         }
 
         // EGT (thermocouple)
-        if (appConfig.egtEnabled) {
+        if (global.appConfig.egtEnabled) {
             SensorValues.setHasHardware(global.EValueId.TURBO1_TURB_INLET_TEMP, true);
         }
 
         // BME280 (ambient sensors)
-        if (appConfig.bme280Enabled) {
+        if (global.appConfig.bme280Enabled) {
             SensorValues.setHasHardware(global.EValueId.AMBIENT_PRES, true);
             SensorValues.setHasHardware(global.EValueId.AMBIENT_TEMP, true);
             SensorValues.setHasHardware(global.EValueId.AMBIENT_HUMIDITY, true);
         }
     }
 
-    // Copy current sensor readings to centralized storage
-    void updateSensorValues() {
-        SensorValues.set(global.EValueId.AMBIENT_PRES, appData.absoluteBarometricpressurekPa);
-        SensorValues.set(global.EValueId.AMBIENT_TEMP, appData.ambientTemperatureC);
-        SensorValues.set(global.EValueId.AMBIENT_HUMIDITY, appData.humidity);
-        SensorValues.set(global.EValueId.OIL_PRES, appData.oilPressurekPa);
-        SensorValues.set(global.EValueId.OIL_TEMP, appData.oilTemperatureC);
-        SensorValues.set(global.EValueId.COOLANT_PRES, appData.coolantPressurekPa);
-        SensorValues.set(global.EValueId.COOLANT_TEMP, appData.coolantTemperatureC);
-        SensorValues.set(global.EValueId.FUEL_PRES, appData.fuelPressurekPa);
-        SensorValues.set(global.EValueId.FUEL_TEMP, appData.fuelTemperatureC);
-        SensorValues.set(global.EValueId.ENGINE_BAY_TEMP, appData.engineBayTemperatureC);
-        SensorValues.set(global.EValueId.TURBO1_TURB_INLET_TEMP, appData.egtTemperatureC);
-        SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_PRES, appData.boostPressurekPa);
-        SensorValues.set(global.EValueId.TURBO1_COMP_OUTLET_TEMP, appData.boostTemperatureC);
-        SensorValues.set(global.EValueId.CAC1_INLET_PRES, appData.cacInletPressurekPa);
-        SensorValues.set(global.EValueId.CAC1_INLET_TEMP, appData.cacInletTemperatureC);
-        SensorValues.set(global.EValueId.CAC1_OUTLET_TEMP, appData.airInletTemperatureC);
-        SensorValues.set(global.EValueId.TURBO1_COMP_INLET_PRES, appData.airInletPressurekPa);
-        SensorValues.set(global.EValueId.MANIFOLD1_ABS_PRES, appData.boostPressurekPa);
-        SensorValues.set(global.EValueId.MANIFOLD1_TEMP, appData.boostTemperatureC);
-    }
-
     // Send J1939 messages - defined before loop
     public void sendJ1939Messages() {
         // Every 500ms - send fast-updating data
         if (halfSecondMillis >= 500) {
-            // PGN 65270 - Inlet/Exhaust Conditions 1
-            J1939Bus.sendPgn65270(
-                appData.airInletPressurekPa,
-                appData.airInletTemperatureC,
-                appData.egtTemperatureC,
-                appData.boostPressurekPa);
-
-            // PGN 65263 - Engine Fluid Level/Pressure 1
-            J1939Bus.sendPgn65263(
-                appData.fuelPressurekPa,
-                appData.oilPressurekPa,
-                appData.coolantPressurekPa);
-
-            // PGN 65190 - Turbocharger Information 2
-            J1939Bus.sendPgn65190(
-                appData.boostPressurekPa,
-                appData.cacInletPressurekPa);
+            J1939Bus.sendPgnGeneric(65270);  // Inlet/Exhaust Conditions 1
+            J1939Bus.sendPgnGeneric(65263);  // Engine Fluid Level/Pressure 1
+            J1939Bus.sendPgnGeneric(65190);  // Turbocharger Information 5
 
             halfSecondMillis <- 0;
         }
 
         // Every 1000ms - send slower-updating data
         if (oneSecondMillis >= 1000) {
-            // PGN 65269 - Ambient Conditions
-            J1939Bus.sendPgn65269(
-                appData.ambientTemperatureC,
-                appData.airInletTemperatureC,
-                appData.absoluteBarometricpressurekPa);
-
-            // PGN 65262 - Engine Temperature 1
-            J1939Bus.sendPgn65262(
-                appData.coolantTemperatureC,
-                appData.fuelTemperatureC,
-                appData.oilTemperatureC);
-
-            // PGN 65129 - Engine Temperature 2
-            J1939Bus.sendPgn65129(
-                appData.boostTemperatureC,
-                appData.coolantTemperatureC);
-
-            // PGN 65189 - Turbocharger Information 1
-            J1939Bus.sendPgn65189(
-                appData.cacInletTemperatureC,
-                appData.transferPipeTemperatureC,
-                appData.engineBayTemperatureC);
-
-            // PGN 65164 - Electronic Engine Controller 6
-            J1939Bus.sendPgn65164();
+            J1939Bus.sendPgnGeneric(65269);  // Ambient Conditions
+            J1939Bus.sendPgnGeneric(65262);  // Engine Temperature 1
+            J1939Bus.sendPgnGeneric(65129);  // Engine Temperature 2
+            J1939Bus.sendPgnGeneric(65189);  // Turbocharger Information 4
+            J1939Bus.sendPgnGeneric(65164);  // Engine Temperature 3
 
             oneSecondMillis <- 0;
         }
@@ -181,12 +114,12 @@ scope Ossm {
         Serial.println("OSSM Initializing...");
 
         // Load configuration from EEPROM (or use defaults)
-        bool configLoaded <- ConfigStorage.loadConfig(appConfig);
+        bool configLoaded <- ConfigStorage.loadConfig(global.appConfig);
         if (!configLoaded) {
             Serial.println("Loading default configuration");
-            ConfigStorage.loadDefaults(appConfig);
+            ConfigStorage.loadDefaults(global.appConfig);
             // Save defaults to EEPROM for next boot
-            ConfigStorage.saveConfig(appConfig);
+            ConfigStorage.saveConfig(global.appConfig);
         } else {
             Serial.println("Configuration loaded from EEPROM");
         }
@@ -195,14 +128,13 @@ scope Ossm {
         populateHardwareFlags();
 
         // Initialize managers with configuration
-        ADS1115Manager.initialize(appConfig);
-        MAX31856Manager.initialize(appConfig);
-        BME280Manager.initialize(appConfig);
-        SensorProcessor.initialize(appConfig);
-        // CommandHandler no longer needs initialization - config passed to each function
+        ADS1115Manager.initialize(global.appConfig);
+        MAX31856Manager.initialize(global.appConfig);
+        BME280Manager.initialize(global.appConfig);
+        SensorProcessor.initialize();
 
         // Initialize J1939 bus
-        J1939Bus.initialize(appData, appConfig);
+        J1939Bus.initialize();
 
         // Initialize serial command handler
         SerialCommandHandler.initialize();
@@ -221,10 +153,7 @@ scope Ossm {
         }
 
         // Process serial commands
-        SerialCommandHandler.update(appConfig, appData);
-
-        // Update centralized sensor values before J1939 transmission
-        updateSensorValues();
+        SerialCommandHandler.update();
 
         // Send J1939 messages on their own timing
         sendJ1939Messages();

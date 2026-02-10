@@ -7,31 +7,21 @@
 
 /**
  * Serial Command Handler
- * Processes serial commands for sensor configuration
+ * Thin transport: parse serial text -> u8[8] -> CommandHandler.process()
  */
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <Parse.hpp>
 #include <AppConfig.h>
-#include <Display/AppData.h>
-#include <Data/ConfigStorage.h>
-#include <Data/MAX31856Manager.h>
-#include <Data/BME280Manager.h>
 #include <Domain/CommandHandler.h>
-#include <Domain/TCommandResult.h>
-#include <Display/SpnCategory.h>
-#include <Display/SpnInfo.h>
 #include <Display/FaultDecode.h>
-#include <Display/J1939Bus.h>
-#include <Display/J1939Encode.h>
 #include <Data/ADS1115Manager.h>
+#include <Data/MAX31856Manager.h>
+#include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-// SPN labels indexed by SpnInfo_getIndex()
-extern const char SPN_LABELS[20][33] = {"Oil Temp(SPN 175)", "Coolant Temp(SPN 110)", "Fuel Temp(SPN 174)", "Boost Temp(SPN 105)", "CAC Inlet Temp(SPN 1131)", "Xfer Pipe Temp(SPN 1132)", "Air Inlet Temp 4(SPN 1133)", "Air Inlet Temp(SPN 172)", "Eng Bay Temp(SPN 441)", "Oil Pres(SPN 100)", "Coolant Pres(SPN 109)", "Fuel Pres(SPN 94)", "Boost Pres(SPN 102)", "Air Inlet Pres(SPN 106)", "CAC Inlet Pres(SPN 1127)", "Xfer Pipe Pres(SPN 1128)", "EGT(SPN 173)", "Ambient Temp(SPN 171)", "Baro Pres(SPN 108)", "Humidity(SPN 354)"};
 
 // Module state for command buffer
 char cmdBuffer[129] = "";
@@ -42,105 +32,239 @@ SeaDash::Parse::ParseResult parsed = (SeaDash::Parse::ParseResult){ .data = {0},
 
 /* Scope: SerialCommandHandler */
 
-static void SerialCommandHandler_printSpnLabel(uint16_t spn) {
-    uint8_t idx = SpnInfo_getIndex(spn);
-    if (idx == SpnInfo_IDX_UNKNOWN) {
-        Serial.print("Unknown");
-        return;
-    }
-    Serial.print(SPN_LABELS[idx]);
-}
-
-static void SerialCommandHandler_printTempValueForSpn(uint16_t spn, const AppData& appData) {
-    float value = -273.15;
-    switch (spn) {
-        case 175: {
-            value = appData.oilTemperatureC;
+static void SerialCommandHandler_printResult(ECommandResult result) {
+    switch (result) {
+        case ECommandResult_CMD_SUCCESS: {
+            Serial.println("OK");
             break;
         }
-        case 110: {
-            value = appData.coolantTemperatureC;
+        case ECommandResult_CMD_UNKNOWN_COMMAND: {
+            Serial.println("ERR,Unknown command");
             break;
         }
-        case 1637: {
-            value = appData.coolantTemperatureC;
+        case ECommandResult_CMD_UNKNOWN_VALUE: {
+            Serial.println("ERR,Unknown value");
             break;
         }
-        case 174: {
-            value = appData.fuelTemperatureC;
+        case ECommandResult_CMD_MISSING_VALUE: {
+            Serial.println("ERR,Missing value");
             break;
         }
-        case 105: {
-            value = appData.boostTemperatureC;
+        case ECommandResult_CMD_MISSING_SENSOR_NUMBER: {
+            Serial.println("ERR,Missing sensor number");
             break;
         }
-        case 1363: {
-            value = appData.boostTemperatureC;
+        case ECommandResult_CMD_INVALID_SENSOR_NUMBER: {
+            Serial.println("ERR,Invalid sensor number");
             break;
         }
-        case 1131: {
-            value = appData.cacInletTemperatureC;
+        case ECommandResult_CMD_INVALID_TC_TYPE: {
+            Serial.println("ERR,Invalid TC type (0-7)");
             break;
         }
-        case 1132: {
-            value = appData.transferPipeTemperatureC;
+        case ECommandResult_CMD_INVALID_PRESET: {
+            Serial.println("ERR,Invalid preset");
             break;
         }
-        case 1133: {
-            value = appData.airInletTemperatureC;
+        case ECommandResult_CMD_INVALID_NTC_PARAM: {
+            Serial.println("ERR,Invalid NTC param (0-3)");
             break;
         }
-        case 172: {
-            value = appData.airInletTemperatureC;
+        case ECommandResult_CMD_SAVE_FAILED: {
+            Serial.println("ERR,Save failed");
             break;
         }
-        case 441: {
-            value = appData.engineBayTemperatureC;
+        default: {
+            Serial.println("ERR,Unknown error");
             break;
         }
-    }
-    if (value < -200.0) {
-        Serial.println("ERROR");
-    } else {
-        Serial.print(value, 1);
-        Serial.println(" C");
     }
 }
 
-static void SerialCommandHandler_printPressureValueForSpn(uint16_t spn, const AppData& appData) {
-    float value = 0.0;
-    switch (spn) {
-        case 100: {
-            value = appData.oilPressurekPa;
+static void SerialCommandHandler_printEnabledValues(void) {
+    Serial.println("=== Enabled Values ===");
+    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
+        EValueId val = appConfig.tempInputs[i].assignedValue;
+        if (val != EValueId_VALUE_UNASSIGNED) {
+            Serial.print("temp");
+            Serial.print(i + 1);
+            Serial.print(": valueId ");
+            Serial.println(static_cast<uint8_t>(val));
+        }
+    }
+    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
+        EValueId val = appConfig.pressureInputs[i].assignedValue;
+        if (val != EValueId_VALUE_UNASSIGNED) {
+            Serial.print("pres");
+            Serial.print(i + 1);
+            Serial.print(": valueId ");
+            Serial.println(static_cast<uint8_t>(val));
+        }
+    }
+    if (appConfig.egtEnabled) {
+        Serial.println("EGT: enabled");
+    }
+    if (appConfig.bme280Enabled) {
+        Serial.println("BME280: enabled");
+    }
+}
+
+static void SerialCommandHandler_handleQuery(void) {
+    uint8_t queryType = 0;
+    if (parsed.count > 1) {
+        queryType = parsed.data[1];
+    }
+    switch (queryType) {
+        case 0: {
+            SerialCommandHandler_printEnabledValues();
             break;
         }
-        case 109: {
-            value = appData.coolantPressurekPa;
+        case 4: {
+            Serial.println("=== Full Configuration ===");
+            Serial.print("J1939 Address: ");
+            Serial.println(appConfig.j1939SourceAddress);
+            Serial.print("EGT Enabled: ");
+            if (appConfig.egtEnabled) {
+                Serial.println("Yes");
+            } else {
+                Serial.println("No");
+            }
+            Serial.print("TC Type: ");
+            Serial.println(appConfig.thermocoupleType);
+            Serial.print("BME280 Enabled: ");
+            if (appConfig.bme280Enabled) {
+                Serial.println("Yes");
+            } else {
+                Serial.println("No");
+            }
+            SerialCommandHandler_printEnabledValues();
             break;
         }
-        case 94: {
-            value = appData.fuelPressurekPa;
-            break;
-        }
-        case 102: {
-            value = appData.boostPressurekPa;
-            break;
-        }
-        case 106: {
-            value = appData.airInletPressurekPa;
-            break;
-        }
-        case 1127: {
-            value = appData.cacInletPressurekPa;
-            break;
-        }
-        case 1128: {
-            value = appData.transferPipePressurekPa;
+        default: {
+            Serial.println("ERR,Query type 0 or 4");
             break;
         }
     }
-    Serial.print(value, 2);
-    Serial.println(" kPa");
+}
+
+static void SerialCommandHandler_handleReadSensors(void) {
+    uint8_t sensorType = 0;
+    if (parsed.count > 1) {
+        sensorType = parsed.data[1];
+    }
+    switch (sensorType) {
+        case 0: {
+            Serial.println("=== Live Sensor Values ===");
+            if (appConfig.egtEnabled) {
+                Serial.print("EGT: ");
+                uint8_t faultStatus = MAX31856Manager_getFaultStatus();
+                if (faultStatus == 0) {
+                    Serial.print(SensorValues_get(EValueId_TURBO1_TURB_INLET_TEMP), 1);
+                    Serial.println(" C");
+                } else {
+                    Serial.println("FAULT");
+                }
+            }
+            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
+                EValueId val = appConfig.tempInputs[i].assignedValue;
+                if (val != EValueId_VALUE_UNASSIGNED) {
+                    Serial.print("temp");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    Serial.print(SensorValues_get(val), 1);
+                    Serial.println(" C");
+                }
+            }
+            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
+                EValueId val = appConfig.pressureInputs[i].assignedValue;
+                if (val != EValueId_VALUE_UNASSIGNED) {
+                    Serial.print("pres");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    Serial.print(SensorValues_get(val), 2);
+                    Serial.println(" kPa");
+                }
+            }
+            if (appConfig.bme280Enabled) {
+                Serial.print("Ambient Temp: ");
+                Serial.print(SensorValues_get(EValueId_AMBIENT_TEMP), 1);
+                Serial.println(" C");
+                Serial.print("Humidity: ");
+                Serial.print(SensorValues_get(EValueId_AMBIENT_HUMIDITY), 1);
+                Serial.println(" %");
+                Serial.print("Baro: ");
+                Serial.print(SensorValues_get(EValueId_AMBIENT_PRES), 2);
+                Serial.println(" kPa");
+            }
+            break;
+        }
+        case 1: {
+            if (!appConfig.egtEnabled) {
+                Serial.println("ERR,EGT not enabled");
+                return;
+            }
+            Serial.print("EGT: ");
+            uint8_t faultStatus = MAX31856Manager_getFaultStatus();
+            if (faultStatus == 0) {
+                Serial.print(SensorValues_get(EValueId_TURBO1_TURB_INLET_TEMP), 1);
+                Serial.println(" C");
+            } else {
+                Serial.print("FAULT (0x");
+                Serial.print(faultStatus, HEX);
+                Serial.println(")");
+            }
+            break;
+        }
+        case 2: {
+            Serial.println("=== Temperature Sensors ===");
+            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
+                EValueId val = appConfig.tempInputs[i].assignedValue;
+                if (val != EValueId_VALUE_UNASSIGNED) {
+                    Serial.print("temp");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    Serial.print(SensorValues_get(val), 1);
+                    Serial.println(" C");
+                }
+            }
+            break;
+        }
+        case 3: {
+            Serial.println("=== Pressure Sensors ===");
+            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
+                EValueId val = appConfig.pressureInputs[i].assignedValue;
+                if (val != EValueId_VALUE_UNASSIGNED) {
+                    Serial.print("pres");
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    Serial.print(SensorValues_get(val), 2);
+                    Serial.println(" kPa");
+                }
+            }
+            break;
+        }
+        case 4: {
+            if (!appConfig.bme280Enabled) {
+                Serial.println("ERR,BME280 not enabled");
+                return;
+            }
+            Serial.println("=== BME280 Ambient ===");
+            Serial.print("Ambient Temp: ");
+            Serial.print(SensorValues_get(EValueId_AMBIENT_TEMP), 1);
+            Serial.println(" C");
+            Serial.print("Humidity: ");
+            Serial.print(SensorValues_get(EValueId_AMBIENT_HUMIDITY), 1);
+            Serial.println(" %");
+            Serial.print("Baro: ");
+            Serial.print(SensorValues_get(EValueId_AMBIENT_PRES), 2);
+            Serial.println(" kPa");
+            break;
+        }
+        default: {
+            Serial.println("ERR,Sensor type 0-4");
+            break;
+        }
+    }
 }
 
 static void SerialCommandHandler_reportFaults(void) {
@@ -191,363 +315,6 @@ static void SerialCommandHandler_reportFaults(void) {
     }
 }
 
-static void SerialCommandHandler_handleEnableSpn(AppConfig& config) {
-    if (parsed.count < 4) {
-        Serial.println("ERR,2,Usage: 1,spnHi,spnLo,enable[,input]");
-        return;
-    }
-    uint16_t spnHi = parsed.data[1];
-    uint16_t spnLo = parsed.data[2];
-    uint16_t spn = (spnHi << 8) | spnLo;
-    bool enable = (parsed.data[3] != 0);
-    uint8_t input = 0;
-    if (parsed.count > 4) {
-        input = parsed.data[4];
-    }
-    uint8_t errorCode = 0;
-    if (enable) {
-        errorCode = CommandHandler_enableSpn(config, spn, input);
-    } else {
-        errorCode = CommandHandler_disableSpn(config, spn);
-    }
-    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
-        Serial.print("ERR,");
-        Serial.print(errorCode);
-        if (errorCode == static_cast<uint8_t>(ECommandError_UNKNOWN_SPN)) {
-            Serial.print(",Unknown SPN: ");
-            Serial.println(spn);
-        } else if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT)) {
-            Serial.println(",Input 1-8 required for temp SPN");
-        } else if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT)) {
-            Serial.println(",Input 1-7 required for pressure SPN");
-        } else {
-            Serial.println();
-        }
-        return;
-    }
-    ESpnCategory catValue = SpnCategory_getCategory(spn);
-    if (enable) {
-        if (catValue == ESpnCategory_SPN_CAT_TEMPERATURE) {
-            Serial.print("OK,SPN ");
-            Serial.print(spn);
-            Serial.print(" enabled on temp");
-            Serial.println(input);
-        } else if (catValue == ESpnCategory_SPN_CAT_PRESSURE) {
-            Serial.print("OK,SPN ");
-            Serial.print(spn);
-            Serial.print(" enabled on pres");
-            Serial.println(input);
-        } else if (catValue == ESpnCategory_SPN_CAT_EGT) {
-            Serial.println("OK,EGT enabled");
-        } else if (catValue == ESpnCategory_SPN_CAT_BME280) {
-            Serial.println("OK,BME280 enabled (SPNs 171, 108, 354)");
-        } else {
-            Serial.println("OK");
-        }
-    } else {
-        if (catValue == ESpnCategory_SPN_CAT_EGT) {
-            Serial.println("OK,EGT disabled");
-        } else if (catValue == ESpnCategory_SPN_CAT_BME280) {
-            Serial.println("OK,BME280 disabled");
-        } else {
-            Serial.print("OK,SPN ");
-            Serial.print(spn);
-            Serial.println(" disabled");
-        }
-    }
-}
-
-static void SerialCommandHandler_handleSetPressureRange(AppConfig& config) {
-    if (parsed.count < 4) {
-        Serial.println("ERR,2,Usage: 3,input,valueHi,valueLo (use preset cmd 9)");
-        return;
-    }
-    uint8_t input = parsed.data[1];
-    uint16_t valueHi = parsed.data[2];
-    uint16_t valueLo = parsed.data[3];
-    uint16_t maxPressure = (valueHi << 8) | valueLo;
-    uint8_t errorCode = CommandHandler_setPressureRange(config, input, maxPressure);
-    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
-        Serial.println("ERR,5,Input must be 1-7");
-        return;
-    }
-    Serial.print("OK,pres");
-    Serial.print(input);
-    Serial.print(" maxPressure=");
-    Serial.println(maxPressure);
-}
-
-static void SerialCommandHandler_handleSetTcType(AppConfig& config) {
-    if (parsed.count < 2) {
-        Serial.println("ERR,2,Usage: 4,type (0-7)");
-        return;
-    }
-    uint8_t tcType = parsed.data[1];
-    uint8_t errorCode = CommandHandler_setTcType(config, tcType);
-    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
-        Serial.println("ERR,7,Type must be 0-7");
-        return;
-    }
-    Serial.print("OK,Thermocouple type=");
-    Serial.println(tcType);
-}
-
-static void SerialCommandHandler_printEnabledSpns(const AppConfig& config) {
-    Serial.println("=== Enabled SPNs ===");
-    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-        if (config.tempInputs[i].assignedSpn != 0) {
-            Serial.print("temp");
-            Serial.print(i + 1);
-            Serial.print(": ");
-            SerialCommandHandler_printSpnLabel(config.tempInputs[i].assignedSpn);
-            Serial.println();
-        }
-    }
-    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-        if (config.pressureInputs[i].assignedSpn != 0) {
-            Serial.print("pres");
-            Serial.print(i + 1);
-            Serial.print(": ");
-            SerialCommandHandler_printSpnLabel(config.pressureInputs[i].assignedSpn);
-            Serial.println();
-        }
-    }
-    if (config.egtEnabled) {
-        SerialCommandHandler_printSpnLabel(173);
-        Serial.println();
-    }
-    if (config.bme280Enabled) {
-        SerialCommandHandler_printSpnLabel(171);
-        Serial.print(", ");
-        SerialCommandHandler_printSpnLabel(108);
-        Serial.print(", ");
-        SerialCommandHandler_printSpnLabel(354);
-        Serial.println();
-    }
-}
-
-static void SerialCommandHandler_handleQuery(const AppConfig& config) {
-    uint8_t queryType = 0;
-    if (parsed.count > 1) {
-        queryType = parsed.data[1];
-    }
-    switch (queryType) {
-        case 0: {
-            SerialCommandHandler_printEnabledSpns(config);
-            break;
-        }
-        case 4: {
-            Serial.println("=== Full Configuration ===");
-            Serial.print("J1939 Address: ");
-            Serial.println(config.j1939SourceAddress);
-            Serial.print("EGT Enabled: ");
-            if (config.egtEnabled) {
-                Serial.println("Yes");
-            } else {
-                Serial.println("No");
-            }
-            Serial.print("TC Type: ");
-            Serial.println(config.thermocoupleType);
-            Serial.print("BME280 Enabled: ");
-            if (config.bme280Enabled) {
-                Serial.println("Yes");
-            } else {
-                Serial.println("No");
-            }
-            SerialCommandHandler_printEnabledSpns(config);
-            break;
-        }
-        default: {
-            Serial.println("ERR,8,Query type 0 or 4");
-            break;
-        }
-    }
-}
-
-static void SerialCommandHandler_handleSave(const AppConfig& config) {
-    Serial.print("Saving configuration... ");
-    uint8_t errorCode = CommandHandler_save(config);
-    if (errorCode == static_cast<uint8_t>(ECommandError_OK)) {
-        Serial.println("OK");
-    } else {
-        Serial.println("ERR,9,Save failed");
-    }
-}
-
-static void SerialCommandHandler_handleReset(AppConfig& config) {
-    Serial.println("Resetting to defaults...");
-    CommandHandler_reset(config);
-    Serial.println("OK,Use '6' to save");
-}
-
-static void SerialCommandHandler_handleNtcPreset(AppConfig& config) {
-    if (parsed.count < 3) {
-        Serial.println("ERR,2,Usage: 8,input,preset (0=AEM,1=Bosch,2=GM)");
-        return;
-    }
-    uint8_t input = parsed.data[1];
-    uint8_t preset = parsed.data[2];
-    uint8_t errorCode = CommandHandler_applyNtcPreset(config, input, preset);
-    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
-        if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_TEMP_INPUT)) {
-            Serial.println("ERR,4,Input must be 1-8");
-        } else {
-            Serial.println("ERR,10,Preset must be 0-2");
-        }
-        return;
-    }
-    const char presetNames[3][9] = {"AEM", "Bosch", "GM"};
-    Serial.print("OK,temp");
-    Serial.print(input);
-    Serial.print(" set to ");
-    Serial.print(presetNames[preset]);
-    Serial.println(" preset");
-}
-
-static void SerialCommandHandler_handlePressurePreset(AppConfig& config) {
-    if (parsed.count < 3) {
-        Serial.println("ERR,2,Usage: 9,input,preset (0-15=bar, 20-30=PSIG)");
-        return;
-    }
-    uint8_t input = parsed.data[1];
-    uint8_t preset = parsed.data[2];
-    uint8_t errorCode = CommandHandler_applyPressurePreset(config, input, preset);
-    if (errorCode != static_cast<uint8_t>(ECommandError_OK)) {
-        if (errorCode == static_cast<uint8_t>(ECommandError_INVALID_PRESSURE_INPUT)) {
-            Serial.println("ERR,5,Input must be 1-7");
-        } else {
-            Serial.println("ERR,10,Preset must be 0-15 (bar) or 20-30 (PSIG)");
-        }
-        return;
-    }
-    Serial.print("OK,pres");
-    Serial.print(input);
-    Serial.print(" set to ");
-    if (preset <= 15) {
-        const char barNames[16][9] = {"1", "1.5", "2", "2.5", "3", "4", "5", "7", "10", "50", "100", "150", "200", "1000", "2000", "3000"};
-        Serial.print(barNames[preset]);
-        Serial.println(" bar (PSIA)");
-    } else if (preset >= 20 && preset <= 30) {
-        const uint16_t psiValues[11] = {15, 30, 50, 100, 150, 200, 250, 300, 350, 400, 500};
-        Serial.print(psiValues[preset - 20]);
-        Serial.println(" PSIG");
-    }
-}
-
-static void SerialCommandHandler_handleReadSensors(const AppConfig& config, const AppData& appData) {
-    uint8_t sensorType = 0;
-    if (parsed.count > 1) {
-        sensorType = parsed.data[1];
-    }
-    switch (sensorType) {
-        case 0: {
-            Serial.println("=== Live Sensor Values ===");
-            if (config.egtEnabled) {
-                Serial.print("EGT: ");
-                uint8_t faultStatus = MAX31856Manager_getFaultStatus();
-                if (faultStatus == 0) {
-                    Serial.print(appData.egtTemperatureC, 1);
-                    Serial.println(" C");
-                } else {
-                    Serial.println("FAULT");
-                }
-            }
-            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-                if (config.tempInputs[i].assignedSpn != 0) {
-                    SerialCommandHandler_printSpnLabel(config.tempInputs[i].assignedSpn);
-                    Serial.print(": ");
-                    SerialCommandHandler_printTempValueForSpn(config.tempInputs[i].assignedSpn, appData);
-                }
-            }
-            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-                if (config.pressureInputs[i].assignedSpn != 0) {
-                    SerialCommandHandler_printSpnLabel(config.pressureInputs[i].assignedSpn);
-                    Serial.print(": ");
-                    SerialCommandHandler_printPressureValueForSpn(config.pressureInputs[i].assignedSpn, appData);
-                }
-            }
-            if (config.bme280Enabled) {
-                SerialCommandHandler_printSpnLabel(171);
-                Serial.print(": ");
-                Serial.print(appData.ambientTemperatureC, 1);
-                Serial.println(" C");
-                SerialCommandHandler_printSpnLabel(354);
-                Serial.print(": ");
-                Serial.print(appData.humidity, 1);
-                Serial.println(" %");
-                SerialCommandHandler_printSpnLabel(108);
-                Serial.print(": ");
-                Serial.print(appData.absoluteBarometricpressurekPa, 2);
-                Serial.println(" kPa");
-            }
-            break;
-        }
-        case 1: {
-            if (!config.egtEnabled) {
-                Serial.println("ERR,11,EGT not enabled");
-                return;
-            }
-            Serial.print("EGT: ");
-            uint8_t faultStatus = MAX31856Manager_getFaultStatus();
-            if (faultStatus == 0) {
-                Serial.print(appData.egtTemperatureC, 1);
-                Serial.println(" C");
-            } else {
-                Serial.print("FAULT (0x");
-                Serial.print(faultStatus, HEX);
-                Serial.println(")");
-            }
-            break;
-        }
-        case 2: {
-            Serial.println("=== Temperature Sensors ===");
-            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-                if (config.tempInputs[i].assignedSpn != 0) {
-                    SerialCommandHandler_printSpnLabel(config.tempInputs[i].assignedSpn);
-                    Serial.print(": ");
-                    SerialCommandHandler_printTempValueForSpn(config.tempInputs[i].assignedSpn, appData);
-                }
-            }
-            break;
-        }
-        case 3: {
-            Serial.println("=== Pressure Sensors ===");
-            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-                if (config.pressureInputs[i].assignedSpn != 0) {
-                    SerialCommandHandler_printSpnLabel(config.pressureInputs[i].assignedSpn);
-                    Serial.print(": ");
-                    SerialCommandHandler_printPressureValueForSpn(config.pressureInputs[i].assignedSpn, appData);
-                }
-            }
-            break;
-        }
-        case 4: {
-            if (!config.bme280Enabled) {
-                Serial.println("ERR,12,BME280 not enabled");
-                return;
-            }
-            Serial.println("=== BME280 Ambient ===");
-            SerialCommandHandler_printSpnLabel(171);
-            Serial.print(": ");
-            Serial.print(appData.ambientTemperatureC, 1);
-            Serial.println(" C");
-            SerialCommandHandler_printSpnLabel(354);
-            Serial.print(": ");
-            Serial.print(appData.humidity, 1);
-            Serial.println(" %");
-            SerialCommandHandler_printSpnLabel(108);
-            Serial.print(": ");
-            Serial.print(appData.absoluteBarometricpressurekPa, 2);
-            Serial.println(" kPa");
-            break;
-        }
-        default: {
-            Serial.println("ERR,11,Sensor type 0-4");
-            break;
-        }
-    }
-}
-
 static void SerialCommandHandler_handleDumpEeprom(void) {
     uint32_t configSize = sizeof(AppConfig);
     Serial.println("=== EEPROM Dump ===");
@@ -573,85 +340,67 @@ static void SerialCommandHandler_handleDumpEeprom(void) {
     Serial.println("END");
 }
 
-static void SerialCommandHandler_processCommand(AppConfig& config, const AppData& appData) {
+static void SerialCommandHandler_processCommand(void) {
     uint32_t len = strlen(cmdBuffer);
     if (len == 0) {
         return;
     }
     parsed = SeaDash::Parse::parse(cmdBuffer, ',');
     if (!parsed.success || parsed.count < 1) {
-        Serial.println("ERR,1,Parse failed");
+        Serial.println("ERR,Parse failed");
         return;
     }
     uint8_t cmdNum = parsed.data[0];
     switch (cmdNum) {
-        case 1: {
-            SerialCommandHandler_handleEnableSpn(config);
-            break;
-        }
-        case 3: {
-            SerialCommandHandler_handleSetPressureRange(config);
-            break;
-        }
-        case 4: {
-            SerialCommandHandler_handleSetTcType(config);
-            break;
-        }
         case 5: {
-            SerialCommandHandler_handleQuery(config);
-            break;
-        }
-        case 6: {
-            SerialCommandHandler_handleSave(config);
-            break;
-        }
-        case 7: {
-            SerialCommandHandler_handleReset(config);
-            break;
-        }
-        case 8: {
-            SerialCommandHandler_handleNtcPreset(config);
-            break;
-        }
-        case 9: {
-            SerialCommandHandler_handlePressurePreset(config);
+            SerialCommandHandler_handleQuery();
+            SerialCommandHandler_reportFaults();
+            return;
             break;
         }
         case 10: {
-            SerialCommandHandler_handleReadSensors(config, appData);
+            SerialCommandHandler_handleReadSensors();
+            SerialCommandHandler_reportFaults();
+            return;
             break;
         }
         case 11: {
             SerialCommandHandler_handleDumpEeprom();
+            return;
             break;
         }
         case 12: {
             ADS1115Manager_printDebugInfo();
-            break;
-        }
-        default: {
-            Serial.println("ERR,1,Unknown command");
+            return;
             break;
         }
     }
+    uint8_t data[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    for (uint8_t i = 0; i < 8; i += 1) {
+        if (i < parsed.count) {
+            data[i] = static_cast<uint8_t>(parsed.data[i]);
+        }
+    }
+    ECommandResult result = CommandHandler_process(data);
+    SerialCommandHandler_printResult(result);
     SerialCommandHandler_reportFaults();
 }
 
 void SerialCommandHandler_initialize(void) {
     cmdIndex = 0;
     strncpy(cmdBuffer, "", 128); cmdBuffer[128] = '\0';
-    Serial.println("OSSM Command Interface Ready (byte format)");
-    Serial.println("Commands: 1,spnHi,spnLo,en,input | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
+    Serial.println("OSSM Command Interface Ready");
+    Serial.println("Commands: 1,valueId[,input] | 2,valueId | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
 }
 
-void SerialCommandHandler_update(AppConfig& config, const AppData& appData) {
+void SerialCommandHandler_update(void) {
     int32_t available = Serial.available();
     while (available > 0) {
         int32_t readResult = Serial.read();
         char c = ((readResult) & 0xFFU);
         if (c == '\n' || c == '\r') {
             if (cmdIndex > 0) {
-                SerialCommandHandler_processCommand(config, appData);
+                SerialCommandHandler_processCommand();
                 cmdIndex = 0;
                 strncpy(cmdBuffer, "", 128); cmdBuffer[128] = '\0';
             }

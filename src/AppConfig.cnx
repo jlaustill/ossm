@@ -1,8 +1,9 @@
 // AppConfig.cnx - Main configuration types and constants for OSSM
+#include <Data/types/EValueId.cnx>
 
 // Configuration magic number and version
 const u32 CONFIG_MAGIC <- 0x4F53534D;  // "OSSM" in ASCII
-const u8 CONFIG_VERSION <- 3;           // Bumped for pressure type support
+const u8 CONFIG_VERSION <- 4;           // EValueId-based config (was SPN-based)
 
 // Number of user-facing inputs
 const u8 TEMP_INPUT_COUNT <- 8;
@@ -83,19 +84,19 @@ enum ESpnCategory {
 
 // Temperature input configuration (temp1-temp8)
 struct TTempInputConfig {
-    u16 assignedSpn;      // Which SPN this input feeds (0 = disabled)
-    f32 coeffA;           // Steinhart-Hart A coefficient
-    f32 coeffB;           // Steinhart-Hart B coefficient
-    f32 coeffC;           // Steinhart-Hart C coefficient
-    f32 resistorValue;    // Reference resistor in voltage divider (ohms)
+    EValueId assignedValue;  // Which value this input feeds (VALUE_UNASSIGNED = disabled)
+    f32 coeffA;              // Steinhart-Hart A coefficient
+    f32 coeffB;              // Steinhart-Hart B coefficient
+    f32 coeffC;              // Steinhart-Hart C coefficient
+    f32 resistorValue;       // Reference resistor in voltage divider (ohms)
 }
 
 // Pressure input configuration (pres1-pres7)
 struct TPressureInputConfig {
-    u16 assignedSpn;         // Which SPN this input feeds (0 = disabled)
-    u16 maxPressure;         // Max value: bar for PSIA, PSI for PSIG
+    EValueId assignedValue;      // Which value this input feeds (VALUE_UNASSIGNED = disabled)
+    u16 maxPressure;             // Max value: bar for PSIA, PSI for PSIG
     EPressureType pressureType;  // PSIA (bar) or PSIG (PSI)
-    u8 reserved;             // Padding for alignment
+    u8 reserved;                 // Padding for alignment
 }
 
 // Fixed hardware mapping: tempX -> ADS device/channel
@@ -118,26 +119,29 @@ struct AppConfig {
     u32 magic;               // CONFIG_MAGIC validates EEPROM contents
     u8 version;              // Configuration version for migration
     u8 j1939SourceAddress;   // J1939 source address (default 149)
-    u8 reserved[2];          // Padding for alignment
+    u8[2] reserved;          // Padding for alignment
 
     // Temperature inputs (user-facing: temp1-temp8)
-    TTempInputConfig tempInputs[8];
+    TTempInputConfig[8] tempInputs;
 
     // Pressure inputs (user-facing: pres1-pres7)
-    TPressureInputConfig pressureInputs[7];
+    TPressureInputConfig[7] pressureInputs;
 
     // Thermocouple (EGT)
     bool egtEnabled;              // SPN 173 enabled
     EThermocoupleType thermocoupleType;
-    u8 tcReserved[2];             // Padding
+    u8[2] tcReserved;             // Padding
 
     // BME280 (ambient sensors)
     bool bme280Enabled;           // Enables SPNs 171, 108, 354
-    u8 bme280Reserved[3];         // Padding
+    u8[3] bme280Reserved;         // Padding
 
     // CRC32 for validation
     u32 checksum;
 }
+
+// Global config singleton
+AppConfig appConfig;
 
 // Default AEM temperature sensor Steinhart-Hart coefficients
 const f32 AEM_TEMP_COEFF_A <- 1.485995686e-03;
@@ -159,7 +163,7 @@ const f32 GM_TEMP_RESISTOR <- 3000.0;
 
 // Temperature input hardware mappings (fixed)
 // Index 0 = temp1, Index 7 = temp8
-const THardwareMapping TEMP_HARDWARE_MAP[8] <- [
+const THardwareMapping[8] TEMP_HARDWARE_MAP <- [
     { adsDevice: 0, adsChannel: 0 },  // temp1 -> ADS 0x48, channel 0 (A0)
     { adsDevice: 0, adsChannel: 2 },  // temp2 -> ADS 0x48, channel 2 (A2)
     { adsDevice: 1, adsChannel: 0 },  // temp3 -> ADS 0x49, channel 0 (A0)
@@ -172,7 +176,7 @@ const THardwareMapping TEMP_HARDWARE_MAP[8] <- [
 
 // Pressure input hardware mappings (fixed)
 // Index 0 = pres1, Index 6 = pres7
-const THardwareMapping PRESSURE_HARDWARE_MAP[7] <- [
+const THardwareMapping[7] PRESSURE_HARDWARE_MAP <- [
     { adsDevice: 0, adsChannel: 1 },  // pres1 -> ADS 0x48, channel 1 (A1)
     { adsDevice: 0, adsChannel: 3 },  // pres2 -> ADS 0x48, channel 3
     { adsDevice: 2, adsChannel: 0 },  // pres3 -> ADS 0x4A, channel 0
@@ -183,13 +187,13 @@ const THardwareMapping PRESSURE_HARDWARE_MAP[7] <- [
 ];
 
 // ADS1115 device I2C addresses (fixed)
-const u8 ADS_I2C_ADDRESSES[4] <- [0x48, 0x49, 0x4A, 0x4B];
+const u8[4] ADS_I2C_ADDRESSES <- [0x48, 0x49, 0x4A, 0x4B];
 
 // ADS1115 DRDY pins (fixed)
-const u8 ADS_DRDY_PINS[4] <- [0, 1, 4, 5];  // D0, D1, D4, D5
+const u8[4] ADS_DRDY_PINS <- [0, 1, 4, 5];  // D0, D1, D4, D5
 
 // Known SPNs lookup table
-const TSpnInfo KNOWN_SPNS[20] <- [
+const TSpnInfo[20] KNOWN_SPNS <- [
     // Temperature SPNs (require temp input)
     { spn: 175, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 0 },
     { spn: 110, category: ESpnCategory.SPN_CAT_TEMPERATURE, hiResSpn: 1637 },

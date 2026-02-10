@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <Data/types/EValueId.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,14 +73,14 @@ typedef enum {
 
 /* Struct definitions */
 typedef struct TTempInputConfig {
-    uint16_t assignedSpn;
+    EValueId assignedValue;
     float coeffA;
     float coeffB;
     float coeffC;
     float resistorValue;
 } TTempInputConfig;
 typedef struct TPressureInputConfig {
-    uint16_t assignedSpn;
+    EValueId assignedValue;
     uint16_t maxPressure;
     EPressureType pressureType;
     uint8_t reserved;
@@ -114,6 +115,7 @@ extern const uint8_t CONFIG_VERSION;
 extern const uint8_t TEMP_INPUT_COUNT;
 extern const uint8_t PRESSURE_INPUT_COUNT;
 extern const uint8_t ADS_DEVICE_COUNT;
+extern AppConfig appConfig;
 extern const float AEM_TEMP_COEFF_A;
 extern const float AEM_TEMP_COEFF_B;
 extern const float AEM_TEMP_COEFF_C;

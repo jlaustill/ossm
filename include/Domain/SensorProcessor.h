@@ -14,19 +14,15 @@
 #include <Data/BME280Manager.h>
 #include <Display/SensorConvert.h>
 #include <Display/HardwareMap.h>
-#include <Display/AppData.h>
+#include <Data/SensorValues.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* External type dependencies - include appropriate headers */
-typedef struct AppConfig AppConfig;
-typedef struct AppData AppData;
-
 /* Function prototypes */
-void SensorProcessor_initialize(const AppConfig& cfg);
-void SensorProcessor_processAllInputs(AppData& appData);
+void SensorProcessor_initialize(void);
+void SensorProcessor_processAllInputs(void);
 
 #ifdef __cplusplus
 }

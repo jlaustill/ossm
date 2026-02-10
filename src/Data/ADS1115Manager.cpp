@@ -89,13 +89,13 @@ void ADS1115Manager_initialize(const AppConfig& config) {
         }
     }
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-        if (config.tempInputs[i].assignedSpn != 0) {
+        if (config.tempInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
             uint8_t dev = HardwareMap_tempDevice(i);
             ADS1115Manager_deviceEnabled[dev] = true;
         }
     }
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-        if (config.pressureInputs[i].assignedSpn != 0) {
+        if (config.pressureInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
             uint8_t dev = HardwareMap_pressureDevice(i);
             ADS1115Manager_deviceEnabled[dev] = true;
         }

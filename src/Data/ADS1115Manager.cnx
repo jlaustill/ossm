@@ -16,12 +16,12 @@ scope ADS1115Manager {
     const u32 CONVERSION_TIMEOUT_MS <- 15;
 
     // ADS1115 device instances
-    Adafruit_ADS1115 ads[ADS_DEVICE_COUNT];
+    Adafruit_ADS1115[ADS_DEVICE_COUNT] ads;
 
     // Device configuration
-    u8 drdyPins[ADS_DEVICE_COUNT] <- [0, 0, 0, 0];
-    bool deviceEnabled[ADS_DEVICE_COUNT] <- [false, false, false, false];
-    bool deviceInitialized[ADS_DEVICE_COUNT] <- [false, false, false, false];
+    u8[ADS_DEVICE_COUNT] drdyPins <- [0, 0, 0, 0];
+    bool[ADS_DEVICE_COUNT] deviceEnabled <- [false, false, false, false];
+    bool[ADS_DEVICE_COUNT] deviceInitialized <- [false, false, false, false];
 
     // Reading buffers
     // TODO: Re-enable atomic when C-Next supports Arduino/Teensy critical sections
@@ -34,7 +34,7 @@ scope ADS1115Manager {
     u32 conversionStartTime <- 0;
 
     // MUX values for single-ended channels
-    const u16 MUX_SINGLE[4] <- [
+    const u16[4] MUX_SINGLE <- [
         ADS1X15_REG_CONFIG_MUX_SINGLE_0,
         ADS1X15_REG_CONFIG_MUX_SINGLE_1,
         ADS1X15_REG_CONFIG_MUX_SINGLE_2,
@@ -118,14 +118,14 @@ scope ADS1115Manager {
 
         // Determine which ADS devices need to be enabled based on input usage
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-            if (config.tempInputs[i].assignedSpn != 0) {
+            if (config.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
                 u8 dev <- global.HardwareMap.tempDevice(i);
                 this.deviceEnabled[dev] <- true;
             }
         }
 
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-            if (config.pressureInputs[i].assignedSpn != 0) {
+            if (config.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
                 u8 dev <- global.HardwareMap.pressureDevice(i);
                 this.deviceEnabled[dev] <- true;
             }

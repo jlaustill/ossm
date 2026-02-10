@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <Display/AppData.h>
 #include <AppConfig.h>
 #include "../Data/ConfigStorage.h"
 #include "../Data/ADS1115Manager.h"
@@ -17,7 +16,6 @@
 #include "SensorProcessor.h"
 #include "CommandHandler.h"
 #include <Data/SensorValues.h>
-#include <Data/J1939Config.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 

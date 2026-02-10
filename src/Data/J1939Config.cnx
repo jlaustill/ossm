@@ -7,7 +7,7 @@
 
 // SPN encoding configurations
 // Each entry maps a J1939 SPN to a physical value with encoding parameters
-const TSpnConfig SPN_CONFIGS[] <- [
+const TSpnConfig[20] SPN_CONFIGS <- [
     // ─── PGN 65269 - Ambient Conditions ───
     // SPN 108 - Barometric Pressure (0.5 kPa/bit)
     { spn: 108, pgn: 65269, bytePos: 1, dataLength: 1, resolution: 0.5, offset: 0.0, source: EValueId.AMBIENT_PRES },
@@ -68,7 +68,7 @@ const TSpnConfig SPN_CONFIGS[] <- [
 const u8 SPN_CONFIG_COUNT <- 20;
 
 // PGN transmission configurations
-const TPgnConfig PGN_CONFIGS[] <- [
+const TPgnConfig[8] PGN_CONFIGS <- [
     { pgn: 65129, intervalMs: 1000, dataLength: 8, priority: 6 },  // Engine Temperature 2
     { pgn: 65164, intervalMs: 1000, dataLength: 8, priority: 6 },  // Engine Temperature 3
     { pgn: 65189, intervalMs: 500, dataLength: 8, priority: 6 },   // Turbocharger Info 4

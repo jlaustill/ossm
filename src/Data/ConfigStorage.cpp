@@ -35,14 +35,14 @@ void ConfigStorage_loadDefaults(AppConfig& config) {
     config.version = CONFIG_VERSION;
     config.j1939SourceAddress = 149;
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        config.tempInputs[i].assignedSpn = 0;
+        config.tempInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
         config.tempInputs[i].coeffA = AEM_TEMP_COEFF_A;
         config.tempInputs[i].coeffB = AEM_TEMP_COEFF_B;
         config.tempInputs[i].coeffC = AEM_TEMP_COEFF_C;
         config.tempInputs[i].resistorValue = AEM_TEMP_RESISTOR;
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        config.pressureInputs[i].assignedSpn = 0;
+        config.pressureInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
         config.pressureInputs[i].maxPressure = 100;
         config.pressureInputs[i].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
         config.pressureInputs[i].reserved = 0;

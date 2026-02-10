@@ -36,5 +36,8 @@ enum EValueId {
     ENGINE_BAY_TEMP,
 
     // Sentinel for array sizing
-    VALUE_ID_COUNT
+    VALUE_ID_COUNT,
+
+    // Unassigned input sentinel (must be after VALUE_ID_COUNT)
+    VALUE_UNASSIGNED <- 0xFF
 }

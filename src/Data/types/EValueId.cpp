@@ -27,5 +27,6 @@ typedef enum {
     EValueId_FUEL_PRES = 18,
     EValueId_FUEL_TEMP = 19,
     EValueId_ENGINE_BAY_TEMP = 20,
-    EValueId_VALUE_ID_COUNT = 21
+    EValueId_VALUE_ID_COUNT = 21,
+    EValueId_VALUE_UNASSIGNED = 255
 } EValueId;

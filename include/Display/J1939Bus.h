@@ -8,13 +8,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <AppData.h>
-#include "../AppConfig.h"
+#include <AppConfig.h>
 #include <Domain/CommandHandler.h>
-#include <Domain/TCommandResult.h>
 #include "J1939Encode.h"
-#include "J1939Decode.h"
-#include "SpnCheck.h"
 #include "FloatBytes.h"
 #include <Data/J1939Config.h>
 #include <Data/SensorValues.h>
@@ -23,24 +19,10 @@
 extern "C" {
 #endif
 
-/* External type dependencies - include appropriate headers */
-typedef struct AppData AppData;
-typedef struct AppConfig AppConfig;
-
 /* Function prototypes */
 void J1939Bus_sendPgnGeneric(uint16_t pgn);
-void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t errCode, const uint8_t data[8], uint8_t dataLen);
 void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len);
-void J1939Bus_initialize(const AppData& currentData, const AppConfig& cfg);
-void J1939Bus_sendPgn65129(float intakeTemp, float coolantTemp);
-void J1939Bus_sendPgn65164(void);
-void J1939Bus_sendPgn65189(float intake2Temp, float intake3Temp, float intake4Temp);
-void J1939Bus_sendPgn65190(float boost1kPa, float boost2kPa);
-void J1939Bus_sendPgn65262(float coolantTemp, float fuelTemp, float oilTemp);
-void J1939Bus_sendPgn65263(float fuelPres, float oilPres, float coolantPres);
-void J1939Bus_sendPgn65269(float ambientTemp, float airInletTemp, float baroPress);
-void J1939Bus_sendPgn65270(float airInletPres, float airInletTemp, float egtTemp, float boostPres);
-void J1939Bus_sendPgn65269Generic(void);
+void J1939Bus_initialize(void);
 
 #ifdef __cplusplus
 }

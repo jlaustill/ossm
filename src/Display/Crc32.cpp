@@ -45,16 +45,14 @@ uint32_t Crc32_calculateChecksum(const AppConfig& config) {
     crc = Crc32_crcByte(crc, config.version);
     crc = Crc32_crcByte(crc, config.j1939SourceAddress);
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        crc = Crc32_crcByte(crc, ((config.tempInputs[i].assignedSpn) & 0xFFU));
-        crc = Crc32_crcByte(crc, ((config.tempInputs[i].assignedSpn >> 8) & 0xFFU));
+        crc = Crc32_crcByte(crc, static_cast<uint8_t>(config.tempInputs[i].assignedValue));
         crc = Crc32_crcFloat(crc, config.tempInputs[i].coeffA);
         crc = Crc32_crcFloat(crc, config.tempInputs[i].coeffB);
         crc = Crc32_crcFloat(crc, config.tempInputs[i].coeffC);
         crc = Crc32_crcFloat(crc, config.tempInputs[i].resistorValue);
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        crc = Crc32_crcByte(crc, ((config.pressureInputs[i].assignedSpn) & 0xFFU));
-        crc = Crc32_crcByte(crc, ((config.pressureInputs[i].assignedSpn >> 8) & 0xFFU));
+        crc = Crc32_crcByte(crc, static_cast<uint8_t>(config.pressureInputs[i].assignedValue));
         crc = Crc32_crcByte(crc, ((config.pressureInputs[i].maxPressure) & 0xFFU));
         crc = Crc32_crcByte(crc, ((config.pressureInputs[i].maxPressure >> 8) & 0xFFU));
         crc = Crc32_crcByte(crc, config.pressureInputs[i].pressureType);

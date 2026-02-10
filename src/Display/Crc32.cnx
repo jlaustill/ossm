@@ -42,20 +42,18 @@ scope Crc32 {
         crc <- this.crcByte(crc, config.j1939SourceAddress);
         // Skip reserved[2]
 
-        // Temperature inputs (8 structs × 18 bytes each)
+        // Temperature inputs (8 structs × 17 bytes each)
         for (u32 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-            crc <- this.crcByte(crc, config.tempInputs[i].assignedSpn[0,8]);
-            crc <- this.crcByte(crc, config.tempInputs[i].assignedSpn[8,8]);
+            crc <- this.crcByte(crc, (u8)config.tempInputs[i].assignedValue);
             crc <- this.crcFloat(crc, config.tempInputs[i].coeffA);
             crc <- this.crcFloat(crc, config.tempInputs[i].coeffB);
             crc <- this.crcFloat(crc, config.tempInputs[i].coeffC);
             crc <- this.crcFloat(crc, config.tempInputs[i].resistorValue);
         }
 
-        // Pressure inputs (7 structs × 5 bytes each)
+        // Pressure inputs (7 structs × 4 bytes each)
         for (u32 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-            crc <- this.crcByte(crc, config.pressureInputs[i].assignedSpn[0,8]);
-            crc <- this.crcByte(crc, config.pressureInputs[i].assignedSpn[8,8]);
+            crc <- this.crcByte(crc, (u8)config.pressureInputs[i].assignedValue);
             crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[0,8]);
             crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[8,8]);
             crc <- this.crcByte(crc, config.pressureInputs[i].pressureType);

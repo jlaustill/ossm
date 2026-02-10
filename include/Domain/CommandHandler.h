@@ -14,50 +14,38 @@
 #include <Data/MAX31856Manager.h>
 #include <Data/BME280Manager.h>
 #include <Display/Presets.h>
-#include <Display/SpnCategory.h>
 #include <Display/InputValid.h>
-#include <Display/AppData.h>
-#include <Domain/TCommandResult.h>
-#include <Data/J1939Config.h>
 #include <Data/SensorValues.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* External type dependencies - include appropriate headers */
-typedef struct AppConfig AppConfig;
-typedef struct TQueryResult TQueryResult;
-
 /* Enumerations */
 typedef enum {
-    ECommandError_OK = 0,
-    ECommandError_UNKNOWN_COMMAND = 1,
-    ECommandError_PARSE_FAILED = 2,
-    ECommandError_UNKNOWN_SPN = 3,
-    ECommandError_INVALID_TEMP_INPUT = 4,
-    ECommandError_INVALID_PRESSURE_INPUT = 5,
-    ECommandError_INVALID_NTC_PARAM = 6,
-    ECommandError_INVALID_TC_TYPE = 7,
-    ECommandError_INVALID_QUERY_TYPE = 8,
-    ECommandError_SAVE_FAILED = 9,
-    ECommandError_INVALID_PRESET = 10
-} ECommandError;
+    ECommandResult_CMD_SUCCESS = 0,
+    ECommandResult_CMD_UNKNOWN_COMMAND = 1,
+    ECommandResult_CMD_UNKNOWN_VALUE = 2,
+    ECommandResult_CMD_MISSING_VALUE = 3,
+    ECommandResult_CMD_MISSING_SENSOR_NUMBER = 4,
+    ECommandResult_CMD_INVALID_SENSOR_NUMBER = 5,
+    ECommandResult_CMD_INVALID_TC_TYPE = 6,
+    ECommandResult_CMD_INVALID_PRESET = 7,
+    ECommandResult_CMD_INVALID_NTC_PARAM = 8,
+    ECommandResult_CMD_SAVE_FAILED = 9
+} ECommandResult;
+typedef enum {
+    EValueCategory_VALUE_CAT_TEMPERATURE = 0,
+    EValueCategory_VALUE_CAT_PRESSURE = 1,
+    EValueCategory_VALUE_CAT_EGT = 2,
+    EValueCategory_VALUE_CAT_BME280 = 3,
+    EValueCategory_VALUE_CAT_UNKNOWN = 4
+} EValueCategory;
 
 /* Function prototypes */
-uint8_t CommandHandler_enableSpn(AppConfig& cfg, uint16_t spn, uint8_t input);
-uint8_t CommandHandler_disableSpn(AppConfig& cfg, uint16_t spn);
-uint8_t CommandHandler_setPressureRange(AppConfig& cfg, uint8_t input, uint16_t maxPressure);
-uint8_t CommandHandler_setTcType(AppConfig& cfg, uint8_t tcType);
-uint8_t CommandHandler_applyNtcPreset(AppConfig& cfg, uint8_t input, uint8_t preset);
-uint8_t CommandHandler_applyPressurePreset(AppConfig& cfg, uint8_t input, uint8_t preset);
-uint8_t CommandHandler_setNtcParam(AppConfig& cfg, uint8_t input, uint8_t param, float value);
-uint8_t CommandHandler_save(const AppConfig& cfg);
-uint8_t CommandHandler_reset(AppConfig& cfg);
-uint8_t CommandHandler_querySpnCounts(const AppConfig& cfg, TQueryResult& out);
-uint8_t CommandHandler_queryFullConfig(const AppConfig& cfg, TQueryResult& out);
-uint8_t CommandHandler_queryTempSpns(const AppConfig& cfg, uint8_t subQuery, TQueryResult& out);
-uint8_t CommandHandler_queryPresSpns(const AppConfig& cfg, uint8_t subQuery, TQueryResult& out);
+EValueCategory CommandHandler_getValueCategory(EValueId valueId);
+ECommandResult CommandHandler_setNtcParam(uint8_t input, uint8_t param, float value);
+ECommandResult CommandHandler_process(const uint8_t data[8]);
 
 #ifdef __cplusplus
 }

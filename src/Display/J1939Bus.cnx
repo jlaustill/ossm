@@ -1,15 +1,11 @@
 // J1939 CAN Bus Communication
-// Handles J1939 message transmission and configuration commands
+// Thin transport: parse CAN -> u8[8] -> CommandHandler.process()
 
-#include <AppData.cnx>
-#include "../AppConfig.cnx"
+#include <AppConfig.cnx>
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
 #include <Domain/CommandHandler.cnx>
-#include <Domain/TCommandResult.cnx>
 #include "J1939Encode.cnx"
-#include "J1939Decode.cnx"
-#include "SpnCheck.cnx"
 #include "FloatBytes.cnx"
 #include <Data/J1939Config.cnx>
 #include <Data/SensorValues.cnx>
@@ -18,15 +14,8 @@ scope J1939Bus {
     // CAN bus instance - OSSM v0.0.2 uses CAN1 (D22/D23)
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canBus;
 
-    // Application state
-    AppData appData;
-    AppConfig config;
+    // ─── Helpers ─────────────────────────────────────────────────────
 
-    // ========================================================================
-    // Helper functions (must be defined first)
-    // ========================================================================
-
-    // Helper to build CAN ID from J1939 parameters
     u32 buildCanId(u16 pgn, u8 priority, u8 sourceAddr) {
         u32 id <- 0;
         id[26,3] <- priority;
@@ -35,23 +24,20 @@ scope J1939Bus {
         return id;
     }
 
-    // Fill buffer with 0xFF (unused bytes)
-    void fillBuffer(u8 buf[8]) {
+    void fillBuffer(u8[8] buf) {
         for (u8 i <- 0; i < 8; i +<- 1) {
             buf[i] <- 0xFF;
         }
     }
 
-    // Check if a value has hardware assigned
     bool isValueEnabled(EValueId valueId) {
         return global.SensorValues.getHasHardware(valueId);
     }
 
-    // Helper to send a CAN message with priority 6
-    void sendMessage(u16 pgn, const u8 buf[8]) {
+    void sendMessage(u16 pgn, const u8[8] buf) {
         CAN_message_t msg;
         msg.flags.extended <- 1;
-        msg.id <- this.buildCanId(pgn, 6, this.config.j1939SourceAddress);
+        msg.id <- this.buildCanId(pgn, 6, global.appConfig.j1939SourceAddress);
         msg.len <- 8;
 
         for (u8 i <- 0; i < 8; i +<- 1) {
@@ -61,12 +47,12 @@ scope J1939Bus {
         this.canBus.write(msg);
     }
 
-    // Generic PGN sender - finds all SPNs for this PGN and encodes them
+    // ─── Generic PGN sender ─────────────────────────────────────────
+
     public void sendPgnGeneric(u16 pgn) {
-        u8 buf[8];
+        u8[8] buf;
         this.fillBuffer(buf);
 
-        // Find and encode all SPNs belonging to this PGN
         for (u8 i <- 0; i < SPN_CONFIG_COUNT; i <- i + 1) {
             TSpnConfig cfg <- SPN_CONFIGS[i];
 
@@ -74,17 +60,14 @@ scope J1939Bus {
                 continue;
             }
 
-            // Check if this value has hardware
             bool hasHw <- this.isValueEnabled(cfg.source);
             if (!hasHw) {
                 continue;
             }
 
-            // Get source value and encode
             f32 value <- global.SensorValues.get(cfg.source);
             u16 encoded <- global.J1939Encode.encode(value, cfg.resolution, cfg.offset);
 
-            // Place in buffer (bytePos is 1-indexed per J1939 docs)
             u8 pos <- cfg.bytePos - 1;
             buf[pos] <- (u8)(encoded & 0xFF);
             if (cfg.dataLength = 2) {
@@ -95,11 +78,12 @@ scope J1939Bus {
         this.sendMessage(pgn, buf);
     }
 
-    // Send configuration response on PGN 65281
-    public void sendConfigResponse(u8 cmd, u8 errCode, const u8 data[8], u8 dataLen) {
-        u8 buf[8];
+    // ─── Config response (PGN 65281) ────────────────────────────────
+
+    void sendConfigResponse(u8 cmd, u8 resultCode, const u8[8] data, u8 dataLen) {
+        u8[8] buf;
         buf[0] <- cmd;
-        buf[1] <- errCode;
+        buf[1] <- resultCode;
 
         for (u8 i <- 0; i < 6; i +<- 1) {
             if (i < dataLen) {
@@ -111,7 +95,7 @@ scope J1939Bus {
 
         CAN_message_t msg;
         msg.flags.extended <- 1;
-        msg.id <- this.buildCanId(65281, 6, this.config.j1939SourceAddress);
+        msg.id <- this.buildCanId(65281, 6, global.appConfig.j1939SourceAddress);
         msg.len <- 8;
 
         for (u8 i <- 0; i < 8; i +<- 1) {
@@ -121,130 +105,113 @@ scope J1939Bus {
         this.canBus.write(msg);
     }
 
-    // ========================================================================
-    // Command handlers (must be before processConfigCommand)
-    // ========================================================================
+    // ─── CAN-only: Query ────────────────────────────────────────────
 
-    void handleEnableSpn(const u8 data[8]) {
-        u16 spn <- global.J1939Decode.getSpn(data);
-        bool enable <- global.J1939Decode.getEnable(data);
-        u8 input <- global.J1939Decode.getInput(data);
-
-        u8 errorCode;
-        if (enable) {
-            errorCode <- global.CommandHandler.enableSpn(this.config, spn, input);
-        } else {
-            errorCode <- global.CommandHandler.disableSpn(this.config, spn);
-        }
-
-        u8 emptyData[8];
-        this.sendConfigResponse(1, errorCode, emptyData, 0);
-    }
-
-    void handleSetNtcParam(const u8 data[8]) {
-        u8 input <- global.J1939Decode.getNtcInput(data);
-        u8 param <- global.J1939Decode.getNtcParam(data);
-        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
-
-        u8 errorCode <- global.CommandHandler.setNtcParam(this.config, input, param, value);
-        u8 emptyData[8];
-        this.sendConfigResponse(2, errorCode, emptyData, 0);
-    }
-
-    void handleSetPressureRange(const u8 data[8]) {
-        u8 input <- global.J1939Decode.getPressureInput(data);
-        u16 maxPsi <- global.J1939Decode.getMaxPressure(data);
-
-        u8 errorCode <- global.CommandHandler.setPressureRange(this.config, input, maxPsi);
-        u8 emptyData[8];
-        this.sendConfigResponse(3, errorCode, emptyData, 0);
-    }
-
-    void handleSetTcType(const u8 data[8]) {
-        u8 tcType <- global.J1939Decode.getTcType(data);
-
-        u8 errorCode <- global.CommandHandler.setTcType(this.config, tcType);
-        u8 emptyData[8];
-        this.sendConfigResponse(4, errorCode, emptyData, 0);
-    }
-
-    void handleQuery(const u8 data[8]) {
-        u8 queryType <- global.J1939Decode.getQueryType(data);
-        u8 subQuery <- global.J1939Decode.getSubQuery(data);
-
-        TQueryResult queryResult;
-        u8 errorCode;
+    void handleQuery(const u8[8] data) {
+        u8 queryType <- data[1];
+        u8 subQuery <- data[2];
+        u8[8] respData;
+        this.fillBuffer(respData);
 
         switch (queryType) {
-            case 0 { errorCode <- global.CommandHandler.querySpnCounts(this.config, queryResult); }
-            case 1 { errorCode <- global.CommandHandler.queryTempSpns(this.config, subQuery, queryResult); }
-            case 2 { errorCode <- global.CommandHandler.queryPresSpns(this.config, subQuery, queryResult); }
-            case 4 { errorCode <- global.CommandHandler.queryFullConfig(this.config, queryResult); }
-            default { errorCode <- 8; }  // ECommandError_INVALID_QUERY_TYPE
-        }
-
-        this.sendConfigResponse(5, errorCode, queryResult.data, queryResult.len);
-    }
-
-    void handleSave() {
-        u8 errorCode <- global.CommandHandler.save(this.config);
-        u8 emptyData[8];
-        this.sendConfigResponse(6, errorCode, emptyData, 0);
-    }
-
-    void handleReset() {
-        u8 errorCode <- global.CommandHandler.reset(this.config);
-        u8 emptyData[8];
-        this.sendConfigResponse(7, errorCode, emptyData, 0);
-    }
-
-    void handleNtcPreset(const u8 data[8]) {
-        u8 input <- global.J1939Decode.getPresetInput(data);
-        u8 preset <- global.J1939Decode.getPresetId(data);
-
-        u8 errorCode <- global.CommandHandler.applyNtcPreset(this.config, input, preset);
-        u8 emptyData[8];
-        this.sendConfigResponse(8, errorCode, emptyData, 0);
-    }
-
-    void handlePressurePreset(const u8 data[8]) {
-        u8 input <- global.J1939Decode.getPresetInput(data);
-        u8 preset <- global.J1939Decode.getPresetId(data);
-
-        u8 errorCode <- global.CommandHandler.applyPressurePreset(this.config, input, preset);
-        u8 emptyData[8];
-        this.sendConfigResponse(9, errorCode, emptyData, 0);
-    }
-
-    // ========================================================================
-    // Command processing (must be before sniffDataPrivate)
-    // ========================================================================
-
-    public void processConfigCommand(const u8 data[8], u8 len) {
-        if (len < 1) { return; }
-
-        u8 cmd <- data[0];
-
-        switch (cmd) {
-            case 1 { this.handleEnableSpn(data); }
-            case 2 { this.handleSetNtcParam(data); }
-            case 3 { this.handleSetPressureRange(data); }
-            case 4 { this.handleSetTcType(data); }
-            case 5 { this.handleQuery(data); }
-            case 6 { this.handleSave(); }
-            case 7 { this.handleReset(); }
-            case 8 { this.handleNtcPreset(data); }
-            case 9 { this.handlePressurePreset(data); }
+            case 0 {
+                // Value counts
+                u8 tempCount <- 0;
+                u8 presCount <- 0;
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+                    if (global.appConfig.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                        tempCount +<- 1;
+                    }
+                }
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+                    if (global.appConfig.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                        presCount +<- 1;
+                    }
+                }
+                respData[0] <- tempCount;
+                respData[1] <- presCount;
+                if (global.appConfig.egtEnabled) {
+                    respData[2] <- 1;
+                } else {
+                    respData[2] <- 0;
+                }
+                if (global.appConfig.bme280Enabled) {
+                    respData[3] <- 1;
+                } else {
+                    respData[3] <- 0;
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 4);
+            }
+            case 1 {
+                // Temp value IDs (6 per sub-query, 1 byte each)
+                u8 startIdx <- subQuery * 6;
+                for (u8 i <- 0; i < 6; i +<- 1) {
+                    u8 idx <- startIdx + i;
+                    if (idx < TEMP_INPUT_COUNT) {
+                        respData[i] <- (u8)global.appConfig.tempInputs[idx].assignedValue;
+                    } else {
+                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                    }
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+            }
+            case 2 {
+                // Pressure value IDs (6 per sub-query, 1 byte each)
+                u8 startIdx <- subQuery * 6;
+                for (u8 i <- 0; i < 6; i +<- 1) {
+                    u8 idx <- startIdx + i;
+                    if (idx < PRESSURE_INPUT_COUNT) {
+                        respData[i] <- (u8)global.appConfig.pressureInputs[idx].assignedValue;
+                    } else {
+                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                    }
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+            }
+            case 4 {
+                // Full config
+                respData[0] <- global.appConfig.j1939SourceAddress;
+                respData[1] <- (u8)global.appConfig.thermocoupleType;
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 2);
+            }
             default {
-                u8 empty[1];
-                this.sendConfigResponse(cmd, 1, empty, 0);
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_UNKNOWN_COMMAND, respData, 0);
             }
         }
     }
 
-    // ========================================================================
-    // CAN message reception (must be before initialize)
-    // ========================================================================
+    // ─── CAN-only: NTC param (float bytes in CAN frame) ────────────
+
+    void handleNtcParam(const u8[8] data) {
+        u8 input <- data[1];
+        u8 param <- data[2];
+        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
+
+        ECommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
+        u8[8] emptyData;
+        this.sendConfigResponse(10, (u8)result, emptyData, 0);
+    }
+
+    // ─── Command dispatch ───────────────────────────────────────────
+
+    public void processConfigCommand(const u8[8] data, u8 len) {
+        if (len < 1) { return; }
+
+        u8 cmd <- data[0];
+
+        // CAN-only commands
+        switch (cmd) {
+            case 5 { this.handleQuery(data); return; }
+            case 10 { this.handleNtcParam(data); return; }
+        }
+
+        // Forward to unified CommandHandler
+        ECommandResult result <- global.CommandHandler.process(data);
+        u8[8] emptyData;
+        this.sendConfigResponse(cmd, (u8)result, emptyData, 0);
+    }
+
+    // ─── CAN message reception ──────────────────────────────────────
 
     void sniffDataPrivate(const CAN_message_t msg) {
         J1939Message message <- { pgn: 0 };
@@ -262,14 +229,9 @@ scope J1939Bus {
         }
     }
 
-    // ========================================================================
-    // Initialization
-    // ========================================================================
+    // ─── Initialization ─────────────────────────────────────────────
 
-    public void initialize(AppData currentData, AppConfig cfg) {
-        this.appData <- currentData;
-        this.config <- cfg;
-
+    public void initialize() {
         Serial.println("J1939 Bus initializing");
 
         this.canBus.begin();
@@ -281,204 +243,6 @@ scope J1939Bus {
         this.canBus.mailboxStatus();
 
         Serial.print("J1939 Source Address: ");
-        Serial.println(this.config.j1939SourceAddress);
-    }
-
-    // ========================================================================
-    // PGN transmission functions
-    // ========================================================================
-
-    // Send PGN 65129 - Engine Temperature 2
-    public void sendPgn65129(f32 intakeTemp, f32 coolantTemp) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn1363 <- global.SpnCheck.isSpnEnabled(this.config, 1363);
-        bool spn1637 <- global.SpnCheck.isSpnEnabled(this.config, 1637);
-
-        if (spn1363) {
-            u16 encoded <- global.J1939Encode.temp16bit(intakeTemp);
-            buf[0] <- encoded[0,8];
-            buf[1] <- encoded[8,8];
-        }
-        if (spn1637) {
-            u16 encoded <- global.J1939Encode.temp16bit(coolantTemp);
-            buf[2] <- encoded[0,8];
-            buf[3] <- encoded[8,8];
-        }
-
-        this.sendMessage(65129, buf);
-    }
-
-    // Send PGN 65164 - Engine Temperature 3
-    public void sendPgn65164() {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn441 <- global.SpnCheck.isSpnEnabled(this.config, 441);
-        bool spn354 <- global.SpnCheck.isSpnEnabled(this.config, 354);
-
-        if (spn441) {
-            buf[0] <- global.J1939Encode.temp8bit(this.appData.engineBayTemperatureC);
-        }
-        if (spn354) {
-            buf[6] <- global.J1939Encode.humidity(this.appData.humidity);
-        }
-
-        this.sendMessage(65164, buf);
-    }
-
-    // Send PGN 65189 - Turbocharger Information 4
-    public void sendPgn65189(f32 intake2Temp, f32 intake3Temp, f32 intake4Temp) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn1131 <- global.SpnCheck.isSpnEnabled(this.config, 1131);
-        bool spn1132 <- global.SpnCheck.isSpnEnabled(this.config, 1132);
-        bool spn1133 <- global.SpnCheck.isSpnEnabled(this.config, 1133);
-
-        if (spn1131) {
-            buf[0] <- global.J1939Encode.temp8bit(intake2Temp);
-        }
-        if (spn1132) {
-            buf[1] <- global.J1939Encode.temp8bit(intake3Temp);
-        }
-        if (spn1133) {
-            buf[2] <- global.J1939Encode.temp8bit(intake4Temp);
-        }
-
-        this.sendMessage(65189, buf);
-    }
-
-    // Send PGN 65190 - Turbocharger Information 5
-    public void sendPgn65190(f32 boost1kPa, f32 boost2kPa) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn1127 <- global.SpnCheck.isSpnEnabled(this.config, 1127);
-        bool spn1128 <- global.SpnCheck.isSpnEnabled(this.config, 1128);
-
-        if (spn1127) {
-            u16 encoded <- global.J1939Encode.boost16bit(boost1kPa);
-            buf[0] <- encoded[0,8];
-            buf[1] <- encoded[8,8];
-            Serial.print("Boost Pressure Sent: ");
-            Serial.print(boost1kPa);
-            Serial.print(" kPa, Encoded: ");
-            Serial.print(buf[0]);
-            Serial.print(" ");
-            Serial.print(buf[1]);
-            Serial.println(" kPa ");
-        }
-        if (spn1128) {
-            u16 encoded <- global.J1939Encode.boost16bit(boost2kPa);
-            buf[2] <- encoded[0,8];
-            buf[3] <- encoded[8,8];
-        }
-
-        this.sendMessage(65190, buf);
-    }
-
-    // Send PGN 65262 - Engine Temperature 1
-    public void sendPgn65262(f32 coolantTemp, f32 fuelTemp, f32 oilTemp) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn110 <- global.SpnCheck.isSpnEnabled(this.config, 110);
-        bool spn174 <- global.SpnCheck.isSpnEnabled(this.config, 174);
-        bool spn175 <- global.SpnCheck.isSpnEnabled(this.config, 175);
-
-        if (spn110) {
-            buf[0] <- global.J1939Encode.temp8bit(coolantTemp);
-        }
-        if (spn174) {
-            buf[1] <- global.J1939Encode.temp8bit(fuelTemp);
-        }
-        if (spn175) {
-            u16 encoded <- global.J1939Encode.temp16bit(oilTemp);
-            buf[2] <- encoded[0,8];
-            buf[3] <- encoded[8,8];
-        }
-
-        this.sendMessage(65262, buf);
-    }
-
-    // Send PGN 65263 - Engine Fluid Level/Pressure 1
-    public void sendPgn65263(f32 fuelPres, f32 oilPres, f32 coolantPres) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn94 <- global.SpnCheck.isSpnEnabled(this.config, 94);
-        bool spn100 <- global.SpnCheck.isSpnEnabled(this.config, 100);
-        bool spn109 <- global.SpnCheck.isSpnEnabled(this.config, 109);
-
-        if (spn94) {
-            buf[0] <- global.J1939Encode.pressure4kPa(fuelPres);
-        }
-        if (spn100) {
-            buf[3] <- global.J1939Encode.pressure4kPa(oilPres);
-        }
-        if (spn109) {
-            buf[6] <- global.J1939Encode.pressure2kPa(coolantPres);
-        }
-
-        this.sendMessage(65263, buf);
-    }
-
-    // Send PGN 65269 - Ambient Conditions
-    public void sendPgn65269(f32 ambientTemp, f32 airInletTemp, f32 baroPress) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn108 <- global.SpnCheck.isSpnEnabled(this.config, 108);
-        bool spn171 <- global.SpnCheck.isSpnEnabled(this.config, 171);
-        bool spn172 <- global.SpnCheck.isSpnEnabled(this.config, 172);
-
-        if (spn108) {
-            buf[0] <- global.J1939Encode.barometric(baroPress);
-        }
-        if (spn171) {
-            u16 encoded <- global.J1939Encode.temp16bit(ambientTemp);
-            buf[3] <- encoded[0,8];
-            buf[4] <- encoded[8,8];
-        }
-        if (spn172) {
-            buf[5] <- global.J1939Encode.temp8bit(airInletTemp);
-        }
-
-        this.sendMessage(65269, buf);
-    }
-
-    // Send PGN 65270 - Inlet/Exhaust Conditions 1
-    public void sendPgn65270(f32 airInletPres, f32 airInletTemp, f32 egtTemp, f32 boostPres) {
-        u8 buf[8];
-        this.fillBuffer(buf);
-
-        bool spn102 <- global.SpnCheck.isSpnEnabled(this.config, 102);
-        bool spn105 <- global.SpnCheck.isSpnEnabled(this.config, 105);
-        bool spn106 <- global.SpnCheck.isSpnEnabled(this.config, 106);
-        bool spn173 <- global.SpnCheck.isSpnEnabled(this.config, 173);
-
-        if (spn102) {
-            buf[1] <- global.J1939Encode.pressure2kPa(boostPres);
-        }
-        if (spn105) {
-            buf[2] <- global.J1939Encode.temp8bit(airInletTemp);
-        }
-        if (spn106) {
-            buf[3] <- global.J1939Encode.pressure2kPa(airInletPres);
-        }
-        if (spn173) {
-            u16 encoded <- global.J1939Encode.temp16bit(egtTemp);
-            buf[5] <- encoded[0,8];
-            buf[6] <- encoded[8,8];
-        }
-
-        this.sendMessage(65270, buf);
-    }
-
-    // Test: Send PGN 65269 using generic encoder
-    public void sendPgn65269Generic() {
-        this.sendPgnGeneric(65269);
+        Serial.println(global.appConfig.j1939SourceAddress);
     }
 }

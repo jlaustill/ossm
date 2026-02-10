@@ -8,7 +8,6 @@
 // Main OSSM application logic
 // Handles sensor polling, J1939 messaging, and command processing
 #include <Arduino.h>
-#include <Display/AppData.h>
 #include <AppConfig.h>
 #include "../Data/ConfigStorage.h"
 #include "../Data/ADS1115Manager.h"
@@ -17,7 +16,6 @@
 #include "SensorProcessor.h"
 #include "CommandHandler.h"
 #include <Data/SensorValues.h>
-#include <Data/J1939Config.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
 
@@ -25,8 +23,6 @@
 #include <stdbool.h>
 
 /* Scope: Ossm */
-static AppData Ossm_appData = {0};
-static AppConfig Ossm_appConfig = {0};
 static IntervalTimer Ossm_sensorTimer = {};
 static bool Ossm_sensorUpdateReady = false;
 static elapsedMillis Ossm_halfSecondMillis = {};
@@ -40,73 +36,45 @@ void Ossm_processSensorUpdates(void) {
     ADS1115Manager_update();
     MAX31856Manager_update();
     BME280Manager_update();
-    SensorProcessor_processAllInputs(Ossm_appData);
+    SensorProcessor_processAllInputs();
 }
 
 static void Ossm_populateHardwareFlags(void) {
     for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-        uint16_t spn = Ossm_appConfig.tempInputs[i].assignedSpn;
-        if (spn != 0) {
-            EValueId source = J1939Config_findSourceForSpn(spn);
-            if (source != EValueId_VALUE_ID_COUNT) {
-                SensorValues_setHasHardware(source, true);
-            }
+        EValueId val = appConfig.tempInputs[i].assignedValue;
+        if (val != EValueId_VALUE_UNASSIGNED) {
+            SensorValues_setHasHardware(val, true);
         }
     }
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-        uint16_t spn = Ossm_appConfig.pressureInputs[i].assignedSpn;
-        if (spn != 0) {
-            EValueId source = J1939Config_findSourceForSpn(spn);
-            if (source != EValueId_VALUE_ID_COUNT) {
-                SensorValues_setHasHardware(source, true);
-            }
+        EValueId val = appConfig.pressureInputs[i].assignedValue;
+        if (val != EValueId_VALUE_UNASSIGNED) {
+            SensorValues_setHasHardware(val, true);
         }
     }
-    if (Ossm_appConfig.egtEnabled) {
+    if (appConfig.egtEnabled) {
         SensorValues_setHasHardware(EValueId_TURBO1_TURB_INLET_TEMP, true);
     }
-    if (Ossm_appConfig.bme280Enabled) {
+    if (appConfig.bme280Enabled) {
         SensorValues_setHasHardware(EValueId_AMBIENT_PRES, true);
         SensorValues_setHasHardware(EValueId_AMBIENT_TEMP, true);
         SensorValues_setHasHardware(EValueId_AMBIENT_HUMIDITY, true);
     }
 }
 
-static void Ossm_updateSensorValues(void) {
-    SensorValues_set(EValueId_AMBIENT_PRES, Ossm_appData.absoluteBarometricpressurekPa);
-    SensorValues_set(EValueId_AMBIENT_TEMP, Ossm_appData.ambientTemperatureC);
-    SensorValues_set(EValueId_AMBIENT_HUMIDITY, Ossm_appData.humidity);
-    SensorValues_set(EValueId_OIL_PRES, Ossm_appData.oilPressurekPa);
-    SensorValues_set(EValueId_OIL_TEMP, Ossm_appData.oilTemperatureC);
-    SensorValues_set(EValueId_COOLANT_PRES, Ossm_appData.coolantPressurekPa);
-    SensorValues_set(EValueId_COOLANT_TEMP, Ossm_appData.coolantTemperatureC);
-    SensorValues_set(EValueId_FUEL_PRES, Ossm_appData.fuelPressurekPa);
-    SensorValues_set(EValueId_FUEL_TEMP, Ossm_appData.fuelTemperatureC);
-    SensorValues_set(EValueId_ENGINE_BAY_TEMP, Ossm_appData.engineBayTemperatureC);
-    SensorValues_set(EValueId_TURBO1_TURB_INLET_TEMP, Ossm_appData.egtTemperatureC);
-    SensorValues_set(EValueId_TURBO1_COMP_OUTLET_PRES, Ossm_appData.boostPressurekPa);
-    SensorValues_set(EValueId_TURBO1_COMP_OUTLET_TEMP, Ossm_appData.boostTemperatureC);
-    SensorValues_set(EValueId_CAC1_INLET_PRES, Ossm_appData.cacInletPressurekPa);
-    SensorValues_set(EValueId_CAC1_INLET_TEMP, Ossm_appData.cacInletTemperatureC);
-    SensorValues_set(EValueId_CAC1_OUTLET_TEMP, Ossm_appData.airInletTemperatureC);
-    SensorValues_set(EValueId_TURBO1_COMP_INLET_PRES, Ossm_appData.airInletPressurekPa);
-    SensorValues_set(EValueId_MANIFOLD1_ABS_PRES, Ossm_appData.boostPressurekPa);
-    SensorValues_set(EValueId_MANIFOLD1_TEMP, Ossm_appData.boostTemperatureC);
-}
-
 void Ossm_sendJ1939Messages(void) {
     if (Ossm_halfSecondMillis >= 500) {
-        J1939Bus_sendPgn65270(Ossm_appData.airInletPressurekPa, Ossm_appData.airInletTemperatureC, Ossm_appData.egtTemperatureC, Ossm_appData.boostPressurekPa);
-        J1939Bus_sendPgn65263(Ossm_appData.fuelPressurekPa, Ossm_appData.oilPressurekPa, Ossm_appData.coolantPressurekPa);
-        J1939Bus_sendPgn65190(Ossm_appData.boostPressurekPa, Ossm_appData.cacInletPressurekPa);
+        J1939Bus_sendPgnGeneric(65270);
+        J1939Bus_sendPgnGeneric(65263);
+        J1939Bus_sendPgnGeneric(65190);
         Ossm_halfSecondMillis = 0;
     }
     if (Ossm_oneSecondMillis >= 1000) {
-        J1939Bus_sendPgn65269(Ossm_appData.ambientTemperatureC, Ossm_appData.airInletTemperatureC, Ossm_appData.absoluteBarometricpressurekPa);
-        J1939Bus_sendPgn65262(Ossm_appData.coolantTemperatureC, Ossm_appData.fuelTemperatureC, Ossm_appData.oilTemperatureC);
-        J1939Bus_sendPgn65129(Ossm_appData.boostTemperatureC, Ossm_appData.coolantTemperatureC);
-        J1939Bus_sendPgn65189(Ossm_appData.cacInletTemperatureC, Ossm_appData.transferPipeTemperatureC, Ossm_appData.engineBayTemperatureC);
-        J1939Bus_sendPgn65164();
+        J1939Bus_sendPgnGeneric(65269);
+        J1939Bus_sendPgnGeneric(65262);
+        J1939Bus_sendPgnGeneric(65129);
+        J1939Bus_sendPgnGeneric(65189);
+        J1939Bus_sendPgnGeneric(65164);
         Ossm_oneSecondMillis = 0;
     }
 }
@@ -120,20 +88,20 @@ void Ossm_setup(void) {
         elapsed = millis() - startTime;
     }
     Serial.println("OSSM Initializing...");
-    bool configLoaded = ConfigStorage_loadConfig(Ossm_appConfig);
+    bool configLoaded = ConfigStorage_loadConfig(appConfig);
     if (!configLoaded) {
         Serial.println("Loading default configuration");
-        ConfigStorage_loadDefaults(Ossm_appConfig);
-        ConfigStorage_saveConfig(Ossm_appConfig);
+        ConfigStorage_loadDefaults(appConfig);
+        ConfigStorage_saveConfig(appConfig);
     } else {
         Serial.println("Configuration loaded from EEPROM");
     }
     Ossm_populateHardwareFlags();
-    ADS1115Manager_initialize(Ossm_appConfig);
-    MAX31856Manager_initialize(Ossm_appConfig);
-    BME280Manager_initialize(Ossm_appConfig);
-    SensorProcessor_initialize(Ossm_appConfig);
-    J1939Bus_initialize(Ossm_appData, Ossm_appConfig);
+    ADS1115Manager_initialize(appConfig);
+    MAX31856Manager_initialize(appConfig);
+    BME280Manager_initialize(appConfig);
+    SensorProcessor_initialize();
+    J1939Bus_initialize();
     SerialCommandHandler_initialize();
     Ossm_sensorTimer.begin(Ossm_sensorTimerCallback, 50000);
     Serial.println("OSSM Ready");
@@ -144,7 +112,6 @@ void Ossm_loop(void) {
         Ossm_processSensorUpdates();
         Ossm_sensorUpdateReady = false;
     }
-    SerialCommandHandler_update(Ossm_appConfig, Ossm_appData);
-    Ossm_updateSensorValues();
+    SerialCommandHandler_update();
     Ossm_sendJ1939Messages();
 }

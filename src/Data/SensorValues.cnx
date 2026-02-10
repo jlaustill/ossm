@@ -5,10 +5,10 @@
 
 scope SensorValues {
     // Runtime value storage
-    f32 values[global.EValueId.VALUE_ID_COUNT];
+    f32[global.EValueId.VALUE_ID_COUNT] values;
 
     // Track which values have hardware assigned
-    bool hasHardware[global.EValueId.VALUE_ID_COUNT];
+    bool[global.EValueId.VALUE_ID_COUNT] hasHardware;
 
     public void initialize() {
         for (u8 i <- 0; i < global.EValueId.VALUE_ID_COUNT; i <- i + 1) {

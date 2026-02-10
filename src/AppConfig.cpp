@@ -3,17 +3,19 @@
  * A safer C for embedded systems
  */
 
+// AppConfig.cnx - Main configuration types and constants for OSSM
+#include <Data/types/EValueId.h>
+
 #include <stdint.h>
 #include <stdbool.h>
 
-// AppConfig.cnx - Main configuration types and constants for OSSM
 // Configuration magic number and version
 extern const uint32_t CONFIG_MAGIC = 0x4F53534D;
 
 // "OSSM" in ASCII
-extern const uint8_t CONFIG_VERSION = 3;
+extern const uint8_t CONFIG_VERSION = 4;
 
-// Bumped for pressure type support
+// EValueId-based config (was SPN-based)
 // Number of user-facing inputs
 extern const uint8_t TEMP_INPUT_COUNT = 8;
 
@@ -90,7 +92,7 @@ typedef enum {
 
 // Temperature input configuration (temp1-temp8)
 typedef struct TTempInputConfig {
-    uint16_t assignedSpn;
+    EValueId assignedValue;
     float coeffA;
     float coeffB;
     float coeffC;
@@ -99,7 +101,7 @@ typedef struct TTempInputConfig {
 
 // Pressure input configuration (pres1-pres7)
 typedef struct TPressureInputConfig {
-    uint16_t assignedSpn;
+    EValueId assignedValue;
     uint16_t maxPressure;
     EPressureType pressureType;
     uint8_t reserved;
@@ -134,6 +136,9 @@ typedef struct AppConfig {
     uint8_t bme280Reserved[3];
     uint32_t checksum;
 } AppConfig;
+
+// Global config singleton
+AppConfig appConfig = {0};
 
 // Default AEM temperature sensor Steinhart-Hart coefficients
 extern const float AEM_TEMP_COEFF_A = 1.485995686e-03;
