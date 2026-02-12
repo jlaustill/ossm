@@ -16,29 +16,16 @@ This applies to ALL repositories, not just this one.
 
 ## NEVER DO WORKAROUNDS
 
-**CRITICAL: NEVER implement workarounds. EVER. ZERO EXCEPTIONS.**
+**CRITICAL: NEVER implement workarounds. ZERO EXCEPTIONS.** No wrapper functions, no "creative solutions", no restructuring code to dodge bugs. If something is broken:
 
-We face bugs HEAD ON. When you encounter a bug, limitation, or issue in a tool, library, or transpiler:
-
-1. **DO NOT** try to work around it
-2. **DO NOT** create wrapper functions to hide the problem
-3. **DO NOT** temporarily rename/move/modify files to bypass issues
-4. **DO NOT** suggest "creative solutions" that mask the underlying problem
-5. **DO NOT** use alternative approaches just to avoid a bug
-6. **DO NOT** flatten data structures, split files, or restructure code to dodge transpiler limitations
-
-**INSTEAD:**
-- Document the bug thoroughly with minimal reproducers
-- File the bug report on the appropriate issue tracker
-- Wait for the fix
-- Move on to other work that isn't blocked
-- Ask the user if you're unsure whether something counts as a workaround
-
-Workarounds create technical debt, hide real issues from maintainers, and waste time going in circles. If something is broken, it needs to be fixed properly - not papered over. There are no "temporary" workarounds - they become permanent debt.
+1. Document the bug with a minimal reproducer
+2. File on the appropriate issue tracker
+3. Move on to unblocked work
+4. Ask the user if unsure whether something counts as a workaround
 
 ## Project Overview
 
-Open Source Sensor Module (OSSM) - An embedded firmware for Teensy 4.1 that reads automotive sensors and transmits data over CAN bus using J1939 protocol. The module emulates a secondary PCM/ECM and supports up to 19 sensors (temperatures, pressures, humidity, etc.).
+Open Source Sensor Module (OSSM) - An embedded firmware for Teensy 4.0 that reads automotive sensors and transmits data over CAN bus using J1939 protocol. The module emulates a secondary PCM/ECM and supports up to 19 sensors (temperatures, pressures, humidity, etc.).
 
 ## J1939 Standards Compliance
 
@@ -53,6 +40,9 @@ If you are unsure about any J1939 specification detail (byte order, scaling, off
 ## Build Commands
 
 ```bash
+# Transpile C-Next sources (run after editing .cnx files)
+cnext src/path/to/modified.cnx
+
 # Build the project
 pio run
 
@@ -93,6 +83,7 @@ src/
 
 ### Key Patterns
 
+- **Orchestrator Pattern**: `ossm.cnx` is a thin orchestrator — subsystems own their internals (ISRs, timers, state). Ossm only calls `initialize()` and `update()`.
 - **Sensor Configuration**: Inputs configured via `AppConfig` with `EValueId` assignments. Only assigned inputs are read and transmitted.
 - **CAN Bus**: Uses CAN1 (pins D22/D23) via FlexCAN_T4 for J1939 transmission at 250kbps.
 - **Timed Transmission**: Sensor data sent at fixed intervals (500ms for pressure PGNs, 1000ms for temperature PGNs).
