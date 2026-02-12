@@ -20,16 +20,6 @@
 /* Scope: Hardware */
 
 static bool Hardware_isValueAssigned(const AppConfig& config, EValueId id) {
-    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-        if (config.tempInputs[i].assignedValue == id) {
-            return true;
-        }
-    }
-    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-        if (config.pressureInputs[i].assignedValue == id) {
-            return true;
-        }
-    }
     if (id == EValueId_TURBO1_TURB_INLET_TEMP) {
         return config.egtEnabled;
     }
@@ -41,6 +31,14 @@ static bool Hardware_isValueAssigned(const AppConfig& config, EValueId id) {
     }
     if (id == EValueId_AMBIENT_HUMIDITY) {
         return config.bme280Enabled;
+    }
+    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
+        if (config.tempInputs[i].assignedValue == id) {
+            return true;
+        }
+        if (i < PRESSURE_INPUT_COUNT && config.pressureInputs[i].assignedValue == id) {
+            return true;
+        }
     }
     return false;
 }

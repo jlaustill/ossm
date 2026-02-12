@@ -11,16 +11,17 @@
 scope Hardware {
     // Check if a value ID is assigned to any hardware input
     bool isValueAssigned(const AppConfig config, EValueId id) {
-        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-            if (config.tempInputs[i].assignedValue = id) { return true; }
-        }
-        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-            if (config.pressureInputs[i].assignedValue = id) { return true; }
-        }
+        // Single-flag sensors: no looping needed
         if (id = EValueId.TURBO1_TURB_INLET_TEMP) { return config.egtEnabled; }
         if (id = EValueId.AMBIENT_PRES) { return config.bme280Enabled; }
         if (id = EValueId.AMBIENT_TEMP) { return config.bme280Enabled; }
         if (id = EValueId.AMBIENT_HUMIDITY) { return config.bme280Enabled; }
+
+        // Input-assigned sensors: scan both arrays in one pass
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            if (config.tempInputs[i].assignedValue = id) { return true; }
+            if (i < PRESSURE_INPUT_COUNT && config.pressureInputs[i].assignedValue = id) { return true; }
+        }
         return false;
     }
 
