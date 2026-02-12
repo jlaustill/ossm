@@ -22,7 +22,7 @@ extern "C" {
 
 /* Function prototypes */
 void SensorProcessor_initialize(void);
-void SensorProcessor_processAllInputs(void);
+void SensorProcessor_update(void);
 
 #ifdef __cplusplus
 }

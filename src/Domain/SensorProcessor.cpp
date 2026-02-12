@@ -20,10 +20,11 @@
 #include <stdbool.h>
 
 /* Scope: SensorProcessor */
-static bool SensorProcessor_initialized = false;
+static IntervalTimer SensorProcessor_sensorTimer = {};
+static bool SensorProcessor_sensorUpdateReady = false;
 
-void SensorProcessor_initialize(void) {
-    SensorProcessor_initialized = true;
+static void SensorProcessor_sensorTimerCallback(void) {
+    SensorProcessor_sensorUpdateReady = true;
 }
 
 static float SensorProcessor_getAtmosphericPressurekPa(void) {
@@ -83,12 +84,27 @@ static void SensorProcessor_processBme280(void) {
     }
 }
 
-void SensorProcessor_processAllInputs(void) {
-    if (!SensorProcessor_initialized) {
-        return;
-    }
+static void SensorProcessor_processAllInputs(void) {
     SensorProcessor_processTempInputs();
     SensorProcessor_processPressureInputs();
     SensorProcessor_processEgt();
     SensorProcessor_processBme280();
+}
+
+static void SensorProcessor_pollAndProcess(void) {
+    ADS1115Manager_update();
+    MAX31856Manager_update();
+    BME280Manager_update();
+    SensorProcessor_processAllInputs();
+}
+
+void SensorProcessor_initialize(void) {
+    SensorProcessor_sensorTimer.begin(SensorProcessor_sensorTimerCallback, 50000);
+}
+
+void SensorProcessor_update(void) {
+    if (SensorProcessor_sensorUpdateReady) {
+        SensorProcessor_pollAndProcess();
+        SensorProcessor_sensorUpdateReady = false;
+    }
 }

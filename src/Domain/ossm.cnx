@@ -5,9 +5,6 @@
 #include <AppConfig.cnx>
 
 #include "../Data/ConfigStorage.cnx"
-#include "../Data/ADS1115Manager.cnx"
-#include "../Data/MAX31856Manager.cnx"
-#include "../Data/BME280Manager.cnx"
 #include "SensorProcessor.cnx"
 #include "Hardware.cnx"
 #include <Data/SensorValues.cnx>
@@ -15,40 +12,11 @@
 #include "SerialCommandHandler.cnx"
 
 scope Ossm {
-    // Static member variables
-    IntervalTimer sensorTimer;
-    atomic bool sensorUpdateReady <- false;
     elapsedMillis halfSecondMillis;
     elapsedMillis oneSecondMillis;
-    
 
-    // Timer interval in microseconds
-    const u32 SENSOR_TIMER_INTERVAL_US <- 50000;  // 50ms
-
-    // Timer callback - defined first since it's used by setup
-    public void sensorTimerCallback() {
-        // This runs in interrupt context - keep it minimal
-        // Just set a flag to process in main loop
-        sensorUpdateReady <- true;
-    }
-
-    // Process sensor updates - defined before loop
-    public void processSensorUpdates() {
-        // Poll ADS1115 devices (non-blocking, advances state machine)
-        ADS1115Manager.update();
-
-        // Poll MAX31856 thermocouple (non-blocking)
-        MAX31856Manager.update();
-
-        // Poll BME280 ambient sensor (reads every 1 second)
-        BME280Manager.update();
-
-        // Process all sensor readings into SensorValues
-        SensorProcessor.processAllInputs();
-    }
-
-    // Send J1939 messages - defined before loop
-    public void sendJ1939Messages() {
+    // Send J1939 messages on their own timing
+    void sendJ1939Messages() {
         // Every 500ms - send fast-updating data
         if (halfSecondMillis >= 500) {
             J1939Bus.sendPgnGeneric(65270);  // Inlet/Exhaust Conditions 1
@@ -89,33 +57,18 @@ scope Ossm {
         // Load configuration from EEPROM (or defaults if invalid)
         ConfigStorage.loadConfig(appConfig);
 
-        // Initialize all sensor hardware from config
-        Hardware.initialize(global.appConfig);
+        // Initialize all hardware and subsystems
+        Hardware.initialize(appConfig);
         SensorProcessor.initialize();
-
-        // Initialize J1939 bus
         J1939Bus.initialize();
-
-        // Initialize serial command handler
         SerialCommandHandler.initialize();
-
-        // Start sensor polling timer (50ms interval)
-        sensorTimer.begin(sensorTimerCallback, SENSOR_TIMER_INTERVAL_US);
 
         Serial.println("OSSM Ready");
     }
 
     public void loop() {
-        // Process sensor updates when timer fires
-        if (sensorUpdateReady) {
-            processSensorUpdates();
-            sensorUpdateReady <- false;
-        }
-
-        // Process serial commands
+        SensorProcessor.update();
         SerialCommandHandler.update();
-
-        // Send J1939 messages on their own timing
         sendJ1939Messages();
     }
 }

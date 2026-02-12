@@ -10,9 +10,6 @@
 #include <stdbool.h>
 #include <AppConfig.h>
 #include "../Data/ConfigStorage.h"
-#include "../Data/ADS1115Manager.h"
-#include "../Data/MAX31856Manager.h"
-#include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
 #include "Hardware.h"
 #include <Data/SensorValues.h>
@@ -24,9 +21,6 @@ extern "C" {
 #endif
 
 /* Function prototypes */
-void Ossm_sensorTimerCallback(void);
-void Ossm_processSensorUpdates(void);
-void Ossm_sendJ1939Messages(void);
 void Ossm_setup(void);
 void Ossm_loop(void);
 

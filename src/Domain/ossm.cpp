@@ -10,9 +10,6 @@
 #include <Arduino.h>
 #include <AppConfig.h>
 #include "../Data/ConfigStorage.h"
-#include "../Data/ADS1115Manager.h"
-#include "../Data/MAX31856Manager.h"
-#include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
 #include "Hardware.h"
 #include <Data/SensorValues.h>
@@ -20,26 +17,12 @@
 #include "SerialCommandHandler.h"
 
 #include <stdint.h>
-#include <stdbool.h>
 
 /* Scope: Ossm */
-static IntervalTimer Ossm_sensorTimer = {};
-static bool Ossm_sensorUpdateReady = false;
 static elapsedMillis Ossm_halfSecondMillis = {};
 static elapsedMillis Ossm_oneSecondMillis = {};
 
-void Ossm_sensorTimerCallback(void) {
-    Ossm_sensorUpdateReady = true;
-}
-
-void Ossm_processSensorUpdates(void) {
-    ADS1115Manager_update();
-    MAX31856Manager_update();
-    BME280Manager_update();
-    SensorProcessor_processAllInputs();
-}
-
-void Ossm_sendJ1939Messages(void) {
+static void Ossm_sendJ1939Messages(void) {
     if (Ossm_halfSecondMillis >= 500) {
         J1939Bus_sendPgnGeneric(65270);
         J1939Bus_sendPgnGeneric(65263);
@@ -72,15 +55,11 @@ void Ossm_setup(void) {
     SensorProcessor_initialize();
     J1939Bus_initialize();
     SerialCommandHandler_initialize();
-    Ossm_sensorTimer.begin(Ossm_sensorTimerCallback, 50000);
     Serial.println("OSSM Ready");
 }
 
 void Ossm_loop(void) {
-    if (Ossm_sensorUpdateReady) {
-        Ossm_processSensorUpdates();
-        Ossm_sensorUpdateReady = false;
-    }
+    SensorProcessor_update();
     SerialCommandHandler_update();
     Ossm_sendJ1939Messages();
 }
