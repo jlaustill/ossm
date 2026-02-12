@@ -23,7 +23,7 @@
 static IntervalTimer SensorProcessor_sensorTimer = {};
 static bool SensorProcessor_sensorUpdateReady = false;
 
-static void SensorProcessor_sensorTimerCallback(void) {
+static void SensorProcessor_sensorTimerISR(void) {
     SensorProcessor_sensorUpdateReady = true;
 }
 
@@ -99,7 +99,7 @@ static void SensorProcessor_pollAndProcess(void) {
 }
 
 void SensorProcessor_initialize(void) {
-    SensorProcessor_sensorTimer.begin(SensorProcessor_sensorTimerCallback, 50000);
+    SensorProcessor_sensorTimer.begin(SensorProcessor_sensorTimerISR, 50000);
 }
 
 void SensorProcessor_update(void) {

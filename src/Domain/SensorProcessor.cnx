@@ -15,7 +15,7 @@ scope SensorProcessor {
     atomic bool sensorUpdateReady <- false;
     const u32 SENSOR_TIMER_INTERVAL_US <- 50000;  // 50ms
 
-    void sensorTimerCallback() {
+    void sensorTimerISR() {
         sensorUpdateReady <- true;
     }
 
@@ -102,7 +102,7 @@ scope SensorProcessor {
     }
 
     public void initialize() {
-        sensorTimer.begin(sensorTimerCallback, SENSOR_TIMER_INTERVAL_US);
+        sensorTimer.begin(sensorTimerISR, SENSOR_TIMER_INTERVAL_US);
     }
 
     // Called from main loop - checks ISR flag and processes if ready
