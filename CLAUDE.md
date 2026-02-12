@@ -70,27 +70,31 @@ pio device monitor
 
 ```
 src/
-├── main.cpp              # Arduino entry point (setup/loop delegates to ossm class)
-├── configuration.h       # Sensor enable flags (#define SPN_xxx to enable specific sensors)
+├── main.cpp                  # Arduino entry point (delegates to Ossm scope)
+├── AppConfig.cnx             # Configuration struct, constants, input types
 ├── Domain/
-│   └── ossm.cpp/h        # Main application logic, sensor initialization, timed data collection
+│   ├── ossm.cnx              # Main setup/loop, timer-driven sensor polling
+│   ├── Hardware.cnx           # Hardware scope: pin init, hasHardware flags
+│   ├── SensorProcessor.cnx   # Reads ADC/thermocouple/BME280 → SensorValues
+│   ├── CommandHandler.cnx    # Unified command processing (EValueId dispatch)
+│   └── SerialCommandHandler.cnx  # Serial transport, forwards to CommandHandler
 ├── Display/
-│   └── J1939Bus.cpp/h    # CAN bus communication, J1939 message formatting, dual-bus repeater
+│   ├── J1939Bus.cnx          # CAN bus init, data-driven sendPgnGeneric()
+│   ├── J1939Encode.cnx       # J1939 byte encoding per SPN
+│   └── ...                   # Crc32, ValueName, HardwareMap, etc.
 └── Data/
-    └── AmbientSensors/   # BME280 sensor handling (humidity, barometric pressure, ambient temp)
-
-lib/
-├── PressureSensor/       # ADS1115 ADC-based pressure sensor driver
-└── TempSensor/           # ADS1115 ADC-based temperature sensor driver (Steinhart-Hart thermistor)
-
-include/
-└── AppData.h             # Central data structure holding all sensor readings
+    ├── ConfigStorage.cnx     # EEPROM load/save/validate (owns fallback-to-defaults)
+    ├── SensorValues.cnx      # Central sensor readings store
+    ├── ADS1115Manager.cnx    # ADS1115 ADC state machine
+    ├── MAX31856Manager.cnx   # Thermocouple driver
+    ├── BME280Manager.cnx     # Ambient conditions driver
+    └── types/                # TAdcReading, EValueId, TPgnConfig, etc.
 ```
 
 ### Key Patterns
 
-- **Sensor Configuration**: Sensors are enabled/disabled via preprocessor defines in `configuration.h`. Only defined SPNs will be transmitted.
-- **CAN Bus**: OSSM v0.0.2 uses CAN1 (pins D22/D23) via FlexCAN_T4 for J1939 transmission at 250kbps.
+- **Sensor Configuration**: Inputs configured via `AppConfig` with `EValueId` assignments. Only assigned inputs are read and transmitted.
+- **CAN Bus**: Uses CAN1 (pins D22/D23) via FlexCAN_T4 for J1939 transmission at 250kbps.
 - **Timed Transmission**: Sensor data sent at fixed intervals (500ms for pressure PGNs, 1000ms for temperature PGNs).
 - **J1939 Protocol**: All sensor data encoded per SAE J1939 SPNs with appropriate scaling/offsets.
 

@@ -71,8 +71,10 @@ scope Ossm {
     }
 
     public void setup() {
-        SensorValues.initialize();
         Serial.begin(115200);
+
+        SensorValues.initialize();
+        
         // Wait for USB serial connection (up to 3 seconds)
         u32 startTime <- millis();
         u32 elapsed <- millis() - startTime;
@@ -80,18 +82,12 @@ scope Ossm {
             elapsed <- millis() - startTime;
         }
 
-        Serial.println("OSSM Initializing...");
+        Serial.print("OSSM Initializing...");
+        Serial.print(elapsed);
+        Serial.println(" ms");
 
-        // Load configuration from EEPROM (or use defaults)
-        bool configLoaded <- ConfigStorage.loadConfig(global.appConfig);
-        if (!configLoaded) {
-            Serial.println("Loading default configuration");
-            ConfigStorage.loadDefaults(global.appConfig);
-            // Save defaults to EEPROM for next boot
-            ConfigStorage.saveConfig(global.appConfig);
-        } else {
-            Serial.println("Configuration loaded from EEPROM");
-        }
+        // Load configuration from EEPROM (or defaults if invalid)
+        ConfigStorage.loadConfig(appConfig);
 
         // Initialize all sensor hardware from config
         Hardware.initialize(global.appConfig);

@@ -1,5 +1,6 @@
 // config_storage.cnx - EEPROM configuration persistence
 // Manages loading, saving, and validating AppConfig in EEPROM
+#include <Arduino.h>
 #include <AppConfig.cnx>
 #include <EEPROM.h>
 #include <Display/Crc32.cnx>
@@ -81,17 +82,17 @@ scope ConfigStorage {
     }
 
     // Load configuration from EEPROM into provided struct
-    // Returns true if valid config was loaded, false if defaults were used
-    public bool loadConfig(AppConfig config) {
+    // If EEPROM data is invalid, loads defaults and saves them
+    public void loadConfig(AppConfig config) {
         global.EEPROM.get(this.EEPROM_CONFIG_ADDRESS, config);
 
         bool isValid <- this.validateConfig(config);
         if (!isValid) {
+            Serial.println("Loading default configuration");
             this.loadDefaults(config);
             this.saveConfig(config);
-            return false;
+        } else {
+            Serial.println("Configuration loaded from EEPROM");
         }
-
-        return true;
     }
 }

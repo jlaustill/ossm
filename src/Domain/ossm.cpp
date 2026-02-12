@@ -57,22 +57,17 @@ void Ossm_sendJ1939Messages(void) {
 }
 
 void Ossm_setup(void) {
-    SensorValues_initialize();
     Serial.begin(115200);
+    SensorValues_initialize();
     uint32_t startTime = millis();
     uint32_t elapsed = millis() - startTime;
     while (!Serial && elapsed < 3000) {
         elapsed = millis() - startTime;
     }
-    Serial.println("OSSM Initializing...");
-    bool configLoaded = ConfigStorage_loadConfig(appConfig);
-    if (!configLoaded) {
-        Serial.println("Loading default configuration");
-        ConfigStorage_loadDefaults(appConfig);
-        ConfigStorage_saveConfig(appConfig);
-    } else {
-        Serial.println("Configuration loaded from EEPROM");
-    }
+    Serial.print("OSSM Initializing...");
+    Serial.print(elapsed);
+    Serial.println(" ms");
+    ConfigStorage_loadConfig(appConfig);
     Hardware_initialize(appConfig);
     SensorProcessor_initialize();
     J1939Bus_initialize();

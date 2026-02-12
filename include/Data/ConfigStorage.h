@@ -22,7 +22,7 @@ typedef struct AppConfig AppConfig;
 bool ConfigStorage_validateConfig(const AppConfig& config);
 void ConfigStorage_loadDefaults(AppConfig& config);
 bool ConfigStorage_saveConfig(const AppConfig& config);
-bool ConfigStorage_loadConfig(AppConfig& config);
+void ConfigStorage_loadConfig(AppConfig& config);
 
 #ifdef __cplusplus
 }
