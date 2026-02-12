@@ -63,13 +63,14 @@ src/
 ├── main.cpp                  # Arduino entry point (delegates to Ossm scope)
 ├── AppConfig.cnx             # Configuration struct, constants, input types
 ├── Domain/
-│   ├── ossm.cnx              # Main setup/loop, timer-driven sensor polling
+│   ├── ossm.cnx              # Pure orchestrator: setup/loop calls initialize()/update()
 │   ├── Hardware.cnx           # Hardware scope: pin init, hasHardware flags
 │   ├── SensorProcessor.cnx   # Reads ADC/thermocouple/BME280 → SensorValues
 │   ├── CommandHandler.cnx    # Unified command processing (EValueId dispatch)
-│   └── SerialCommandHandler.cnx  # Serial transport, forwards to CommandHandler
+│   ├── SerialCommandHandler.cnx  # Serial transport, forwards to CommandHandler
+│   └── J1939CommandHandler.cnx   # CAN transport, PGN scheduling, forwards to CommandHandler
 ├── Display/
-│   ├── J1939Bus.cnx          # CAN bus init, data-driven sendPgnGeneric()
+│   ├── J1939Bus.cnx          # CAN hardware, outbound PGNs, ISR buffering
 │   ├── J1939Encode.cnx       # J1939 byte encoding per SPN
 │   └── ...                   # Crc32, ValueName, HardwareMap, etc.
 └── Data/
