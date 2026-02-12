@@ -88,10 +88,12 @@ scope J1939Bus {
     }
 
     public void getPendingCommand(u8[8] outData) {
-        for (u8 i <- 0; i < 8; i +<- 1) {
-            outData[i] <- configCmdData[i];
+        critical {
+            for (u8 i <- 0; i < 8; i +<- 1) {
+                outData[i] <- configCmdData[i];
+            }
+            configCmdPending <- false;
         }
-        configCmdPending <- false;
     }
 
     // ─── CAN message reception ──────────────────────────────────────
@@ -104,9 +106,9 @@ scope J1939Bus {
         // PGN 65280 (0xFF00) - Configuration commands: buffer for main loop
         if (message.pgn = 65280) {
             for (u8 i <- 0; i < 8; i +<- 1) {
-                this.configCmdData[i] <- msg.buf[i];
+                configCmdData[i] <- msg.buf[i];
             }
-            this.configCmdPending <- true;
+            configCmdPending <- true;
             return;
         }
 
