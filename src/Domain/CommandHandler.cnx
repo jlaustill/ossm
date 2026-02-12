@@ -4,12 +4,9 @@
 
 #include <AppConfig.cnx>
 #include <Data/ConfigStorage.cnx>
-#include <Data/ADS1115Manager.cnx>
-#include <Data/MAX31856Manager.cnx>
-#include <Data/BME280Manager.cnx>
+#include <Domain/Hardware.cnx>
 #include <Display/Presets.cnx>
 #include <Display/InputValid.cnx>
-#include <Data/SensorValues.cnx>
 
 enum ECommandResult {
     CMD_SUCCESS <- 0,
@@ -87,7 +84,6 @@ scope CommandHandler {
                     }
                 }
                 global.appConfig.tempInputs[data[2] - 1].assignedValue <- valueId;
-                global.ADS1115Manager.initialize(global.appConfig);
             }
             case VALUE_CAT_PRESSURE {
                 bool validInput <- global.InputValid.isValidPressureInput(data[2]);
@@ -100,29 +96,19 @@ scope CommandHandler {
                     }
                 }
                 global.appConfig.pressureInputs[data[2] - 1].assignedValue <- valueId;
-                global.ADS1115Manager.initialize(global.appConfig);
             }
             case VALUE_CAT_EGT {
                 global.appConfig.egtEnabled <- true;
-                global.MAX31856Manager.initialize(global.appConfig);
             }
             case VALUE_CAT_BME280 {
                 global.appConfig.bme280Enabled <- true;
-                global.BME280Manager.initialize(global.appConfig);
             }
             default {
                 return global.ECommandResult.CMD_UNKNOWN_VALUE;
             }
         }
 
-        if (category = global.EValueCategory.VALUE_CAT_BME280) {
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_PRES, true);
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_TEMP, true);
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_HUMIDITY, true);
-        } else {
-            global.SensorValues.setHasHardware(valueId, true);
-        }
-
+        global.Hardware.initialize(global.appConfig);
         return global.ECommandResult.CMD_SUCCESS;
     }
 
@@ -160,14 +146,7 @@ scope CommandHandler {
             }
         }
 
-        if (category = global.EValueCategory.VALUE_CAT_BME280) {
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_PRES, false);
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_TEMP, false);
-            global.SensorValues.setHasHardware(global.EValueId.AMBIENT_HUMIDITY, false);
-        } else {
-            global.SensorValues.setHasHardware(valueId, false);
-        }
-
+        global.Hardware.initialize(global.appConfig);
         return global.ECommandResult.CMD_SUCCESS;
     }
 

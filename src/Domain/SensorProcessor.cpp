@@ -27,7 +27,7 @@ void SensorProcessor_initialize(void) {
 }
 
 static float SensorProcessor_getAtmosphericPressurekPa(void) {
-    float baro = SensorValues_get(EValueId_AMBIENT_PRES);
+    float baro = SensorValues_current[EValueId_AMBIENT_PRES].value;
     if (baro > 0.0) {
         return baro;
     }
@@ -44,7 +44,7 @@ static void SensorProcessor_processTempInputs(void) {
         uint8_t channel = HardwareMap_tempChannel(i);
         float voltage = ADS1115Manager_getVoltage(device, channel);
         float tempC = SensorConvert_ntcTemperature(voltage, appConfig.tempInputs[i]);
-        SensorValues_set(val, tempC);
+        SensorValues_current[val].value = tempC;
     }
 }
 
@@ -59,7 +59,7 @@ static void SensorProcessor_processPressureInputs(void) {
         float voltage = ADS1115Manager_getVoltage(device, channel);
         float atm = SensorProcessor_getAtmosphericPressurekPa();
         float pressurekPa = SensorConvert_pressure(voltage, appConfig.pressureInputs[i], atm);
-        SensorValues_set(val, pressurekPa);
+        SensorValues_current[val].value = pressurekPa;
     }
 }
 
@@ -67,7 +67,7 @@ static void SensorProcessor_processEgt(void) {
     bool egtReady = MAX31856Manager_isEnabled();
     if (appConfig.egtEnabled && egtReady) {
         float temp = MAX31856Manager_getTemperatureC();
-        SensorValues_set(EValueId_TURBO1_TURB_INLET_TEMP, temp);
+        SensorValues_current[EValueId_TURBO1_TURB_INLET_TEMP].value = temp;
     }
 }
 
@@ -77,9 +77,9 @@ static void SensorProcessor_processBme280(void) {
         float temp = BME280Manager_getTemperatureC();
         float humidity = BME280Manager_getHumidity();
         float pressure = BME280Manager_getPressurekPa();
-        SensorValues_set(EValueId_AMBIENT_TEMP, temp);
-        SensorValues_set(EValueId_AMBIENT_HUMIDITY, humidity);
-        SensorValues_set(EValueId_AMBIENT_PRES, pressure);
+        SensorValues_current[EValueId_AMBIENT_TEMP].value = temp;
+        SensorValues_current[EValueId_AMBIENT_HUMIDITY].value = humidity;
+        SensorValues_current[EValueId_AMBIENT_PRES].value = pressure;
     }
 }
 

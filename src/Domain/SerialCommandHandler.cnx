@@ -12,6 +12,7 @@
 #include <Data/ADS1115Manager.cnx>
 #include <Data/MAX31856Manager.cnx>
 #include <Data/SensorValues.cnx>
+#include <Display/ValueName.cnx>
 
 // Module state for command buffer
 string<128> cmdBuffer;
@@ -47,8 +48,9 @@ scope SerialCommandHandler {
             if (val != global.EValueId.VALUE_UNASSIGNED) {
                 Serial.print("temp");
                 Serial.print(i + 1);
-                Serial.print(": valueId ");
-                Serial.println((u8)val);
+                Serial.print(": ");
+                global.ValueName.print(val);
+                Serial.println();
             }
         }
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
@@ -56,8 +58,9 @@ scope SerialCommandHandler {
             if (val != global.EValueId.VALUE_UNASSIGNED) {
                 Serial.print("pres");
                 Serial.print(i + 1);
-                Serial.print(": valueId ");
-                Serial.println((u8)val);
+                Serial.print(": ");
+                global.ValueName.print(val);
+                Serial.println();
             }
         }
         if (global.appConfig.egtEnabled) {
@@ -119,7 +122,7 @@ scope SerialCommandHandler {
                     Serial.print("EGT: ");
                     u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
                     if (faultStatus = 0) {
-                        Serial.print(global.SensorValues.get(global.EValueId.TURBO1_TURB_INLET_TEMP), 1);
+                        Serial.print(global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value,1);
                         Serial.println(" C");
                     } else {
                         Serial.println("FAULT");
@@ -131,7 +134,7 @@ scope SerialCommandHandler {
                         Serial.print("temp");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.get(val), 1);
+                        Serial.print(global.SensorValues.current[val].value,1);
                         Serial.println(" C");
                     }
                 }
@@ -141,19 +144,19 @@ scope SerialCommandHandler {
                         Serial.print("pres");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.get(val), 2);
+                        Serial.print(global.SensorValues.current[val].value,2);
                         Serial.println(" kPa");
                     }
                 }
                 if (global.appConfig.bme280Enabled) {
                     Serial.print("Ambient Temp: ");
-                    Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_TEMP), 1);
+                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value,1);
                     Serial.println(" C");
                     Serial.print("Humidity: ");
-                    Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_HUMIDITY), 1);
+                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value,1);
                     Serial.println(" %");
                     Serial.print("Baro: ");
-                    Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_PRES), 2);
+                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_PRES].value,2);
                     Serial.println(" kPa");
                 }
             }
@@ -165,7 +168,7 @@ scope SerialCommandHandler {
                 Serial.print("EGT: ");
                 u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
                 if (faultStatus = 0) {
-                    Serial.print(global.SensorValues.get(global.EValueId.TURBO1_TURB_INLET_TEMP), 1);
+                    Serial.print(global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value,1);
                     Serial.println(" C");
                 } else {
                     Serial.print("FAULT (0x");
@@ -181,7 +184,7 @@ scope SerialCommandHandler {
                         Serial.print("temp");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.get(val), 1);
+                        Serial.print(global.SensorValues.current[val].value,1);
                         Serial.println(" C");
                     }
                 }
@@ -194,7 +197,7 @@ scope SerialCommandHandler {
                         Serial.print("pres");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.get(val), 2);
+                        Serial.print(global.SensorValues.current[val].value,2);
                         Serial.println(" kPa");
                     }
                 }
@@ -206,13 +209,13 @@ scope SerialCommandHandler {
                 }
                 Serial.println("=== BME280 Ambient ===");
                 Serial.print("Ambient Temp: ");
-                Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_TEMP), 1);
+                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value,1);
                 Serial.println(" C");
                 Serial.print("Humidity: ");
-                Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_HUMIDITY), 1);
+                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value,1);
                 Serial.println(" %");
                 Serial.print("Baro: ");
-                Serial.print(global.SensorValues.get(global.EValueId.AMBIENT_PRES), 2);
+                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_PRES].value,2);
                 Serial.println(" kPa");
             }
             default {

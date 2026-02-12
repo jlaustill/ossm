@@ -31,7 +31,7 @@ scope J1939Bus {
     }
 
     bool isValueEnabled(EValueId valueId) {
-        return global.SensorValues.getHasHardware(valueId);
+        return global.SensorValues.current[valueId].hasHardware;
     }
 
     void sendMessage(u16 pgn, const u8[8] buf) {
@@ -65,7 +65,7 @@ scope J1939Bus {
                 continue;
             }
 
-            f32 value <- global.SensorValues.get(cfg.source);
+            f32 value <- global.SensorValues.current[cfg.source].value;
             u16 encoded <- global.J1939Encode.encode(value, cfg.resolution, cfg.offset);
 
             u8 pos <- cfg.bytePos - 1;

@@ -55,7 +55,7 @@ static void J1939Bus_fillBuffer(uint8_t buf[8]) {
 }
 
 static bool J1939Bus_isValueEnabled(EValueId valueId) {
-    return SensorValues_getHasHardware(valueId);
+    return SensorValues_current[valueId].hasHardware;
 }
 
 static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
@@ -81,7 +81,7 @@ void J1939Bus_sendPgnGeneric(uint16_t pgn) {
         if (!hasHw) {
             continue;
         }
-        float value = SensorValues_get(cfg.source);
+        float value = SensorValues_current[cfg.source].value;
         uint16_t encoded = J1939Encode_encode(value, cfg.resolution, cfg.offset);
         uint8_t pos = cfg.bytePos - 1;
         buf[pos] = static_cast<uint8_t>((encoded & 0xFF));

@@ -34,5 +34,5 @@ EValueId J1939Config_findSourceForSpn(uint16_t spn) {
             return cfg.source;
         }
     }
-    return EValueId_VALUE_ID_COUNT;
+    return EValueId_VALUE_UNASSIGNED;
 }

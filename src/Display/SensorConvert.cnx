@@ -70,7 +70,7 @@ scope SensorConvert {
                      (this.PRESSURE_VOLTAGE_MAX - this.PRESSURE_VOLTAGE_MIN);
 
         // Convert based on pressure type
-        if (cfg.pressureType = PRESSURE_TYPE_PSIA) {
+        if (cfg.pressureType = global.EPressureType.PRESSURE_TYPE_PSIA) {
             // Bar sensor (absolute)
             if (cfg.maxPressure > 20000) {
                 // Large bar values: stored as 20000 + bar_value

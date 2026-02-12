@@ -19,7 +19,7 @@ scope SensorProcessor {
 
     // Get atmospheric pressure for PSIG conversion (from BME280 or default)
     f32 getAtmosphericPressurekPa() {
-        f32 baro <- global.SensorValues.get(global.EValueId.AMBIENT_PRES);
+        f32 baro <- global.SensorValues.current[global.EValueId.AMBIENT_PRES].value;
         if (baro > 0.0) {
             return baro;
         }
@@ -39,7 +39,7 @@ scope SensorProcessor {
             f32 voltage <- global.ADS1115Manager.getVoltage(device, channel);
             f32 tempC <- global.SensorConvert.ntcTemperature(voltage, global.appConfig.tempInputs[i]);
 
-            global.SensorValues.set(val, tempC);
+            global.SensorValues.current[val].value <- tempC;
         }
     }
 
@@ -57,7 +57,7 @@ scope SensorProcessor {
             f32 atm <- this.getAtmosphericPressurekPa();
             f32 pressurekPa <- global.SensorConvert.pressure(voltage, global.appConfig.pressureInputs[i], atm);
 
-            global.SensorValues.set(val, pressurekPa);
+            global.SensorValues.current[val].value <- pressurekPa;
         }
     }
 
@@ -66,7 +66,7 @@ scope SensorProcessor {
         bool egtReady <- global.MAX31856Manager.isEnabled();
         if (global.appConfig.egtEnabled && egtReady) {
             f32 temp <- global.MAX31856Manager.getTemperatureC();
-            global.SensorValues.set(global.EValueId.TURBO1_TURB_INLET_TEMP, temp);
+            global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value <- temp;
         }
     }
 
@@ -77,9 +77,9 @@ scope SensorProcessor {
             f32 temp <- global.BME280Manager.getTemperatureC();
             f32 humidity <- global.BME280Manager.getHumidity();
             f32 pressure <- global.BME280Manager.getPressurekPa();
-            global.SensorValues.set(global.EValueId.AMBIENT_TEMP, temp);
-            global.SensorValues.set(global.EValueId.AMBIENT_HUMIDITY, humidity);
-            global.SensorValues.set(global.EValueId.AMBIENT_PRES, pressure);
+            global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value <- temp;
+            global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value <- humidity;
+            global.SensorValues.current[global.EValueId.AMBIENT_PRES].value <- pressure;
         }
     }
 

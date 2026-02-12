@@ -14,6 +14,7 @@
 #include <Data/ADS1115Manager.h>
 #include <Data/MAX31856Manager.h>
 #include <Data/SensorValues.h>
+#include <Display/ValueName.h>
 
 #ifdef __cplusplus
 extern "C" {

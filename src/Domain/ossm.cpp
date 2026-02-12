@@ -14,7 +14,7 @@
 #include "../Data/MAX31856Manager.h"
 #include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
-#include "CommandHandler.h"
+#include "Hardware.h"
 #include <Data/SensorValues.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"
@@ -37,29 +37,6 @@ void Ossm_processSensorUpdates(void) {
     MAX31856Manager_update();
     BME280Manager_update();
     SensorProcessor_processAllInputs();
-}
-
-static void Ossm_populateHardwareFlags(void) {
-    for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
-        EValueId val = appConfig.tempInputs[i].assignedValue;
-        if (val != EValueId_VALUE_UNASSIGNED) {
-            SensorValues_setHasHardware(val, true);
-        }
-    }
-    for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
-        EValueId val = appConfig.pressureInputs[i].assignedValue;
-        if (val != EValueId_VALUE_UNASSIGNED) {
-            SensorValues_setHasHardware(val, true);
-        }
-    }
-    if (appConfig.egtEnabled) {
-        SensorValues_setHasHardware(EValueId_TURBO1_TURB_INLET_TEMP, true);
-    }
-    if (appConfig.bme280Enabled) {
-        SensorValues_setHasHardware(EValueId_AMBIENT_PRES, true);
-        SensorValues_setHasHardware(EValueId_AMBIENT_TEMP, true);
-        SensorValues_setHasHardware(EValueId_AMBIENT_HUMIDITY, true);
-    }
 }
 
 void Ossm_sendJ1939Messages(void) {
@@ -96,10 +73,7 @@ void Ossm_setup(void) {
     } else {
         Serial.println("Configuration loaded from EEPROM");
     }
-    Ossm_populateHardwareFlags();
-    ADS1115Manager_initialize(appConfig);
-    MAX31856Manager_initialize(appConfig);
-    BME280Manager_initialize(appConfig);
+    Hardware_initialize(appConfig);
     SensorProcessor_initialize();
     J1939Bus_initialize();
     SerialCommandHandler_initialize();

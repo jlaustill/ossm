@@ -14,7 +14,7 @@
 #include "../Data/MAX31856Manager.h"
 #include "../Data/BME280Manager.h"
 #include "SensorProcessor.h"
-#include "CommandHandler.h"
+#include "Hardware.h"
 #include <Data/SensorValues.h>
 #include <Display/J1939Bus.h>
 #include "SerialCommandHandler.h"

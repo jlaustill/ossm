@@ -1,0 +1,42 @@
+// Hardware initialization
+// Single entry point for all sensor hardware setup.
+// Called from setup() and after any config change.
+
+#include <AppConfig.cnx>
+#include <Data/ADS1115Manager.cnx>
+#include <Data/MAX31856Manager.cnx>
+#include <Data/BME280Manager.cnx>
+#include <Data/SensorValues.cnx>
+
+scope Hardware {
+    // Check if a value ID is assigned to any hardware input
+    bool isValueAssigned(const AppConfig config, EValueId id) {
+        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+            if (config.tempInputs[i].assignedValue = id) { return true; }
+        }
+        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+            if (config.pressureInputs[i].assignedValue = id) { return true; }
+        }
+        if (id = EValueId.TURBO1_TURB_INLET_TEMP) { return config.egtEnabled; }
+        if (id = EValueId.AMBIENT_PRES) { return config.bme280Enabled; }
+        if (id = EValueId.AMBIENT_TEMP) { return config.bme280Enabled; }
+        if (id = EValueId.AMBIENT_HUMIDITY) { return config.bme280Enabled; }
+        return false;
+    }
+
+    // Set each hardware flag exactly once based on current config
+    void populateHardwareFlags(const AppConfig config) {
+        for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i +<- 1) {
+            EValueId id <- (EValueId)i;
+            bool has <- this.isValueAssigned(config, id);
+            SensorValues.current[id].hasHardware <- has;
+        }
+    }
+
+    public void initialize(const AppConfig config) {
+        this.populateHardwareFlags(config);
+        ADS1115Manager.initialize(config);
+        MAX31856Manager.initialize(config);
+        BME280Manager.initialize(config);
+    }
+}

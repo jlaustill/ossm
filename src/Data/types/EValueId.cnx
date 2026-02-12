@@ -38,6 +38,6 @@ enum EValueId {
     // Sentinel for array sizing
     VALUE_ID_COUNT,
 
-    // Unassigned input sentinel (must be after VALUE_ID_COUNT)
+    // Unassigned input sentinel
     VALUE_UNASSIGNED <- 0xFF
 }

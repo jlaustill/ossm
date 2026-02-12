@@ -3,33 +3,18 @@
 
 #include "types/EValueId.cnx"
 
-scope SensorValues {
-    // Runtime value storage
-    f32[global.EValueId.VALUE_ID_COUNT] values;
+struct TSensorValue {
+    f32 value;
+    bool hasHardware;
+}
 
-    // Track which values have hardware assigned
-    bool[global.EValueId.VALUE_ID_COUNT] hasHardware;
+scope SensorValues {
+    public TSensorValue[EValueId.VALUE_ID_COUNT] current;
 
     public void initialize() {
-        for (u8 i <- 0; i < global.EValueId.VALUE_ID_COUNT; i <- i + 1) {
-            this.values[i] <- 0.0;
-            this.hasHardware[i] <- false;
+        for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i <- i + 1) {
+            this.current[i].value <- 0.0;
+            this.current[i].hasHardware <- false;
         }
-    }
-
-    public f32 get(EValueId id) {
-        return this.values[id];
-    }
-
-    public void set(EValueId id, f32 value) {
-        this.values[id] <- value;
-    }
-
-    public void setHasHardware(EValueId id, bool has) {
-        this.hasHardware[id] <- has;
-    }
-
-    public bool getHasHardware(EValueId id) {
-        return this.hasHardware[id];
     }
 }

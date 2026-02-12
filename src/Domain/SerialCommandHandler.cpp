@@ -18,6 +18,7 @@
 #include <Data/ADS1115Manager.h>
 #include <Data/MAX31856Manager.h>
 #include <Data/SensorValues.h>
+#include <Display/ValueName.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -88,8 +89,9 @@ static void SerialCommandHandler_printEnabledValues(void) {
         if (val != EValueId_VALUE_UNASSIGNED) {
             Serial.print("temp");
             Serial.print(i + 1);
-            Serial.print(": valueId ");
-            Serial.println(static_cast<uint8_t>(val));
+            Serial.print(": ");
+            ValueName_print(val);
+            Serial.println();
         }
     }
     for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
@@ -97,8 +99,9 @@ static void SerialCommandHandler_printEnabledValues(void) {
         if (val != EValueId_VALUE_UNASSIGNED) {
             Serial.print("pres");
             Serial.print(i + 1);
-            Serial.print(": valueId ");
-            Serial.println(static_cast<uint8_t>(val));
+            Serial.print(": ");
+            ValueName_print(val);
+            Serial.println();
         }
     }
     if (appConfig.egtEnabled) {
@@ -159,7 +162,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
                 Serial.print("EGT: ");
                 uint8_t faultStatus = MAX31856Manager_getFaultStatus();
                 if (faultStatus == 0) {
-                    Serial.print(SensorValues_get(EValueId_TURBO1_TURB_INLET_TEMP), 1);
+                    Serial.print(SensorValues_current[EValueId_TURBO1_TURB_INLET_TEMP].value, 1);
                     Serial.println(" C");
                 } else {
                     Serial.println("FAULT");
@@ -171,7 +174,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
                     Serial.print("temp");
                     Serial.print(i + 1);
                     Serial.print(": ");
-                    Serial.print(SensorValues_get(val), 1);
+                    Serial.print(SensorValues_current[val].value, 1);
                     Serial.println(" C");
                 }
             }
@@ -181,19 +184,19 @@ static void SerialCommandHandler_handleReadSensors(void) {
                     Serial.print("pres");
                     Serial.print(i + 1);
                     Serial.print(": ");
-                    Serial.print(SensorValues_get(val), 2);
+                    Serial.print(SensorValues_current[val].value, 2);
                     Serial.println(" kPa");
                 }
             }
             if (appConfig.bme280Enabled) {
                 Serial.print("Ambient Temp: ");
-                Serial.print(SensorValues_get(EValueId_AMBIENT_TEMP), 1);
+                Serial.print(SensorValues_current[EValueId_AMBIENT_TEMP].value, 1);
                 Serial.println(" C");
                 Serial.print("Humidity: ");
-                Serial.print(SensorValues_get(EValueId_AMBIENT_HUMIDITY), 1);
+                Serial.print(SensorValues_current[EValueId_AMBIENT_HUMIDITY].value, 1);
                 Serial.println(" %");
                 Serial.print("Baro: ");
-                Serial.print(SensorValues_get(EValueId_AMBIENT_PRES), 2);
+                Serial.print(SensorValues_current[EValueId_AMBIENT_PRES].value, 2);
                 Serial.println(" kPa");
             }
             break;
@@ -206,7 +209,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
             Serial.print("EGT: ");
             uint8_t faultStatus = MAX31856Manager_getFaultStatus();
             if (faultStatus == 0) {
-                Serial.print(SensorValues_get(EValueId_TURBO1_TURB_INLET_TEMP), 1);
+                Serial.print(SensorValues_current[EValueId_TURBO1_TURB_INLET_TEMP].value, 1);
                 Serial.println(" C");
             } else {
                 Serial.print("FAULT (0x");
@@ -223,7 +226,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
                     Serial.print("temp");
                     Serial.print(i + 1);
                     Serial.print(": ");
-                    Serial.print(SensorValues_get(val), 1);
+                    Serial.print(SensorValues_current[val].value, 1);
                     Serial.println(" C");
                 }
             }
@@ -237,7 +240,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
                     Serial.print("pres");
                     Serial.print(i + 1);
                     Serial.print(": ");
-                    Serial.print(SensorValues_get(val), 2);
+                    Serial.print(SensorValues_current[val].value, 2);
                     Serial.println(" kPa");
                 }
             }
@@ -250,13 +253,13 @@ static void SerialCommandHandler_handleReadSensors(void) {
             }
             Serial.println("=== BME280 Ambient ===");
             Serial.print("Ambient Temp: ");
-            Serial.print(SensorValues_get(EValueId_AMBIENT_TEMP), 1);
+            Serial.print(SensorValues_current[EValueId_AMBIENT_TEMP].value, 1);
             Serial.println(" C");
             Serial.print("Humidity: ");
-            Serial.print(SensorValues_get(EValueId_AMBIENT_HUMIDITY), 1);
+            Serial.print(SensorValues_current[EValueId_AMBIENT_HUMIDITY].value, 1);
             Serial.println(" %");
             Serial.print("Baro: ");
-            Serial.print(SensorValues_get(EValueId_AMBIENT_PRES), 2);
+            Serial.print(SensorValues_current[EValueId_AMBIENT_PRES].value, 2);
             Serial.println(" kPa");
             break;
         }

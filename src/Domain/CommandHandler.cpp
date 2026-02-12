@@ -10,12 +10,9 @@
 // Uses global.appConfig directly - no config passing.
 #include <AppConfig.h>
 #include <Data/ConfigStorage.h>
-#include <Data/ADS1115Manager.h>
-#include <Data/MAX31856Manager.h>
-#include <Data/BME280Manager.h>
+#include <Domain/Hardware.h>
 #include <Display/Presets.h>
 #include <Display/InputValid.h>
-#include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -133,7 +130,6 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
                 }
             }
             appConfig.tempInputs[data[2] - 1].assignedValue = valueId;
-            ADS1115Manager_initialize(appConfig);
             break;
         }
         case EValueCategory_VALUE_CAT_PRESSURE: {
@@ -147,17 +143,14 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
                 }
             }
             appConfig.pressureInputs[data[2] - 1].assignedValue = valueId;
-            ADS1115Manager_initialize(appConfig);
             break;
         }
         case EValueCategory_VALUE_CAT_EGT: {
             appConfig.egtEnabled = true;
-            MAX31856Manager_initialize(appConfig);
             break;
         }
         case EValueCategory_VALUE_CAT_BME280: {
             appConfig.bme280Enabled = true;
-            BME280Manager_initialize(appConfig);
             break;
         }
         default: {
@@ -165,13 +158,7 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
             break;
         }
     }
-    if (category == EValueCategory_VALUE_CAT_BME280) {
-        SensorValues_setHasHardware(EValueId_AMBIENT_PRES, true);
-        SensorValues_setHasHardware(EValueId_AMBIENT_TEMP, true);
-        SensorValues_setHasHardware(EValueId_AMBIENT_HUMIDITY, true);
-    } else {
-        SensorValues_setHasHardware(valueId, true);
-    }
+    Hardware_initialize(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -211,13 +198,7 @@ static ECommandResult CommandHandler_disableValue(const uint8_t data[8]) {
             break;
         }
     }
-    if (category == EValueCategory_VALUE_CAT_BME280) {
-        SensorValues_setHasHardware(EValueId_AMBIENT_PRES, false);
-        SensorValues_setHasHardware(EValueId_AMBIENT_TEMP, false);
-        SensorValues_setHasHardware(EValueId_AMBIENT_HUMIDITY, false);
-    } else {
-        SensorValues_setHasHardware(valueId, false);
-    }
+    Hardware_initialize(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 

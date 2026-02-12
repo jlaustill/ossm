@@ -13,28 +13,11 @@
 #include <stdbool.h>
 
 /* Scope: SensorValues */
-static float SensorValues_values[EValueId_VALUE_ID_COUNT] = {0};
-static bool SensorValues_hasHardware[EValueId_VALUE_ID_COUNT] = {0};
+TSensorValue SensorValues_current[EValueId_VALUE_ID_COUNT] = {0};
 
 void SensorValues_initialize(void) {
     for (uint8_t i = 0; i < EValueId_VALUE_ID_COUNT; i = i + 1) {
-        SensorValues_values[i] = 0.0;
-        SensorValues_hasHardware[i] = false;
+        SensorValues_current[i].value = 0.0;
+        SensorValues_current[i].hasHardware = false;
     }
-}
-
-float SensorValues_get(EValueId id) {
-    return SensorValues_values[id];
-}
-
-void SensorValues_set(EValueId id, float value) {
-    SensorValues_values[id] = value;
-}
-
-void SensorValues_setHasHardware(EValueId id, bool has) {
-    SensorValues_hasHardware[id] = has;
-}
-
-bool SensorValues_getHasHardware(EValueId id) {
-    return SensorValues_hasHardware[id];
 }

@@ -9,7 +9,7 @@
 #include "../Data/MAX31856Manager.cnx"
 #include "../Data/BME280Manager.cnx"
 #include "SensorProcessor.cnx"
-#include "CommandHandler.cnx"
+#include "Hardware.cnx"
 #include <Data/SensorValues.cnx>
 #include <Display/J1939Bus.cnx>
 #include "SerialCommandHandler.cnx"
@@ -45,37 +45,6 @@ scope Ossm {
 
         // Process all sensor readings into SensorValues
         SensorProcessor.processAllInputs();
-    }
-
-    // Mark which EValueIds have hardware based on AppConfig
-    void populateHardwareFlags() {
-        // Temperature inputs
-        for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-            EValueId val <- global.appConfig.tempInputs[i].assignedValue;
-            if (val != global.EValueId.VALUE_UNASSIGNED) {
-                SensorValues.setHasHardware(val, true);
-            }
-        }
-
-        // Pressure inputs
-        for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-            EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
-            if (val != global.EValueId.VALUE_UNASSIGNED) {
-                SensorValues.setHasHardware(val, true);
-            }
-        }
-
-        // EGT (thermocouple)
-        if (global.appConfig.egtEnabled) {
-            SensorValues.setHasHardware(global.EValueId.TURBO1_TURB_INLET_TEMP, true);
-        }
-
-        // BME280 (ambient sensors)
-        if (global.appConfig.bme280Enabled) {
-            SensorValues.setHasHardware(global.EValueId.AMBIENT_PRES, true);
-            SensorValues.setHasHardware(global.EValueId.AMBIENT_TEMP, true);
-            SensorValues.setHasHardware(global.EValueId.AMBIENT_HUMIDITY, true);
-        }
     }
 
     // Send J1939 messages - defined before loop
@@ -124,13 +93,8 @@ scope Ossm {
             Serial.println("Configuration loaded from EEPROM");
         }
 
-        // Populate hardware flags from loaded config
-        populateHardwareFlags();
-
-        // Initialize managers with configuration
-        ADS1115Manager.initialize(global.appConfig);
-        MAX31856Manager.initialize(global.appConfig);
-        BME280Manager.initialize(global.appConfig);
+        // Initialize all sensor hardware from config
+        Hardware.initialize(global.appConfig);
         SensorProcessor.initialize();
 
         // Initialize J1939 bus

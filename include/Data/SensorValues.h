@@ -14,12 +14,17 @@
 extern "C" {
 #endif
 
+/* Struct definitions */
+typedef struct TSensorValue {
+    float value;
+    bool hasHardware;
+} TSensorValue;
+
+/* External variables */
+extern TSensorValue SensorValues_current[EValueId_VALUE_ID_COUNT];
+
 /* Function prototypes */
 void SensorValues_initialize(void);
-float SensorValues_get(EValueId id);
-void SensorValues_set(EValueId id, float value);
-void SensorValues_setHasHardware(EValueId id, bool has);
-bool SensorValues_getHasHardware(EValueId id);
 
 #ifdef __cplusplus
 }
