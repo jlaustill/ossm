@@ -13,31 +13,12 @@
 #include "SensorProcessor.h"
 #include "Hardware.h"
 #include <Data/SensorValues.h>
-#include <Display/J1939Bus.h>
+#include "J1939CommandHandler.h"
 #include "SerialCommandHandler.h"
 
 #include <stdint.h>
 
 /* Scope: Ossm */
-static elapsedMillis Ossm_halfSecondMillis = {};
-static elapsedMillis Ossm_oneSecondMillis = {};
-
-static void Ossm_sendJ1939Messages(void) {
-    if (Ossm_halfSecondMillis >= 500) {
-        J1939Bus_sendPgnGeneric(65270);
-        J1939Bus_sendPgnGeneric(65263);
-        J1939Bus_sendPgnGeneric(65190);
-        Ossm_halfSecondMillis = 0;
-    }
-    if (Ossm_oneSecondMillis >= 1000) {
-        J1939Bus_sendPgnGeneric(65269);
-        J1939Bus_sendPgnGeneric(65262);
-        J1939Bus_sendPgnGeneric(65129);
-        J1939Bus_sendPgnGeneric(65189);
-        J1939Bus_sendPgnGeneric(65164);
-        Ossm_oneSecondMillis = 0;
-    }
-}
 
 void Ossm_setup(void) {
     Serial.begin(115200);
@@ -61,5 +42,5 @@ void Ossm_setup(void) {
 void Ossm_loop(void) {
     SensorProcessor_update();
     SerialCommandHandler_update();
-    Ossm_sendJ1939Messages();
+    J1939CommandHandler_update();
 }

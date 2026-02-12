@@ -1,0 +1,185 @@
+/**
+ * J1939 Command Handler
+ * Thin transport: poll CAN buffer -> u8[8] -> CommandHandler.process()
+ * Sends responses on PGN 65281 via J1939Bus.sendMessage()
+ */
+
+#include <AppConfig.cnx>
+#include <Display/J1939Bus.cnx>
+#include <Domain/CommandHandler.cnx>
+#include <Display/FloatBytes.cnx>
+
+scope J1939CommandHandler {
+    elapsedMillis halfSecondMillis;
+    elapsedMillis oneSecondMillis;
+
+    // ─── Outbound PGN scheduling ─────────────────────────────────────
+
+    void sendScheduledPgns() {
+        // Every 500ms - send fast-updating data
+        if (halfSecondMillis >= 500) {
+            J1939Bus.sendPgnGeneric(65270);  // Inlet/Exhaust Conditions 1
+            J1939Bus.sendPgnGeneric(65263);  // Engine Fluid Level/Pressure 1
+            J1939Bus.sendPgnGeneric(65190);  // Turbocharger Information 5
+
+            halfSecondMillis <- 0;
+        }
+
+        // Every 1000ms - send slower-updating data
+        if (oneSecondMillis >= 1000) {
+            J1939Bus.sendPgnGeneric(65269);  // Ambient Conditions
+            J1939Bus.sendPgnGeneric(65262);  // Engine Temperature 1
+            J1939Bus.sendPgnGeneric(65129);  // Engine Temperature 2
+            J1939Bus.sendPgnGeneric(65189);  // Turbocharger Information 4
+            J1939Bus.sendPgnGeneric(65164);  // Engine Temperature 3
+
+            oneSecondMillis <- 0;
+        }
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────
+
+    void fillBuffer(u8[8] buf) {
+        for (u8 i <- 0; i < 8; i +<- 1) {
+            buf[i] <- 0xFF;
+        }
+    }
+
+    // ─── Result formatting ───────────────────────────────────────────
+
+    void sendConfigResponse(u8 cmd, u8 resultCode, const u8[8] data, u8 dataLen) {
+        u8[8] buf;
+        buf[0] <- cmd;
+        buf[1] <- resultCode;
+
+        for (u8 i <- 0; i < 6; i +<- 1) {
+            if (i < dataLen) {
+                buf[2 + i] <- data[i];
+            } else {
+                buf[2 + i] <- 0xFF;
+            }
+        }
+
+        J1939Bus.sendMessage(65281, buf);
+    }
+
+    // ─── CAN-only: Query ─────────────────────────────────────────────
+
+    void handleQuery(const u8[8] data) {
+        u8 queryType <- data[1];
+        u8 subQuery <- data[2];
+        u8[8] respData;
+        this.fillBuffer(respData);
+
+        switch (queryType) {
+            case 0 {
+                // Value counts
+                u8 tempCount <- 0;
+                u8 presCount <- 0;
+                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
+                    if (global.appConfig.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                        tempCount +<- 1;
+                    }
+                }
+                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
+                    if (global.appConfig.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                        presCount +<- 1;
+                    }
+                }
+                respData[0] <- tempCount;
+                respData[1] <- presCount;
+                if (global.appConfig.egtEnabled) {
+                    respData[2] <- 1;
+                } else {
+                    respData[2] <- 0;
+                }
+                if (global.appConfig.bme280Enabled) {
+                    respData[3] <- 1;
+                } else {
+                    respData[3] <- 0;
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 4);
+            }
+            case 1 {
+                // Temp value IDs (6 per sub-query, 1 byte each)
+                u8 startIdx <- subQuery * 6;
+                for (u8 i <- 0; i < 6; i +<- 1) {
+                    u8 idx <- startIdx + i;
+                    if (idx < TEMP_INPUT_COUNT) {
+                        respData[i] <- (u8)global.appConfig.tempInputs[idx].assignedValue;
+                    } else {
+                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                    }
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+            }
+            case 2 {
+                // Pressure value IDs (6 per sub-query, 1 byte each)
+                u8 startIdx <- subQuery * 6;
+                for (u8 i <- 0; i < 6; i +<- 1) {
+                    u8 idx <- startIdx + i;
+                    if (idx < PRESSURE_INPUT_COUNT) {
+                        respData[i] <- (u8)global.appConfig.pressureInputs[idx].assignedValue;
+                    } else {
+                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                    }
+                }
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+            }
+            case 4 {
+                // Full config
+                respData[0] <- global.appConfig.j1939SourceAddress;
+                respData[1] <- (u8)global.appConfig.thermocoupleType;
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 2);
+            }
+            default {
+                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_UNKNOWN_COMMAND, respData, 0);
+            }
+        }
+    }
+
+    // ─── CAN-only: NTC param (float bytes in CAN frame) ─────────────
+
+    void handleNtcParam(const u8[8] data) {
+        u8 input <- data[1];
+        u8 param <- data[2];
+        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
+
+        ECommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
+        u8[8] emptyData <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        this.sendConfigResponse(10, (u8)result, emptyData, 0);
+    }
+
+    // ─── Command dispatch ────────────────────────────────────────────
+
+    void processCommand(const u8[8] data) {
+        u8 cmd <- data[0];
+
+        // CAN-only commands
+        switch (cmd) {
+            case 5 { this.handleQuery(data); return; }
+            case 10 { this.handleNtcParam(data); return; }
+        }
+
+        // Forward to unified CommandHandler
+        ECommandResult result <- global.CommandHandler.process(data);
+        u8[8] emptyData <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        this.sendConfigResponse(cmd, (u8)result, emptyData, 0);
+    }
+
+    // ─── Public interface ────────────────────────────────────────────
+
+    // Called from main loop - sends scheduled PGNs and processes inbound commands
+    public void update() {
+        this.sendScheduledPgns();
+
+        bool pending <- J1939Bus.hasPendingCommand();
+        if (!pending) {
+            return;
+        }
+
+        u8[8] data;
+        J1939Bus.getPendingCommand(data);
+        this.processCommand(data);
+    }
+}

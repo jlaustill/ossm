@@ -6,39 +6,22 @@
 #include "J1939Bus.h"
 
 // J1939 CAN Bus Communication
-// Thin transport: parse CAN -> u8[8] -> CommandHandler.process()
+// Handles CAN hardware, outbound sensor PGNs, and inbound message buffering
+#include <Arduino.h>
 #include <AppConfig.h>
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include <Domain/CommandHandler.h>
 #include "J1939Encode.h"
-#include "FloatBytes.h"
 #include <Data/J1939Config.h>
 #include <Data/SensorValues.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 
-// ADR-044: Debug overflow helper functions (panic on overflow)
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-static inline uint8_t cnx_clamp_add_u8(uint8_t a, uint32_t b) {
-    if (b > (uint32_t)(UINT8_MAX - a)) {
-        fprintf(stderr, "PANIC: Integer overflow in u8 addition\n");
-        abort();
-    }
-    uint8_t result;
-    if (__builtin_add_overflow(a, (uint8_t)b, &result)) {
-        fprintf(stderr, "PANIC: Integer overflow in u8 addition\n");
-        abort();
-    }
-    return result;
-}
-
 /* Scope: J1939Bus */
 static FlexCAN_T4<CAN1,RX_SIZE_256,TX_SIZE_16> J1939Bus_canBus = {};
+static bool J1939Bus_configCmdPending = false;
+static uint8_t J1939Bus_configCmdData[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
     uint32_t id = 0;
@@ -58,7 +41,7 @@ static bool J1939Bus_isValueEnabled(EValueId valueId) {
     return SensorValues_current[valueId].hasHardware;
 }
 
-static void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
+void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
     CAN_message_t msg = {};
     msg.flags.extended = 1;
     msg.id = J1939Bus_buildCanId(pgn, 6, appConfig.j1939SourceAddress);
@@ -92,138 +75,27 @@ void J1939Bus_sendPgnGeneric(uint16_t pgn) {
     J1939Bus_sendMessage(pgn, buf);
 }
 
-static void J1939Bus_sendConfigResponse(uint8_t cmd, uint8_t resultCode, const uint8_t data[8], uint8_t dataLen) {
-    uint8_t buf[8] = {0};
-    buf[0] = cmd;
-    buf[1] = resultCode;
-    for (uint8_t i = 0; i < 6; i += 1) {
-        if (i < dataLen) {
-            buf[2 + i] = data[i];
-        } else {
-            buf[2 + i] = 0xFF;
-        }
-    }
-    CAN_message_t msg = {};
-    msg.flags.extended = 1;
-    msg.id = J1939Bus_buildCanId(65281, 6, appConfig.j1939SourceAddress);
-    msg.len = 8;
+bool J1939Bus_hasPendingCommand(void) {
+    return J1939Bus_configCmdPending;
+}
+
+void J1939Bus_getPendingCommand(uint8_t outData[8]) {
     for (uint8_t i = 0; i < 8; i += 1) {
-        msg.buf[i] = buf[i];
+        outData[i] = J1939Bus_configCmdData[i];
     }
-    J1939Bus_canBus.write(msg);
+    J1939Bus_configCmdPending = false;
 }
 
-static void J1939Bus_handleQuery(const uint8_t data[8]) {
-    uint8_t queryType = data[1];
-    uint8_t subQuery = data[2];
-    uint8_t respData[8] = {0};
-    J1939Bus_fillBuffer(respData);
-    switch (queryType) {
-        case 0: {
-            uint8_t tempCount = 0;
-            uint8_t presCount = 0;
-            for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
-                if (appConfig.tempInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
-                    tempCount = cnx_clamp_add_u8(tempCount, 1);
-                }
-            }
-            for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
-                if (appConfig.pressureInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
-                    presCount = cnx_clamp_add_u8(presCount, 1);
-                }
-            }
-            respData[0] = tempCount;
-            respData[1] = presCount;
-            if (appConfig.egtEnabled) {
-                respData[2] = 1;
-            } else {
-                respData[2] = 0;
-            }
-            if (appConfig.bme280Enabled) {
-                respData[3] = 1;
-            } else {
-                respData[3] = 0;
-            }
-            J1939Bus_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 4);
-            break;
-        }
-        case 1: {
-            uint8_t startIdx = subQuery * 6;
-            for (uint8_t i = 0; i < 6; i += 1) {
-                uint8_t idx = startIdx + i;
-                if (idx < TEMP_INPUT_COUNT) {
-                    respData[i] = static_cast<uint8_t>(appConfig.tempInputs[idx].assignedValue);
-                } else {
-                    respData[i] = static_cast<uint8_t>(EValueId_VALUE_UNASSIGNED);
-                }
-            }
-            J1939Bus_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6);
-            break;
-        }
-        case 2: {
-            uint8_t startIdx = subQuery * 6;
-            for (uint8_t i = 0; i < 6; i += 1) {
-                uint8_t idx = startIdx + i;
-                if (idx < PRESSURE_INPUT_COUNT) {
-                    respData[i] = static_cast<uint8_t>(appConfig.pressureInputs[idx].assignedValue);
-                } else {
-                    respData[i] = static_cast<uint8_t>(EValueId_VALUE_UNASSIGNED);
-                }
-            }
-            J1939Bus_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6);
-            break;
-        }
-        case 4: {
-            respData[0] = appConfig.j1939SourceAddress;
-            respData[1] = static_cast<uint8_t>(appConfig.thermocoupleType);
-            J1939Bus_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 2);
-            break;
-        }
-        default: {
-            J1939Bus_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_UNKNOWN_COMMAND), respData, 0);
-            break;
-        }
-    }
-}
-
-static void J1939Bus_handleNtcParam(const uint8_t data[8]) {
-    uint8_t input = data[1];
-    uint8_t param = data[2];
-    float value = FloatBytes_fromBytesLE(data[3], data[4], data[5], data[6]);
-    ECommandResult result = CommandHandler_setNtcParam(input, param, value);
-    uint8_t emptyData[8] = {0};
-    J1939Bus_sendConfigResponse(10, static_cast<uint8_t>(result), emptyData, 0);
-}
-
-void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len) {
-    if (len < 1) {
-        return;
-    }
-    uint8_t cmd = data[0];
-    switch (cmd) {
-        case 5: {
-            J1939Bus_handleQuery(data);
-            return;
-            break;
-        }
-        case 10: {
-            J1939Bus_handleNtcParam(data);
-            return;
-            break;
-        }
-    }
-    ECommandResult result = CommandHandler_process(data);
-    uint8_t emptyData[8] = {0};
-    J1939Bus_sendConfigResponse(cmd, static_cast<uint8_t>(result), emptyData, 0);
-}
-
-static void J1939Bus_sniffDataPrivate(const CAN_message_t& msg) {
+static void J1939Bus_sniffDataPrivateISR(const CAN_message_t& msg) {
     J1939Message message = {};
     message.pgn = 0;
     message.setCanId(msg.id);
     message.setData(msg.buf);
     if (message.pgn == 65280) {
-        J1939Bus_processConfigCommand(msg.buf, 8);
+        for (uint8_t i = 0; i < 8; i += 1) {
+            J1939Bus_configCmdData[i] = msg.buf[i];
+        }
+        J1939Bus_configCmdPending = true;
         return;
     }
     if (message.pgn == 59904) {
@@ -238,7 +110,7 @@ void J1939Bus_initialize(void) {
     J1939Bus_canBus.setMaxMB(16);
     J1939Bus_canBus.enableFIFO();
     J1939Bus_canBus.enableFIFOInterrupt();
-    J1939Bus_canBus.onReceive(J1939Bus_sniffDataPrivate);
+    J1939Bus_canBus.onReceive(J1939Bus_sniffDataPrivateISR);
     J1939Bus_canBus.mailboxStatus();
     Serial.print("J1939 Source Address: ");
     Serial.println(appConfig.j1939SourceAddress);

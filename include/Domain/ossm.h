@@ -13,7 +13,7 @@
 #include "SensorProcessor.h"
 #include "Hardware.h"
 #include <Data/SensorValues.h>
-#include <Display/J1939Bus.h>
+#include "J1939CommandHandler.h"
 #include "SerialCommandHandler.h"
 
 #ifdef __cplusplus

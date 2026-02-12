@@ -1,18 +1,21 @@
 // J1939 CAN Bus Communication
-// Thin transport: parse CAN -> u8[8] -> CommandHandler.process()
+// Handles CAN hardware, outbound sensor PGNs, and inbound message buffering
 
+#include <Arduino.h>
 #include <AppConfig.cnx>
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include <Domain/CommandHandler.cnx>
 #include "J1939Encode.cnx"
-#include "FloatBytes.cnx"
 #include <Data/J1939Config.cnx>
 #include <Data/SensorValues.cnx>
 
 scope J1939Bus {
     // CAN bus instance - OSSM v0.0.2 uses CAN1 (D22/D23)
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canBus;
+
+    // Buffered config command from CAN receive interrupt
+    atomic bool configCmdPending <- false;
+    u8[8] configCmdData <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
 
     // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -34,7 +37,7 @@ scope J1939Bus {
         return global.SensorValues.current[valueId].hasHardware;
     }
 
-    void sendMessage(u16 pgn, const u8[8] buf) {
+    public void sendMessage(u16 pgn, const u8[8] buf) {
         CAN_message_t msg;
         msg.flags.extended <- 1;
         msg.id <- this.buildCanId(pgn, 6, global.appConfig.j1939SourceAddress);
@@ -78,152 +81,36 @@ scope J1939Bus {
         this.sendMessage(pgn, buf);
     }
 
-    // ─── Config response (PGN 65281) ────────────────────────────────
+    // ─── Pending config command interface ────────────────────────────
 
-    void sendConfigResponse(u8 cmd, u8 resultCode, const u8[8] data, u8 dataLen) {
-        u8[8] buf;
-        buf[0] <- cmd;
-        buf[1] <- resultCode;
+    public bool hasPendingCommand() {
+        return configCmdPending;
+    }
 
-        for (u8 i <- 0; i < 6; i +<- 1) {
-            if (i < dataLen) {
-                buf[2 + i] <- data[i];
-            } else {
-                buf[2 + i] <- 0xFF;
-            }
-        }
-
-        CAN_message_t msg;
-        msg.flags.extended <- 1;
-        msg.id <- this.buildCanId(65281, 6, global.appConfig.j1939SourceAddress);
-        msg.len <- 8;
-
+    public void getPendingCommand(u8[8] outData) {
         for (u8 i <- 0; i < 8; i +<- 1) {
-            msg.buf[i] <- buf[i];
+            outData[i] <- configCmdData[i];
         }
-
-        this.canBus.write(msg);
-    }
-
-    // ─── CAN-only: Query ────────────────────────────────────────────
-
-    void handleQuery(const u8[8] data) {
-        u8 queryType <- data[1];
-        u8 subQuery <- data[2];
-        u8[8] respData;
-        this.fillBuffer(respData);
-
-        switch (queryType) {
-            case 0 {
-                // Value counts
-                u8 tempCount <- 0;
-                u8 presCount <- 0;
-                for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-                    if (global.appConfig.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
-                        tempCount +<- 1;
-                    }
-                }
-                for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-                    if (global.appConfig.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
-                        presCount +<- 1;
-                    }
-                }
-                respData[0] <- tempCount;
-                respData[1] <- presCount;
-                if (global.appConfig.egtEnabled) {
-                    respData[2] <- 1;
-                } else {
-                    respData[2] <- 0;
-                }
-                if (global.appConfig.bme280Enabled) {
-                    respData[3] <- 1;
-                } else {
-                    respData[3] <- 0;
-                }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 4);
-            }
-            case 1 {
-                // Temp value IDs (6 per sub-query, 1 byte each)
-                u8 startIdx <- subQuery * 6;
-                for (u8 i <- 0; i < 6; i +<- 1) {
-                    u8 idx <- startIdx + i;
-                    if (idx < TEMP_INPUT_COUNT) {
-                        respData[i] <- (u8)global.appConfig.tempInputs[idx].assignedValue;
-                    } else {
-                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
-                    }
-                }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
-            }
-            case 2 {
-                // Pressure value IDs (6 per sub-query, 1 byte each)
-                u8 startIdx <- subQuery * 6;
-                for (u8 i <- 0; i < 6; i +<- 1) {
-                    u8 idx <- startIdx + i;
-                    if (idx < PRESSURE_INPUT_COUNT) {
-                        respData[i] <- (u8)global.appConfig.pressureInputs[idx].assignedValue;
-                    } else {
-                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
-                    }
-                }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
-            }
-            case 4 {
-                // Full config
-                respData[0] <- global.appConfig.j1939SourceAddress;
-                respData[1] <- (u8)global.appConfig.thermocoupleType;
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 2);
-            }
-            default {
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_UNKNOWN_COMMAND, respData, 0);
-            }
-        }
-    }
-
-    // ─── CAN-only: NTC param (float bytes in CAN frame) ────────────
-
-    void handleNtcParam(const u8[8] data) {
-        u8 input <- data[1];
-        u8 param <- data[2];
-        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
-
-        ECommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
-        u8[8] emptyData;
-        this.sendConfigResponse(10, (u8)result, emptyData, 0);
-    }
-
-    // ─── Command dispatch ───────────────────────────────────────────
-
-    public void processConfigCommand(const u8[8] data, u8 len) {
-        if (len < 1) { return; }
-
-        u8 cmd <- data[0];
-
-        // CAN-only commands
-        switch (cmd) {
-            case 5 { this.handleQuery(data); return; }
-            case 10 { this.handleNtcParam(data); return; }
-        }
-
-        // Forward to unified CommandHandler
-        ECommandResult result <- global.CommandHandler.process(data);
-        u8[8] emptyData;
-        this.sendConfigResponse(cmd, (u8)result, emptyData, 0);
+        configCmdPending <- false;
     }
 
     // ─── CAN message reception ──────────────────────────────────────
 
-    void sniffDataPrivate(const CAN_message_t msg) {
+    void sniffDataPrivateISR(const CAN_message_t msg) {
         J1939Message message <- { pgn: 0 };
         message.setCanId(msg.id);
         message.setData(msg.buf);
 
-        // PGN 65280 (0xFF00) - Configuration commands
+        // PGN 65280 (0xFF00) - Configuration commands: buffer for main loop
         if (message.pgn = 65280) {
-            this.processConfigCommand(msg.buf, 8);
+            for (u8 i <- 0; i < 8; i +<- 1) {
+                this.configCmdData[i] <- msg.buf[i];
+            }
+            this.configCmdPending <- true;
             return;
         }
 
+        // PGN 59904 - Request: repeat on bus
         if (message.pgn = 59904) {
             this.canBus.write(msg);
         }
@@ -239,7 +126,7 @@ scope J1939Bus {
         this.canBus.setMaxMB(16);
         this.canBus.enableFIFO();
         this.canBus.enableFIFOInterrupt();
-        this.canBus.onReceive(this.sniffDataPrivate);
+        this.canBus.onReceive(this.sniffDataPrivateISR);
         this.canBus.mailboxStatus();
 
         Serial.print("J1939 Source Address: ");

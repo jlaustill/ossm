@@ -9,9 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <AppConfig.h>
-#include <Domain/CommandHandler.h>
 #include "J1939Encode.h"
-#include "FloatBytes.h"
 #include <Data/J1939Config.h>
 #include <Data/SensorValues.h>
 
@@ -20,8 +18,10 @@ extern "C" {
 #endif
 
 /* Function prototypes */
+void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]);
 void J1939Bus_sendPgnGeneric(uint16_t pgn);
-void J1939Bus_processConfigCommand(const uint8_t data[8], uint8_t len);
+bool J1939Bus_hasPendingCommand(void);
+void J1939Bus_getPendingCommand(uint8_t outData[8]);
 void J1939Bus_initialize(void);
 
 #ifdef __cplusplus

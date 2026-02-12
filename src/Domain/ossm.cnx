@@ -8,36 +8,10 @@
 #include "SensorProcessor.cnx"
 #include "Hardware.cnx"
 #include <Data/SensorValues.cnx>
-#include <Display/J1939Bus.cnx>
+#include "J1939CommandHandler.cnx"
 #include "SerialCommandHandler.cnx"
 
 scope Ossm {
-    elapsedMillis halfSecondMillis;
-    elapsedMillis oneSecondMillis;
-
-    // Send J1939 messages on their own timing
-    void sendJ1939Messages() {
-        // Every 500ms - send fast-updating data
-        if (halfSecondMillis >= 500) {
-            J1939Bus.sendPgnGeneric(65270);  // Inlet/Exhaust Conditions 1
-            J1939Bus.sendPgnGeneric(65263);  // Engine Fluid Level/Pressure 1
-            J1939Bus.sendPgnGeneric(65190);  // Turbocharger Information 5
-
-            halfSecondMillis <- 0;
-        }
-
-        // Every 1000ms - send slower-updating data
-        if (oneSecondMillis >= 1000) {
-            J1939Bus.sendPgnGeneric(65269);  // Ambient Conditions
-            J1939Bus.sendPgnGeneric(65262);  // Engine Temperature 1
-            J1939Bus.sendPgnGeneric(65129);  // Engine Temperature 2
-            J1939Bus.sendPgnGeneric(65189);  // Turbocharger Information 4
-            J1939Bus.sendPgnGeneric(65164);  // Engine Temperature 3
-
-            oneSecondMillis <- 0;
-        }
-    }
-
     public void setup() {
         Serial.begin(115200);
 
@@ -69,6 +43,6 @@ scope Ossm {
     public void loop() {
         SensorProcessor.update();
         SerialCommandHandler.update();
-        sendJ1939Messages();
+        J1939CommandHandler.update();
     }
 }
