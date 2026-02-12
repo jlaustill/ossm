@@ -12,6 +12,16 @@
 #include "SerialCommandHandler.cnx"
 
 scope Ossm {
+    elapsedMicros loopTimer;
+    const u32 LOOP_INTERVAL_US <- 500;  // 500μs (2kHz)
+
+    // Temporary timing audit
+    elapsedMillis reportTimer;
+    u32 maxSensor <- 0;
+    u32 maxSerial <- 0;
+    u32 maxJ1939 <- 0;
+    u32 maxTotal <- 0;
+
     public void setup() {
         Serial.begin(115200);
 
@@ -41,8 +51,42 @@ scope Ossm {
     }
 
     public void loop() {
-        SensorProcessor.update();
-        SerialCommandHandler.update();
-        J1939CommandHandler.update();
+        if (loopTimer >= LOOP_INTERVAL_US) {
+            loopTimer <- 0;
+
+            u32 t0 <- micros();
+            SensorProcessor.update();
+            u32 t1 <- micros();
+            SerialCommandHandler.update();
+            u32 t2 <- micros();
+            J1939CommandHandler.update();
+            u32 t3 <- micros();
+
+            u32 dSensor <- t1 - t0;
+            u32 dSerial <- t2 - t1;
+            u32 dJ1939 <- t3 - t2;
+            u32 dTotal <- t3 - t0;
+
+            if (dSensor > maxSensor) { maxSensor <- dSensor; }
+            if (dSerial > maxSerial) { maxSerial <- dSerial; }
+            if (dJ1939 > maxJ1939) { maxJ1939 <- dJ1939; }
+            if (dTotal > maxTotal) { maxTotal <- dTotal; }
+
+            if (reportTimer >= 5000) {
+                Serial.print("LOOP us max: sensor=");
+                Serial.print(maxSensor);
+                Serial.print(" serial=");
+                Serial.print(maxSerial);
+                Serial.print(" j1939=");
+                Serial.print(maxJ1939);
+                Serial.print(" total=");
+                Serial.println(maxTotal);
+                maxSensor <- 0;
+                maxSerial <- 0;
+                maxJ1939 <- 0;
+                maxTotal <- 0;
+                reportTimer <- 0;
+            }
+        }
     }
 }
