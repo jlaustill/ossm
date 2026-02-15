@@ -30,6 +30,44 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 
 ---
 
+## EValueId Reference
+
+All `valueId` parameters use this enum. Send the numeric value (0-20) in commands:
+
+| ID | Name | Description |
+|----|------|-------------|
+| 0 | AMBIENT_PRES | Ambient/barometric pressure |
+| 1 | AMBIENT_TEMP | Ambient air temperature |
+| 2 | AMBIENT_HUMIDITY | Relative humidity |
+| 3 | TURBO1_COMP_INLET_PRES | Turbo 1 compressor inlet pressure |
+| 4 | TURBO1_COMP_INLET_TEMP | Turbo 1 compressor inlet temperature |
+| 5 | TURBO1_COMP_OUTLET_PRES | Turbo 1 compressor outlet pressure |
+| 6 | TURBO1_COMP_OUTLET_TEMP | Turbo 1 compressor outlet temperature |
+| 7 | TURBO1_TURB_INLET_TEMP | EGT - turbo 1 turbine inlet temperature |
+| 8 | CAC1_INLET_PRES | Charge air cooler 1 inlet pressure |
+| 9 | CAC1_INLET_TEMP | Charge air cooler 1 inlet temperature |
+| 10 | CAC1_OUTLET_PRES | Charge air cooler 1 outlet pressure |
+| 11 | CAC1_OUTLET_TEMP | Charge air cooler 1 outlet temperature |
+| 12 | MANIFOLD1_ABS_PRES | Intake manifold 1 absolute pressure |
+| 13 | MANIFOLD1_TEMP | Intake manifold 1 temperature |
+| 14 | OIL_PRES | Engine oil pressure |
+| 15 | OIL_TEMP | Engine oil temperature |
+| 16 | COOLANT_PRES | Coolant pressure |
+| 17 | COOLANT_TEMP | Coolant temperature |
+| 18 | FUEL_PRES | Fuel delivery pressure |
+| 19 | FUEL_TEMP | Fuel temperature |
+| 20 | ENGINE_BAY_TEMP | Engine bay ambient temperature |
+
+**Values without input (BME280, EGT):**
+- `valueId 0,1,2` = BME280 (AMBIENT_PRES, AMBIENT_TEMP, AMBIENT_HUMIDITY)
+- `valueId 7` = EGT (MAX31856 thermocouple)
+
+**Values requiring input (temperature/pressure sensors):**
+- For temperature: `input` = 1-8 (temp1-temp8)
+- For pressure: `input` = 1-7 (pres1-pres7)
+
+---
+
 ## Command Details
 
 ### Command 1: Enable Value
