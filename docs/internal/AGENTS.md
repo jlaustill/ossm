@@ -2,10 +2,10 @@
 
 This repository uses a small set of autonomous agents to help with tasks such as research, code exploration, and testing. The following table lists the available agents, their purpose, and how they can be invoked.
 
-| Agent | Purpose | Typical Use Cases |
-|-------|---------|------------------|
-| **general** | General‑purpose agent for researching complex questions and executing multi‑step tasks. | Fetching documentation, searching codebases, running external tools, building projects, writing tests.
-| **explore** | Fast agent specialized for exploring codebases. | Find files by pattern, search for symbols or keywords, answer “how does X work?” queries.
+| Agent   | Purpose                                                                 | Typical Use Cases                                                                                                    |
+|---------|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| **general** | General-purpose agent for researching complex questions and executing multi-step tasks. | Fetching documentation, searching codebases, running external tools, building projects, writing tests. |
+| **explore** | Fast agent specialized for exploring codebases.                          | Find files by pattern, search for symbols or keywords, answer "how does X work?" queries.                           |
 
 ## Invoking an Agent
 Agents are launched via the `task` tool:
@@ -25,9 +25,9 @@ The agent will return the results directly in its final message.
 - **Use C‑Next syntax helper skill when unsure about language constructs.**
 
 ## Useful Skills
-| Skill | Description |
-|-------|-------------|
-| `cnext-syntax-helper` | Explains C‑Next syntax, features, and design decisions. Use it for any questions about C‑Next usage.
+| Skill             | Description                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| `cnext-syntax-helper` | Explains C‑Next syntax, features, and design decisions. Use it for any questions about C‑Next usage. |
 
 ---
 

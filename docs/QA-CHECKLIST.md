@@ -18,14 +18,14 @@ Reusable testing checklist for OSSM firmware releases.
 
 | Input | Status | Reading | Notes |
 |-------|--------|---------|-------|
-| temp1 | [ ] | ___°C | |
-| temp2 | [ ] | ___°C | |
-| temp3 | [ ] | ___°C | |
-| temp4 | [ ] | ___°C | |
-| temp5 | [ ] | ___°C | |
-| temp6 | [ ] | ___°C | |
-| temp7 | [ ] | ___°C | |
-| temp8 | [ ] | ___°C | |
+| temp1 | [ ]    | ___°C   |       |
+| temp2 | [ ]    | ___°C   |       |
+| temp3 | [ ]    | ___°C   |       |
+| temp4 | [ ]    | ___°C   |       |
+| temp5 | [ ]    | ___°C   |       |
+| temp6 | [ ]    | ___°C   |       |
+| temp7 | [ ]    | ___°C   |       |
+| temp8 | [ ]    | ___°C   |       |
 
 **Test procedure**: Connect NTC sensor, enable SPN via serial (`1,0,175,1,X`), read with `10,2`
 
@@ -33,13 +33,13 @@ Reusable testing checklist for OSSM firmware releases.
 
 | Input | Status | Reading | Notes |
 |-------|--------|---------|-------|
-| pres1 | [ ] | ___ PSI | |
-| pres2 | [ ] | ___ PSI | |
-| pres3 | [ ] | ___ PSI | |
-| pres4 | [ ] | ___ PSI | |
-| pres5 | [ ] | ___ PSI | |
-| pres6 | [ ] | ___ PSI | |
-| pres7 | [ ] | ___ PSI | |
+| pres1 | [ ]    | ___ PSI |       |
+| pres2 | [ ]    | ___ PSI |       |
+| pres3 | [ ]    | ___ PSI |       |
+| pres4 | [ ]    | ___ PSI |       |
+| pres5 | [ ]    | ___ PSI |       |
+| pres6 | [ ]    | ___ PSI |       |
+| pres7 | [ ]    | ___ PSI |       |
 
 **Test procedure**: Connect pressure sensor, set range (`3,X,0,150`), enable SPN (`1,0,100,1,X`), read with `10,3`
 
@@ -95,15 +95,15 @@ Reusable testing checklist for OSSM firmware releases.
 
 ### PGN Transmission
 
-| PGN | Interval | Status | SPNs Verified |
-|-----|----------|--------|---------------|
-| 65269 | 1s | [ ] | 171, 172, 108 |
-| 65270 | 0.5s | [ ] | 173, 102, 105, 106 |
-| 65262 | 1s | [ ] | 175, 110, 174 |
-| 65263 | 0.5s | [ ] | 100, 109, 94 |
-| 65129 | 1s | [ ] | 1637, 1363 |
-| 65189 | 1s | [ ] | 1131, 1132, 1133 |
-| 65190 | 0.5s | [ ] | 1127, 1128 |
+| PGN   | Interval | Status | SPNs Verified        |
+|-------|----------|--------|----------------------|
+| 65269 | 1s       | [ ]    | 171, 172, 108        |
+| 65270 | 0.5s     | [ ]    | 173, 102, 105, 106   |
+| 65262 | 1s       | [ ]    | 175, 110, 174        |
+| 65263 | 0.5s     | [ ]    | 100, 109, 94         |
+| 65129 | 1s       | [ ]    | 1637, 1363           |
+| 65189 | 1s       | [ ]    | 1131, 1132, 1133     |
+| 65190 | 0.5s     | [ ]    | 1127, 1128           |
 
 **Test procedure**: Enable relevant SPNs, monitor CAN bus with analyzer
 

@@ -44,14 +44,14 @@ OSSM uses a three-layer architecture that separates hardware abstraction from bu
 
 Hardware abstraction and centralized value storage:
 
-| Module | Hardware | Responsibility |
-|--------|----------|----------------|
-| `ADS1115Manager` | 4x ADS1115 ADCs | Non-blocking continuous reads, DRDY detection |
-| `MAX31856Manager` | Thermocouple | SPI communication, fault detection |
-| `BME280Manager` | Ambient sensor | I2C reads for temp, humidity, pressure |
-| `ConfigStorage` | EEPROM | Load/save configuration, defaults |
-| `SensorValues` | - | Central storage indexed by EValueId |
-| `J1939Config` | - | SPN/PGN encoding tables |
+| Module             | Hardware                     | Responsibility                                         |
+|--------------------|------------------------------|--------------------------------------------------------|
+| `ADS1115Manager`   | 4x ADS1115 ADCs              | Non-blocking continuous reads, DRDY detection         |
+| `MAX31856Manager`  | Thermocouple                 | SPI communication, fault detection                     |
+| `BME280Manager`    | Ambient sensor               | I2C reads for temp, humidity, pressure                |
+| `ConfigStorage`    | EEPROM                       | Load/save configuration, defaults                      |
+| `SensorValues`     | -                            | Central storage indexed by EValueId                    |
+| `J1939Config`      | -                            | SPN/PGN encoding tables                                |
 
 **Key pattern**: All sensor managers use non-blocking reads. They advance a state machine on each `update()` call rather than blocking.
 
@@ -64,12 +64,12 @@ Hardware abstraction and centralized value storage:
 
 Business logic - converts raw readings to engineering units:
 
-| Module | Responsibility |
-|--------|----------------|
-| `Ossm` | Main orchestration - setup, loop, timing |
-| `SensorProcessor` | Raw ADC → temperature/pressure values |
-| `CommandHandler` | Process configuration commands |
-| `SerialCommandHandler` | Parse serial input, dispatch to CommandHandler |
+| Module               | Responsibility                                          |
+|----------------------|---------------------------------------------------------|
+| `Ossm`               | Main orchestration - setup, loop, timing               |
+| `SensorProcessor`    | Raw ADC → temperature/pressure values                  |
+| `CommandHandler`     | Process configuration commands                          |
+| `SerialCommandHandler` | Parse serial input, dispatch to CommandHandler       |
 
 **Key pattern**: `SensorProcessor` converts raw readings to engineering units. Values are then copied to `SensorValues` indexed by `EValueId`. The J1939 encoder reads from `SensorValues` using the SPN config tables.
 
@@ -77,14 +77,14 @@ Business logic - converts raw readings to engineering units:
 
 Output formatting and protocol encoding:
 
-| Module | Responsibility |
-|--------|----------------|
-| `J1939Bus` | CAN bus init, message transmission |
-| `J1939Encode` | Pack sensor values into J1939 format |
-| `J1939Decode` | Parse incoming J1939 commands |
-| `SpnInfo` | SPN metadata (scaling, offsets) |
-| `SpnCheck` | Validate SPN assignments |
-| `HardwareMap` | Input number → ADC channel mapping |
+| Module        | Responsibility                                        |
+|---------------|-------------------------------------------------------|
+| `J1939Bus`    | CAN bus init, message transmission                   |
+| `J1939Encode` | Pack sensor values into J1939 format                 |
+| `J1939Decode` | Parse incoming J1939 commands                         |
+| `SpnInfo`     | SPN metadata (scaling, offsets)                       |
+| `SpnCheck`    | Validate SPN assignments                              |
+| `HardwareMap` | Input number → ADC channel mapping                    |
 
 ---
 
@@ -233,11 +233,11 @@ struct AppConfig {
 
 ## Timing
 
-| Event | Interval | Source |
-|-------|----------|--------|
-| Sensor polling | 50ms | IntervalTimer (hardware timer) |
-| Fast PGNs (65270, 65263, 65190) | 500ms | elapsedMillis in loop |
-| Slow PGNs (65269, 65262, 65129, 65189, 65164) | 1000ms | elapsedMillis in loop |
+| Event                                   | Interval | Source                                     |
+|-----------------------------------------|----------|--------------------------------------------|
+| Sensor polling                          | 50ms     | IntervalTimer (hardware timer)             |
+| Fast PGNs (65270, 65263, 65190)        | 500ms    | elapsedMillis in loop                      |
+| Slow PGNs (65269, 65262, 65129, 65189, 65164) | 1000ms | elapsedMillis in loop                      |
 
 The IntervalTimer runs in interrupt context and only sets a flag. Actual sensor reads happen in `loop()` to avoid blocking interrupts.
 
@@ -247,20 +247,20 @@ The IntervalTimer runs in interrupt context and only sets a flag. Actual sensor 
 
 ### ADS1115 Addresses and Channels
 
-| ADC | I2C Addr | DRDY Pin | Inputs |
-|-----|----------|----------|--------|
-| 0 | 0x48 | D0 | temp1, temp2, pres1, pres2 |
-| 1 | 0x49 | D1 | temp3, temp4, pres3, pres4 |
-| 2 | 0x4A | D4 | temp5, temp6, pres5, pres6 |
-| 3 | 0x4B | D5 | temp7, temp8, pres7, - |
+| ADC | I2C Addr | DRDY Pin | Inputs                                  |
+|-----|----------|----------|-----------------------------------------|
+| 0   | 0x48     | D0       | temp1, temp2, pres1, pres2              |
+| 1   | 0x49     | D1       | temp3, temp4, pres3, pres4              |
+| 2   | 0x4A     | D4       | temp5, temp6, pres5, pres6              |
+| 3   | 0x4B     | D5       | temp7, temp8, pres7, -                  |
 
 ### Other Peripherals
 
-| Device | Interface | Pins |
-|--------|-----------|------|
-| MAX31856 | SPI | CS=D10, DRDY=D2, FAULT=D3 |
-| BME280 | I2C | 0x76 (shared I2C bus) |
-| CAN | FlexCAN_T4 | CANL=D7, CANH=D8 |
+| Device    | Interface | Pins                                    |
+|-----------|-----------|-----------------------------------------|
+| MAX31856  | SPI       | CS=D10, DRDY=D2, FAULT=D3              |
+| BME280    | I2C       | 0x76 (shared I2C bus)                  |
+| CAN       | FlexCAN_T4 | CANL=D7, CANH=D8                        |
 
 ---
 

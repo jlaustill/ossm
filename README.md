@@ -23,20 +23,20 @@ OSSM is an open-source automotive sensor module that reads temperature, pressure
 
 ## Pinout
 
-| Pin A | Pin B | Pin C | Pin D |
-|-------|-------|-------|-------|
-| 1. Ground | 1. temp3 - | 1. temp5 + | 1. SCL (BME280) |
-| 2. pres7 Signal | 2. temp3 Signal | 2. pres3 + | 2. SDA (BME280) |
-| 3. temp2 + | 3. pres1 Signal | 3. pres6 + | 3. Ground (BME280) |
-| 4. temp1 + | 4. temp4 + | 4. pres4 Signal | 4. temp5 - |
-| 5. pres7 + | 5. pres5 + | 5. temp7 + | 5. pres3 - |
-| 6. pres2 + | 6. pres1 + | 6. temp6 + | 6. pres3 Signal |
-| 7. **12V Power** | 7. pres5 + | 7. pres4 Signal | 7. **CANL** |
-| 8. 5V (BME280) | 8. pres1 - | 8. pres4 - | 8. **CANH** |
-| 9. Ground | 9. temp4 - | 9. temp6 - | 9. EGT - |
-| 10. pres7 - | 10. pres5 - | 10. temp8 - | 10. EGT + |
-| 11. temp2 - | 11. temp8 Signal | 11. pres7 - | 11. pres6 - |
-| 12. temp1 - | 12. pres6 Signal | 12. pres4 + | 12. temp8 - |
+| Pin A           | Pin B                | Pin C                | Pin D                |
+|-----------------|----------------------|----------------------|----------------------|
+| 1. Ground       | 1. temp3 -           | 1. temp5 +           | 1. SCL (BME280)      |
+| 2. pres7 Signal | 2. temp3 Signal      | 2. pres3 +           | 2. SDA (BME280)      |
+| 3. temp2 +      | 3. pres1 Signal      | 3. pres6 +           | 3. Ground (BME280)   |
+| 4. temp1 +      | 4. temp4 +           | 4. pres4 Signal      | 4. temp5 -           |
+| 5. pres7 +      | 5. pres5 +           | 5. temp7 +           | 5. pres3 -           |
+| 6. pres2 +      | 6. pres1 +           | 6. temp6 +           | 6. pres3 Signal      |
+| 7. **12V Power** | 7. pres5 +          | 7. pres4 Signal      | 7. **CANL**          |
+| 8. 5V (BME280)  | 8. pres1 -           | 8. pres4 -           | 8. **CANH**          |
+| 9. Ground       | 9. temp4 -           | 9. temp6 -           | 9. EGT -             |
+| 10. pres7 -     | 10. pres5 -          | 10. temp8 -          | 10. EGT +            |
+| 11. temp2 -     | 11. temp8 Signal     | 11. pres7 -          | 11. pres6 -          |
+| 12. temp1 -     | 12. pres6 Signal     | 12. pres4 +          | 12. temp8 -          |
 
 ## Quick Start
 
@@ -76,13 +76,13 @@ Saves current configuration to EEPROM.
 
 ### Common Value IDs
 
-| ID | Name | Description | Auto-enabled SPNs |
-|----|------|-------------|-------------------|
-| 15 | OIL_TEMP | Engine oil temperature | 175 |
-| 17 | COOLANT_TEMP | Coolant temperature | 110, 1637 |
-| 14 | OIL_PRES | Engine oil pressure | 100 |
-| 12 | MANIFOLD1_ABS_PRES | Intake manifold pressure | 102 |
-| 7 | TURBO1_TURB_INLET_TEMP | EGT (turbine inlet) | 173 |
+| ID | Name                 | Description                    | Auto-enabled SPNs |
+|----|----------------------|--------------------------------|-------------------|
+| 15 | OIL_TEMP             | Engine oil temperature         | 175               |
+| 17 | COOLANT_TEMP         | Coolant temperature            | 110, 1637         |
+| 14 | OIL_PRES             | Engine oil pressure            | 100               |
+| 12 | MANIFOLD1_ABS_PRES   | Intake manifold pressure       | 102               |
+| 7  | TURBO1_TURB_INLET_TEMP | EGT (turbine inlet)          | 173               |
 
 See [Serial Commands](docs/SERIAL-COMMANDS.md) for complete EValueId table.
 See [SPN Reference](docs/SPN-REFERENCE.md) for value-to-SPN mappings.
@@ -91,12 +91,12 @@ See [SPN Reference](docs/SPN-REFERENCE.md) for value-to-SPN mappings.
 
 OSSM transmits sensor data on standard J1939 PGNs:
 
-| PGN | Interval | Data |
-|-----|----------|------|
-| 65262 | 1s | Oil temp, coolant temp, fuel temp |
-| 65263 | 500ms | Oil pressure, coolant pressure, fuel pressure |
-| 65269 | 1s | Ambient temp, air inlet temp, barometric |
-| 65270 | 500ms | EGT, boost, intake temp, inlet pressure |
+| PGN   | Interval | Data                                     |
+|-------|----------|------------------------------------------|
+| 65262 | 1s       | Oil temp, coolant temp, fuel temp        |
+| 65263 | 500ms    | Oil pressure, coolant pressure, fuel pressure |
+| 65269 | 1s       | Ambient temp, air inlet temp, barometric |
+| 65270 | 500ms    | EGT, boost, intake temp, inlet pressure  |
 
 Only enabled SPNs are transmitted. Disabled SPNs show as 0xFF (Not Available).
 

@@ -12,18 +12,18 @@ This document identifies files in the Data layer (`src/Data/`) that conflate mul
 
 ### Well-Focused (No Refactoring Needed)
 
-| File | Primary Responsibility | Notes |
-|------|----------------------|-------|
-| `SensorValues.cnx` | Central value storage | Simple struct array, no logic |
-| `EValueId.cnx` | Physical measurement enum | Pure enum definition |
-| `TAdcReading.cnx` | ADC reading struct | Data-only struct |
-| `TPgnConfig.cnx` | PGN transmission config | Data-only struct |
-| `TSpnConfig.cnx` | SPN encoding config | Data-only struct |
-| `J1939Config.cnx` | SPN/PGN configuration tables | Lookup table + helper |
-| `ConfigStorage.cnx` | EEPROM persistence | Load/save/validate cycle |
-| `ADS1115Manager.cnx` | ADS1115 hardware driver | State machine + I2C |
-| `BME280Manager.cnx` | BME280 hardware driver | State machine + I2C |
-| `MAX31856Manager.cnx` | MAX31856 hardware driver | State machine + SPI |
+| File                         | Primary Responsibility                                      | Notes                                     |
+|------------------------------|-------------------------------------------------------------|-------------------------------------------|
+| `SensorValues.cnx`           | Central value storage                                       | Simple struct array, no logic             |
+| `EValueId.cnx`               | Physical measurement enum                                   | Pure enum definition                      |
+| `TAdcReading.cnx`            | ADC reading struct                                          | Data-only struct                          |
+| `TPgnConfig.cnx`             | PGN transmission config                                     | Data-only struct                          |
+| `TSpnConfig.cnx`             | SPN encoding config                                         | Data-only struct                          |
+| `J1939Config.cnx`            | SPN/PGN configuration tables                                | Lookup table + helper                     |
+| `ConfigStorage.cnx`          | EEPROM persistence                                          | Load/save/validate cycle                  |
+| `ADS1115Manager.cnx`         | ADS1115 hardware driver                                     | State machine + I2C                       |
+| `BME280Manager.cnx`          | BME280 hardware driver                                      | State machine + I2C                       |
+| `MAX31856Manager.cnx`        | MAX31856 hardware driver                                    | State machine + SPI                       |
 
 ---
 
@@ -41,12 +41,12 @@ This document identifies files in the Data layer (`src/Data/`) that conflate mul
 
 **Code Locations:**
 
-| Lines | Function | Concern |
-|-------|----------|---------|
-| 13-31 | `validateConfig` | Validation only |
-| 34-71 | `loadDefaults` | **Default loading + physics presets** |
-| 75-82 | `saveConfig` | Save only |
-| 86-98 | `loadConfig` | Load + fallback logic |
+| Lines | Function         | Concern                                      |
+|-------|------------------|----------------------------------------------|
+| 13-31 | `validateConfig` | Validation only                             |
+| 34-71 | `loadDefaults`   | **Default loading + physics presets**      |
+| 75-82 | `saveConfig`     | Save only                                   |
+| 86-98 | `loadConfig`     | Load + fallback logic                       |
 
 **Issues Identified:**
 
@@ -94,7 +94,7 @@ Option B: Document that defaults are intentionally opinionated
 
 **Issues Identified:**
 
-1. **Lookup helper is minimal but tight coupling to SPN_CONFIGS**
+1. **`findSourceForSpn` iterates SPN_CONFIGS (tight coupling to table)**
    - `findSourceForSpn` iterates SPN_CONFIGS table
    - If table grows, this becomes O(n) lookup
    - No corresponding reverse lookup (SPN -> index)

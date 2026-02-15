@@ -12,14 +12,14 @@ This document identifies files in the Domain layer (`src/Domain/`) that conflate
 
 ### Well-Focused (No Refactoring Needed)
 
-| File | Primary Responsibility | Notes |
-|------|----------------------|-------|
-| `ossm.cnx` | Main orchestrator | setup/loop with timing audit, delegates to subsystems |
-| `Hardware.cnx` | Hardware initialization | Sets hardware flags, initializes drivers |
-| `SensorProcessor.cnx` | Sensor polling | Reads ADC/thermocouple/BME280, stores to SensorValues |
-| `CommandHandler.cnx` | Unified command processing | EValueId dispatch, no transport knowledge |
-| `J1939CommandHandler.cnx` | CAN transport | Polls CAN buffer, forwards to CommandHandler |
-| `SerialCommandHandler.cnx` | Serial transport | Parses serial text, forwards to CommandHandler |
+| File                         | Primary Responsibility                                      | Notes                                                               |
+|------------------------------|-------------------------------------------------------------|---------------------------------------------------------------------|
+| `ossm.cnx`                   | Main orchestrator                                           | setup/loop with timing audit, delegates to subsystems              |
+| `Hardware.cnx`               | Hardware initialization                                     | Sets hardware flags, initializes drivers                           |
+| `SensorProcessor.cnx`        | Sensor polling                                              | Reads ADC/thermocouple/BME280, stores to SensorValues              |
+| `CommandHandler.cnx`         | Unified command processing                                  | EValueId dispatch, no transport knowledge                          |
+| `J1939CommandHandler.cnx`    | CAN transport                                               | Polls CAN buffer, forwards to CommandHandler                       |
+| `SerialCommandHandler.cnx`   | Serial transport                                            | Parses serial text, forwards to CommandHandler                     |
 
 ---
 
@@ -36,11 +36,11 @@ This document identifies files in the Domain layer (`src/Domain/`) that conflate
 
 **Code Locations:**
 
-| Lines | Function | Concern |
-|-------|----------|---------|
-| 18-23 | Timing audit variables | **Debug instrumentation** |
-| 30-35 | USB serial wait | **Startup convenience (debug)** |
-| 53-91 | Main loop timing | **Debug timing audit** |
+| Lines | Function              | Concern                           |
+|-------|-----------------------|-----------------------------------|
+| 18-23 | Timing audit variables | **Debug instrumentation**        |
+| 30-35 | USB serial wait       | **Startup convenience (debug)**  |
+| 53-91 | Main loop timing      | **Debug timing audit**           |
 
 **Issues Identified:**
 
@@ -89,11 +89,11 @@ Option C: Move timing audit to a separate debug-only transport (serial-only debu
 
 **Code Locations:**
 
-| Lines | Function | Concern |
-|-------|----------|---------|
-| 34-63 | `getValueCategory` | **Value categorization logic** |
-| 111, 149 | Hardware.initialize | **Hardware re-init after each command** |
-| 182-207 | NTC/pressure presets | **Presets application** |
+| Lines      | Function             | Concern                            |
+|------------|----------------------|------------------------------------|
+| 34-63      | `getValueCategory`   | **Value categorization logic**    |
+| 111, 149   | Hardware.initialize  | **Hardware re-init after each command** |
+| 182-207    | NTC/pressure presets | **Presets application**           |
 
 **Issues Identified:**
 
@@ -283,12 +283,12 @@ scope SerialCommandHandler {
 
 ### Cross-Cutting Concerns
 
-| Concern | Found In | Issue |
-|---------|----------|-------|
-| Query handling | J1939CommandHandler, SerialCommandHandler | Duplicated logic |
-| Diagnostics/debug output | SerialCommandHandler, J1939CommandHandler | Mixed with command processing |
-| Fault reporting | SerialCommandHandler | Called after every command |
-| PGN scheduling | J1939CommandHandler | Hardcoded instead of data-driven |
+| Concern                    | Found In                                           | Issue                               |
+|----------------------------|----------------------------------------------------|-------------------------------------|
+| Query handling             | J1939CommandHandler, SerialCommandHandler          | Duplicated logic                    |
+| Diagnostics/debug output   | SerialCommandHandler, J1939CommandHandler          | Mixed with command processing       |
+| Fault reporting            | SerialCommandHandler                               | Called after every command          |
+| PGN scheduling             | J1939CommandHandler                                | Hardcoded instead of data-driven    |
 
 ### Layering
 
@@ -309,12 +309,12 @@ Domain layer imports Data layer:
 
 ## Refactoring Priority
 
-| Priority | File | Effort | Impact |
-|----------|------|--------|--------|
-| High | `J1939CommandHandler.cnx` | High | DRY, data-driven scheduling |
-| High | `SerialCommandHandler.cnx` | High | DRY, separating diagnostics |
-| Medium | `CommandHandler.cnx` | Medium | Batch config changes, clean separation |
-| Low | `ossm.cnx` | Low | Remove debug code from release |
+| Priority | File                             | Effort | Impact                            |
+|----------|----------------------------------|--------|-----------------------------------|
+| High     | `J1939CommandHandler.cnx`        | High   | DRY, data-driven scheduling       |
+| High     | `SerialCommandHandler.cnx`       | High   | DRY, separating diagnostics       |
+| Medium   | `CommandHandler.cnx`             | Medium | Batch config changes, clean separation |
+| Low      | `ossm.cnx`                       | Low    | Remove debug code from release    |
 
 ---
 

@@ -15,16 +15,16 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 
 ## Command Summary
 
-| Cmd | Name | Format | Description |
-|-----|------|--------|-------------|
-| 1 | Enable Value | `1,valueId[,input]` | Enable a value (BME280, EGT, or assign input) |
-| 2 | Disable Value | `2,valueId` | Disable a value |
-| 3 | Set Pressure Range | `3,input,psiHi,psiLo` | Set pressure sensor max PSI |
-| 4 | Set TC Type | `4,type` | Set thermocouple type (0-7) |
-| 5 | Query Config | `5,query_type` | Query configuration |
-| 7 | NTC Preset | `7,input,preset` | Apply NTC sensor preset |
-| 8 | Pressure Preset | `8,input,preset` | Apply pressure sensor preset |
-| 9 | Read Sensors | `9[,type]` | Read live sensor values |
+| Cmd | Name               | Format                   | Description                                  |
+|-----|--------------------|--------------------------|----------------------------------------------|
+| 1   | Enable Value       | `1,valueId[,input]`      | Enable a value (BME280, EGT, or assign input) |
+| 2   | Disable Value      | `2,valueId`              | Disable a value                              |
+| 3   | Set Pressure Range | `3,input,psiHi,psiLo`    | Set pressure sensor max PSI                  |
+| 4   | Set TC Type        | `4,type`                 | Set thermocouple type (0-7)                  |
+| 5   | Query Config       | `5,query_type`           | Query configuration                          |
+| 7   | NTC Preset         | `7,input,preset`         | Apply NTC sensor preset                      |
+| 8   | Pressure Preset    | `8,input,preset`         | Apply pressure sensor preset                 |
+| 9   | Read Sensors       | `9[,type]`               | Read live sensor values                      |
 
 **Note:** All configuration changes are automatically saved to EEPROM. No explicit save command needed.
 
@@ -34,29 +34,29 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 
 All `valueId` parameters use this enum. Send the numeric value (0-20) in commands:
 
-| ID | Name | Description |
-|----|------|-------------|
-| 0 | AMBIENT_PRES | Ambient/barometric pressure |
-| 1 | AMBIENT_TEMP | Ambient air temperature |
-| 2 | AMBIENT_HUMIDITY | Relative humidity |
-| 3 | TURBO1_COMP_INLET_PRES | Turbo 1 compressor inlet pressure |
-| 4 | TURBO1_COMP_INLET_TEMP | Turbo 1 compressor inlet temperature |
-| 5 | TURBO1_COMP_OUTLET_PRES | Turbo 1 compressor outlet pressure |
-| 6 | TURBO1_COMP_OUTLET_TEMP | Turbo 1 compressor outlet temperature |
-| 7 | TURBO1_TURB_INLET_TEMP | EGT - turbo 1 turbine inlet temperature |
-| 8 | CAC1_INLET_PRES | Charge air cooler 1 inlet pressure |
-| 9 | CAC1_INLET_TEMP | Charge air cooler 1 inlet temperature |
-| 10 | CAC1_OUTLET_PRES | Charge air cooler 1 outlet pressure |
-| 11 | CAC1_OUTLET_TEMP | Charge air cooler 1 outlet temperature |
-| 12 | MANIFOLD1_ABS_PRES | Intake manifold 1 absolute pressure |
-| 13 | MANIFOLD1_TEMP | Intake manifold 1 temperature |
-| 14 | OIL_PRES | Engine oil pressure |
-| 15 | OIL_TEMP | Engine oil temperature |
-| 16 | COOLANT_PRES | Coolant pressure |
-| 17 | COOLANT_TEMP | Coolant temperature |
-| 18 | FUEL_PRES | Fuel delivery pressure |
-| 19 | FUEL_TEMP | Fuel temperature |
-| 20 | ENGINE_BAY_TEMP | Engine bay ambient temperature |
+| ID | Name                       | Description                                   |
+|----|----------------------------|-----------------------------------------------|
+| 0  | AMBIENT_PRES               | Ambient/barometric pressure                   |
+| 1  | AMBIENT_TEMP               | Ambient air temperature                       |
+| 2  | AMBIENT_HUMIDITY           | Relative humidity                             |
+| 3  | TURBO1_COMP_INLET_PRES     | Turbo 1 compressor inlet pressure             |
+| 4  | TURBO1_COMP_INLET_TEMP     | Turbo 1 compressor inlet temperature          |
+| 5  | TURBO1_COMP_OUTLET_PRES    | Turbo 1 compressor outlet pressure            |
+| 6  | TURBO1_COMP_OUTLET_TEMP    | Turbo 1 compressor outlet temperature         |
+| 7  | TURBO1_TURB_INLET_TEMP     | EGT - turbo 1 turbine inlet temperature       |
+| 8  | CAC1_INLET_PRES            | Charge air cooler 1 inlet pressure            |
+| 9  | CAC1_INLET_TEMP            | Charge air cooler 1 inlet temperature         |
+| 10 | CAC1_OUTLET_PRES           | Charge air cooler 1 outlet pressure           |
+| 11 | CAC1_OUTLET_TEMP           | Charge air cooler 1 outlet temperature        |
+| 12 | MANIFOLD1_ABS_PRES         | Intake manifold 1 absolute pressure           |
+| 13 | MANIFOLD1_TEMP             | Intake manifold 1 temperature                 |
+| 14 | OIL_PRES                   | Engine oil pressure                           |
+| 15 | OIL_TEMP                   | Engine oil temperature                        |
+| 16 | COOLANT_PRES               | Coolant pressure                              |
+| 17 | COOLANT_TEMP               | Coolant temperature                           |
+| 18 | FUEL_PRES                  | Fuel delivery pressure                        |
+| 19 | FUEL_TEMP                  | Fuel temperature                              |
+| 20 | ENGINE_BAY_TEMP            | Engine bay ambient temperature                |
 
 **Values without input (BME280, EGT):**
 - `valueId 0,1,2` = BME280 (AMBIENT_PRES, AMBIENT_TEMP, AMBIENT_HUMIDITY)
@@ -76,10 +76,10 @@ All `valueId` parameters use this enum. Send the numeric value (0-20) in command
 1,valueId[,input]
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| valueId | EValueId enum value (see table below) |
-| input | Sensor input number (optional, required for temperature/pressure only) |
+| Parameter | Description                                                                 |
+|-----------|-----------------------------------------------------------------------------|
+| valueId   | EValueId enum value (see table below)                                       |
+| input     | Sensor input number (optional, required for temperature/pressure only)      |
 
 **Values without input (BME280, EGT):**
 - `valueId 0,1,2` = BME280 (AMBIENT_PRES, AMBIENT_TEMP, AMBIENT_HUMIDITY)
@@ -136,11 +136,11 @@ Disable a previously enabled value. This removes the value from any sensor input
 3,input,psiHi,psiLo
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| input | Pressure input 1-7 |
-| psiHi | Max PSI high byte (PSI >> 8) |
-| psiLo | Max PSI low byte (PSI & 0xFF) |
+| Parameter | Description                                           |
+|-----------|-------------------------------------------------------|
+| input     | Pressure input 1-7                                    |
+| psiHi     | Max PSI high byte (PSI >> 8)                          |
+| psiLo     | Max PSI low byte (PSI & 0xFF)                         |
 
 **Example:** Set pres1 to 150 PSI:
 ```
@@ -157,14 +157,14 @@ Disable a previously enabled value. This removes the value from any sensor input
 
 | Type | Thermocouple |
 |------|--------------|
-| 0 | B-type |
-| 1 | E-type |
-| 2 | J-type |
-| 3 | K-type (default) |
-| 4 | N-type |
-| 5 | R-type |
-| 6 | S-type |
-| 7 | T-type |
+| 0    | B-type       |
+| 1    | E-type       |
+| 2    | J-type       |
+| 3    | K-type (default) |
+| 4    | N-type       |
+| 5    | R-type       |
+| 6    | S-type       |
+| 7    | T-type       |
 
 **Example:**
 ```
@@ -179,10 +179,10 @@ Disable a previously enabled value. This removes the value from any sensor input
 5,query_type
 ```
 
-| Query Type | Returns |
-|------------|---------|
-| 0 | All assigned values with input mappings |
-| 4 | Full configuration dump |
+| Query Type | Returns                                      |
+|------------|----------------------------------------------|
+| 0          | All assigned values with input mappings      |
+| 4          | Full configuration dump                      |
 
 **Examples:**
 ```
@@ -216,16 +216,16 @@ SPN 354 (AMBIENT_HUMIDITY) -> PGN 65164
 7,input,preset
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| input | Temperature input 1-8 |
-| preset | Preset number (see table) |
+| Parameter | Description                |
+|-----------|----------------------------|
+| input     | Temperature input 1-8      |
+| preset    | Preset number (see table)  |
 
-| Preset | Sensor |
-|--------|--------|
-| 0 | AEM 30-2012 |
-| 1 | Bosch |
-| 2 | GM |
+| Preset | Sensor      |
+|--------|-------------|
+| 0      | AEM 30-2012 |
+| 1      | Bosch       |
+| 2      | GM          |
 
 **Example:**
 ```
@@ -240,16 +240,16 @@ SPN 354 (AMBIENT_HUMIDITY) -> PGN 65164
 8,input,preset
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| input | Pressure input 1-7 |
-| preset | Preset number (see table) |
+| Parameter | Description               |
+|-----------|---------------------------|
+| input     | Pressure input 1-7        |
+| preset    | Preset number (see table) |
 
 | Preset | Max PSI |
 |--------|---------|
-| 0 | 100 PSI |
-| 1 | 150 PSI |
-| 2 | 200 PSI |
+| 0      | 100 PSI |
+| 1      | 150 PSI |
+| 2      | 200 PSI |
 
 **Example:**
 ```
@@ -264,13 +264,13 @@ SPN 354 (AMBIENT_HUMIDITY) -> PGN 65164
 9[,sensorType]
 ```
 
-| Type | Description |
-|------|-------------|
-| 0 | All active sensors (default) |
-| 1 | EGT only |
-| 2 | Temperature sensors |
-| 3 | Pressure sensors |
-| 4 | BME280 ambient |
+| Type | Description                      |
+|------|----------------------------------|
+| 0    | All active sensors (default)     |
+| 1    | EGT only                         |
+| 2    | Temperature sensors              |
+| 3    | Pressure sensors                 |
+| 4    | BME280 ambient                   |
 
 **Examples:**
 ```

@@ -12,17 +12,17 @@ This document identifies files in the Display layer (`src/Display/`) that confla
 
 ### Well-Focused (No Refactoring Needed)
 
-| File | Primary Responsibility | Notes |
-|------|----------------------|-------|
-| `J1939Encode.cnx` | SPN encoding per SAE J1939-71 | Pure encoding: temp16bit, pressure4kPa, etc. |
-| `SensorConvert.cnx` | Physics calculations | NTC thermistor (Steinhart-Hart), pressure voltage-to-kPa |
-| `FaultDecode.cnx` | MAX31856 fault bit interpretation | Pure bit manipulation and checking |
-| `ValueName.cnx` | Human-readable value names | Lookup table for EValueId labels |
-| `ByteUtils.cnx` | Byte manipulation utilities | Endianness, extraction, clamping |
-| `FloatBytes.cnx` | Float/byte conversion | IEEE 754 reconstruction for J1939 commands |
-| `InputValid.cnx` | Input validation | Range checking for all command inputs |
-| `Presets.cnx` | Sensor preset lookup tables | NTC coefficients, pressure presets, TC types |
-| `Crc32.cnx` | CRC32 checksum calculation | Memory-safe checksum over AppConfig struct |
+| File             | Primary Responsibility                                      | Notes                                                                 |
+|------------------|-------------------------------------------------------------|-----------------------------------------------------------------------|
+| `J1939Encode.cnx` | SPN encoding per SAE J1939-71                              | Pure encoding: temp16bit, pressure4kPa, etc.                         |
+| `SensorConvert.cnx` | Physics calculations                                      | NTC thermistor (Steinhart-Hart), pressure voltage-to-kPa             |
+| `FaultDecode.cnx` | MAX31856 fault bit interpretation                         | Pure bit manipulation and checking                                   |
+| `ValueName.cnx` | Human-readable value names                                 | Lookup table for EValueId labels                                     |
+| `ByteUtils.cnx` | Byte manipulation utilities                                | Endianness, extraction, clamping                                     |
+| `FloatBytes.cnx` | Float/byte conversion                                     | IEEE 754 reconstruction for J1939 commands                           |
+| `InputValid.cnx` | Input validation                                          | Range checking for all command inputs                                |
+| `Presets.cnx` | Sensor preset lookup tables                                | NTC coefficients, pressure presets, TC types                         |
+| `Crc32.cnx` | CRC32 checksum calculation                                 | Memory-safe checksum over AppConfig struct                           |
 
 ---
 
@@ -40,13 +40,13 @@ This document identifies files in the Display layer (`src/Display/`) that confla
 
 **Code Locations:**
 
-| Lines | Function | Concern |
-|-------|----------|---------|
-| 40-51 | `sendMessage` | Transmission |
-| 55-82 | `sendPgnGeneric` | **Encoding + Scheduling + Transmission** |
-| 86-97 | `hasPendingCommand` / `getPendingCommand` | Config command buffering |
-| 101-119 | `sniffDataPrivateISR` | CAN receive |
-| 123-137 | `initialize` | Hardware setup |
+| Lines               | Function                           | Concern                                       |
+|---------------------|------------------------------------|-----------------------------------------------|
+| 40-51               | `sendMessage`                      | Transmission                                 |
+| 55-82               | `sendPgnGeneric`                   | **Encoding + Scheduling + Transmission**    |
+| 86-97               | `hasPendingCommand` / `getPendingCommand` | Config command buffering                    |
+| 101-119             | `sniffDataPrivateISR`              | CAN receive                                  |
+| 123-137             | `initialize`                       | Hardware setup                               |
 
 **Issues Identified:**
 
@@ -93,14 +93,14 @@ J1939Sender.cnx (new file):
 
 **Code Locations:**
 
-| Lines | Function | Concern |
-|-------|----------|---------|
-| 13-30 | `tempDevice` | Hardware mapping |
-| 34-47 | `tempChannel` | Hardware mapping |
-| 51-67 | `pressureDevice` | Hardware mapping |
-| 71-83 | `pressureChannel` | Hardware mapping |
-| 87-93 | `adsI2cAddress` | Hardware mapping |
-| 96-107 | `isValidTempInput`, `isValidPressureInput` | **Validation (duplicate)** |
+| Lines               | Function                                      | Concern                         |
+|---------------------|-----------------------------------------------|---------------------------------|
+| 13-30               | `tempDevice`                                  | Hardware mapping               |
+| 34-47               | `tempChannel`                                 | Hardware mapping               |
+| 51-67               | `pressureDevice`                              | Hardware mapping               |
+| 71-83               | `pressureChannel`                             | Hardware mapping               |
+| 87-93               | `adsI2cAddress`                               | Hardware mapping               |
+| 96-107              | `isValidTempInput`, `isValidPressureInput`    | **Validation (duplicate)**     |
 
 **Issues Identified:**
 
@@ -123,10 +123,10 @@ Option B: Move all validation to `HardwareMap.cnx` (if it's considered the autho
 
 ## Refactoring Priority
 
-| Priority | File | Effort | Impact |
-|----------|------|--------|--------|
-| High | `J1939Bus.cnx` | Medium | Decouples transport from encoding |
-| Low | `HardwareMap.cnx` | Low | Removes duplicate validation |
+| Priority | File             | Effort | Impact                            |
+|----------|------------------|--------|-----------------------------------|
+| High     | `J1939Bus.cnx`   | Medium | Decouples transport from encoding |
+| Low      | `HardwareMap.cnx` | Low    | Removes duplicate validation      |
 
 ---
 

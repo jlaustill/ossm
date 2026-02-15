@@ -32,71 +32,71 @@ OSSM uses four 12-pin Deutsch connectors (A, B, C, D).
 
 ### Connector A
 
-| Pin | Function | Notes |
-|-----|----------|-------|
-| 1 | Ground | Chassis ground |
-| 2 | pres2 Signal | Pressure sensor 2 |
-| 3 | temp2 + | Temperature 2 positive |
-| 4 | temp1 + | Temperature 1 positive |
-| 5 | pres2 + | Pressure 2 power (5V) |
-| 6 | pres7 + | Pressure 7 power (5V) |
-| 7 | 12V Power | Main power input |
-| 8 | 5V Output | For BME280 |
-| 9 | Ground | Sensor ground |
-| 10 | pres2 - | Pressure 2 ground |
-| 11 | temp2 - | Temperature 2 negative |
-| 12 | temp1 - | Temperature 1 negative |
+| Pin | Function              | Notes                    |
+|-----|-----------------------|--------------------------|
+| 1   | Ground                | Chassis ground           |
+| 2   | pres2 Signal          | Pressure sensor 2        |
+| 3   | temp2 +               | Temperature 2 positive   |
+| 4   | temp1 +               | Temperature 1 positive   |
+| 5   | pres2 +               | Pressure 2 power (5V)    |
+| 6   | pres7 +               | Pressure 7 power (5V)    |
+| 7   | 12V Power             | Main power input         |
+| 8   | 5V Output             | For BME280               |
+| 9   | Ground                | Sensor ground            |
+| 10  | pres2 -               | Pressure 2 ground        |
+| 11  | temp2 -               | Temperature 2 negative   |
+| 12  | temp1 -               | Temperature 1 negative   |
 
 ### Connector B
 
-| Pin | Function | Notes |
-|-----|----------|-------|
-| 1 | temp3 - | Temperature 3 negative |
-| 2 | temp3 Signal | Temperature 3 |
-| 3 | pres1 Signal | Pressure sensor 1 |
-| 4 | temp4 + | Temperature 4 positive |
-| 5 | pres5 + | Pressure 5 power (5V) |
-| 6 | pres1 + | Pressure 1 power (5V) |
-| 7 | pres5 + | Pressure 5 power (5V) |
-| 8 | pres1 - | Pressure 1 ground |
-| 9 | temp4 - | Temperature 4 negative |
-| 10 | pres5 - | Pressure 5 ground |
-| 11 | temp8 Signal | Temperature 8 |
-| 12 | pres6 Signal | Pressure sensor 6 |
+| Pin | Function              | Notes                    |
+|-----|-----------------------|--------------------------|
+| 1   | temp3 -               | Temperature 3 negative   |
+| 2   | temp3 Signal          | Temperature 3            |
+| 3   | pres1 Signal          | Pressure sensor 1        |
+| 4   | temp4 +               | Temperature 4 positive   |
+| 5   | pres5 +               | Pressure 5 power (5V)    |
+| 6   | pres1 +               | Pressure 1 power (5V)    |
+| 7   | pres5 +               | Pressure 5 power (5V)    |
+| 8   | pres1 -               | Pressure 1 ground        |
+| 9   | temp4 -               | Temperature 4 negative   |
+| 10  | pres5 -               | Pressure 5 ground        |
+| 11  | temp8 Signal          | Temperature 8            |
+| 12  | pres6 Signal          | Pressure sensor 6        |
 
 ### Connector C
 
-| Pin | Function | Notes |
-|-----|----------|-------|
-| 1 | temp5 + | Temperature 5 positive |
-| 2 | pres3 + | Pressure 3 power (5V) |
-| 3 | pres6 + | Pressure 6 power (5V) |
-| 4 | pres4 Signal | Pressure sensor 4 |
-| 5 | temp7 + | Temperature 7 positive |
-| 6 | temp6 + | Temperature 6 positive |
-| 7 | pres4 Signal | Pressure 4 (duplicate?) |
-| 8 | pres4 - | Pressure 4 ground |
-| 9 | temp6 - | Temperature 6 negative |
-| 10 | temp8 - | Temperature 8 negative |
-| 11 | pres7 - | Pressure 7 ground |
-| 12 | pres4 + | Pressure 4 power (5V) |
+| Pin | Function              | Notes                    |
+|-----|-----------------------|--------------------------|
+| 1   | temp5 +               | Temperature 5 positive   |
+| 2   | pres3 +               | Pressure 3 power (5V)    |
+| 3   | pres6 +               | Pressure 6 power (5V)    |
+| 4   | pres4 Signal          | Pressure sensor 4        |
+| 5   | temp7 +               | Temperature 7 positive   |
+| 6   | temp6 +               | Temperature 6 positive   |
+| 7   | pres4 Signal          | Pressure 4 (duplicate?)  |
+| 8   | pres4 -               | Pressure 4 ground        |
+| 9   | temp6 -               | Temperature 6 negative   |
+| 10  | temp8 -               | Temperature 8 negative   |
+| 11  | pres7 -               | Pressure 7 ground        |
+| 12  | pres4 +               | Pressure 4 power (5V)    |
 
 ### Connector D
 
-| Pin | Function | Notes |
-|-----|----------|-------|
-| 1 | SCL | I2C clock for BME280 |
-| 2 | SDA | I2C data for BME280 |
-| 3 | Ground | BME280 ground |
-| 4 | temp5 - | Temperature 5 negative |
-| 5 | pres3 - | Pressure 3 ground |
-| 6 | pres3 Signal | Pressure sensor 3 |
-| 7 | CANL | CAN bus low |
-| 8 | CANH | CAN bus high |
-| 9 | EGT - | Thermocouple negative |
-| 10 | EGT + | Thermocouple positive |
-| 11 | pres6 - | Pressure 6 ground |
-| 12 | temp8 - | Temperature 8 negative |
+| Pin | Function              | Notes                    |
+|-----|-----------------------|--------------------------|
+| 1   | SCL                   | I2C clock for BME280     |
+| 2   | SDA                   | I2C data for BME280      |
+| 3   | Ground                | BME280 ground            |
+| 4   | temp5 -               | Temperature 5 negative   |
+| 5   | pres3 -               | Pressure 3 ground        |
+| 6   | pres3 Signal          | Pressure sensor 3        |
+| 7   | CANL                  | CAN bus low              |
+| 8   | CANH                  | CAN bus high             |
+| 9   | EGT -                 | Thermocouple negative    |
+| 10  | EGT +                 | Thermocouple positive    |
+| 11  | pres6 -               | Pressure 6 ground        |
+| 12  | temp8 -               | Temperature 8 negative   |
 
 ---
 
