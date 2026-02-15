@@ -28,8 +28,7 @@ typedef enum {
     ECommandResult_CMD_INVALID_SENSOR_NUMBER = 5,
     ECommandResult_CMD_INVALID_TC_TYPE = 6,
     ECommandResult_CMD_INVALID_PRESET = 7,
-    ECommandResult_CMD_INVALID_NTC_PARAM = 8,
-    ECommandResult_CMD_SAVE_FAILED = 9
+    ECommandResult_CMD_INVALID_NTC_PARAM = 8
 } ECommandResult;
 typedef enum {
     EValueCategory_VALUE_CAT_TEMPERATURE = 0,

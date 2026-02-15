@@ -34,7 +34,6 @@ scope SerialCommandHandler {
             case CMD_INVALID_TC_TYPE { Serial.println("ERR,Invalid TC type (0-7)"); }
             case CMD_INVALID_PRESET { Serial.println("ERR,Invalid preset"); }
             case CMD_INVALID_NTC_PARAM { Serial.println("ERR,Invalid NTC param (0-3)"); }
-            case CMD_SAVE_FAILED { Serial.println("ERR,Save failed"); }
             default { Serial.println("ERR,Unknown error"); }
         }
     }

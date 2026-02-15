@@ -17,8 +17,7 @@ enum ECommandResult {
     CMD_INVALID_SENSOR_NUMBER,
     CMD_INVALID_TC_TYPE,
     CMD_INVALID_PRESET,
-    CMD_INVALID_NTC_PARAM,
-    CMD_SAVE_FAILED
+    CMD_INVALID_NTC_PARAM
 }
 
 enum EValueCategory {
@@ -109,6 +108,7 @@ scope CommandHandler {
         }
 
         Hardware.initialize(appConfig);
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
@@ -147,6 +147,7 @@ scope CommandHandler {
         }
 
         Hardware.initialize(appConfig);
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
@@ -157,6 +158,7 @@ scope CommandHandler {
         }
         u16 maxPressure <- ((u16)data[2] << 8) | (u16)data[3];
         appConfig.pressureInputs[data[1] - 1].maxPressure <- maxPressure;
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
@@ -166,6 +168,7 @@ scope CommandHandler {
             return ECommandResult.CMD_INVALID_TC_TYPE;
         }
         appConfig.thermocoupleType <- (EThermocoupleType)data[1];
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
@@ -183,6 +186,7 @@ scope CommandHandler {
         appConfig.tempInputs[idx].coeffB <- Presets.ntcCoeffB(data[2]);
         appConfig.tempInputs[idx].coeffC <- Presets.ntcCoeffC(data[2]);
         appConfig.tempInputs[idx].resistorValue <- Presets.ntcResistor(data[2]);
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
@@ -204,21 +208,11 @@ scope CommandHandler {
             appConfig.pressureInputs[idx].maxPressure <- Presets.psiPresetValue(data[2]);
             appConfig.pressureInputs[idx].pressureType <- EPressureType.PRESSURE_TYPE_PSIG;
         }
+        ConfigStorage.saveConfig(appConfig);
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult save() {
-        bool saved <- ConfigStorage.saveConfig(appConfig);
-        if (saved) {
-            return ECommandResult.CMD_SUCCESS;
-        }
-        return ECommandResult.CMD_SAVE_FAILED;
-    }
-
-    ECommandResult reset() {
-        ConfigStorage.loadDefaults(appConfig);
-        return ECommandResult.CMD_SUCCESS;
-    }
+    // Auto-save after every config change - no explicit save command needed
 
     // NTC param (public - CAN calls directly with decoded float)
     public ECommandResult setNtcParam(u8 input, u8 param, f32 value) {
@@ -253,8 +247,6 @@ scope CommandHandler {
             case 2 { return disableValue(data); }
             case 3 { return setPressureRange(data); }
             case 4 { return setTcType(data); }
-            case 6 { return save(); }
-            case 7 { return reset(); }
             case 8 { return applyNtcPreset(data); }
             case 9 { return applyPressurePreset(data); }
             default { return ECommandResult.CMD_UNKNOWN_COMMAND; }

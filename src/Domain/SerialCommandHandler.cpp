@@ -71,10 +71,6 @@ static void SerialCommandHandler_printResult(ECommandResult result) {
             Serial.println("ERR,Invalid NTC param (0-3)");
             break;
         }
-        case ECommandResult_CMD_SAVE_FAILED: {
-            Serial.println("ERR,Save failed");
-            break;
-        }
         default: {
             Serial.println("ERR,Unknown error");
             break;

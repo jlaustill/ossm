@@ -159,6 +159,7 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
         }
     }
     Hardware_initialize(appConfig);
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -199,6 +200,7 @@ static ECommandResult CommandHandler_disableValue(const uint8_t data[8]) {
         }
     }
     Hardware_initialize(appConfig);
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -209,6 +211,7 @@ static ECommandResult CommandHandler_setPressureRange(const uint8_t data[8]) {
     }
     uint16_t maxPressure = (static_cast<uint16_t>(data[2]) << 8) | static_cast<uint16_t>(data[3]);
     appConfig.pressureInputs[data[1] - 1].maxPressure = maxPressure;
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -218,6 +221,7 @@ static ECommandResult CommandHandler_setTcType(const uint8_t data[8]) {
         return ECommandResult_CMD_INVALID_TC_TYPE;
     }
     appConfig.thermocoupleType = static_cast<EThermocoupleType>(data[1]);
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -235,6 +239,7 @@ static ECommandResult CommandHandler_applyNtcPreset(const uint8_t data[8]) {
     appConfig.tempInputs[idx].coeffB = Presets_ntcCoeffB(data[2]);
     appConfig.tempInputs[idx].coeffC = Presets_ntcCoeffC(data[2]);
     appConfig.tempInputs[idx].resistorValue = Presets_ntcResistor(data[2]);
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -256,19 +261,7 @@ static ECommandResult CommandHandler_applyPressurePreset(const uint8_t data[8]) 
         appConfig.pressureInputs[idx].maxPressure = Presets_psiPresetValue(data[2]);
         appConfig.pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
     }
-    return ECommandResult_CMD_SUCCESS;
-}
-
-static ECommandResult CommandHandler_save(void) {
-    bool saved = ConfigStorage_saveConfig(appConfig);
-    if (saved) {
-        return ECommandResult_CMD_SUCCESS;
-    }
-    return ECommandResult_CMD_SAVE_FAILED;
-}
-
-static ECommandResult CommandHandler_reset(void) {
-    ConfigStorage_loadDefaults(appConfig);
+    ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
@@ -319,14 +312,6 @@ ECommandResult CommandHandler_process(const uint8_t data[8]) {
         }
         case 4: {
             return CommandHandler_setTcType(data);
-            break;
-        }
-        case 6: {
-            return CommandHandler_save();
-            break;
-        }
-        case 7: {
-            return CommandHandler_reset();
             break;
         }
         case 8: {

@@ -22,8 +22,6 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 | 3 | Set Pressure Range | `3,input,psiHi,psiLo` | Set pressure sensor max PSI |
 | 4 | Set TC Type | `4,type` | Set thermocouple type (0-7) |
 | 5 | Query Config | `5,query_type` | Query configuration |
-| 6 | Save | `6` | Save configuration to EEPROM |
-| 7 | Reset | `7` | Reset to factory defaults |
 | 8 | NTC Preset | `8,input,preset` | Apply NTC sensor preset |
 | 9 | Pressure Preset | `9,input,preset` | Apply pressure sensor preset |
 | 10 | Read Sensors | `10,type` | Read live sensor values |
@@ -172,34 +170,10 @@ SPN 354 (AMBIENT_HUMIDITY) -> PGN 65164
 
 ---
 
-### Command 6: Save Configuration
+### Command 7: NTC Preset
 
 ```
-6
-```
-
-Saves current configuration to EEPROM. Configuration persists across power cycles.
-
----
-
-### Command 7: Factory Reset
-
-```
-7
-```
-
-Resets all configuration to factory defaults:
-- All values disabled
-- Default NTC calibration values
-- Default pressure ranges
-- J1939 source address reset to 149
-
----
-
-### Command 8: NTC Preset
-
-```
-8,input,preset
+7,input,preset
 ```
 
 | Parameter | Description |
@@ -215,15 +189,15 @@ Resets all configuration to factory defaults:
 
 **Example:**
 ```
-8,3,0    # Set temp3 to AEM preset
+7,3,0    # Set temp3 to AEM preset
 ```
 
 ---
 
-### Command 9: Pressure Preset
+### Command 8: Pressure Preset
 
 ```
-9,input,preset
+8,input,preset
 ```
 
 | Parameter | Description |
@@ -239,15 +213,15 @@ Resets all configuration to factory defaults:
 
 **Example:**
 ```
-9,6,1    # Set pres6 to 150 PSI
+8,6,1    # Set pres6 to 150 PSI
 ```
 
 ---
 
-### Command 10: Read Live Sensors
+### Command 9: Read Live Sensors
 
 ```
-10[,sensorType]
+9[,sensorType]
 ```
 
 | Type | Description |
@@ -260,14 +234,16 @@ Resets all configuration to factory defaults:
 
 **Examples:**
 ```
-10        # Read all active sensors
-10,1      # Read EGT temperature
-10,2      # Read all temperature sensors
-10,3      # Read all pressure sensors
-10,4      # Read BME280 (ambient temp, humidity, barometric)
+9        # Read all active sensors
+9,1      # Read EGT temperature
+9,2      # Read all temperature sensors
+9,3      # Read all pressure sensors
+9,4      # Read BME280 (ambient temp, humidity, barometric)
 ```
 
 **Note:** Sensor faults are displayed at the end of ALL command responses.
+
+**Note:** All configuration changes are automatically saved to EEPROM. No explicit save command needed.
 
 ---
 
@@ -280,7 +256,7 @@ Configure oil temp on temp3 and oil pressure on pres1:
 1,15,3
 
 # Set temp3 to AEM sensor preset
-8,3,0
+7,3,0
 
 # Assign pres1 to OIL_PRES (14)
 1,14,1
@@ -288,14 +264,9 @@ Configure oil temp on temp3 and oil pressure on pres1:
 # Set pres1 to 150 PSI
 3,1,0,150
 
-# Save configuration
-6
-
 # Verify readings
-10
+9
 ```
-
-This auto-enables SPN 175 (oil temp) on PGN 65262 and SPN 100 (oil pressure) on PGN 65263.
 
 ---
 
@@ -333,8 +304,8 @@ Note: BME280 is a single sensor that provides ambient temperature, humidity, and
 - Use `10,X` to read specific sensor type
 
 **Configuration not saving:**
-- Run command `6` after making changes
-- EEPROM has limited write cycles - avoid excessive saves
+- All changes are automatically saved to EEPROM after each command
+- EEPROM has limited write cycles - avoid excessive command spamming
 
 **Unknown command error:**
 - Ensure command format matches: `1,valueId[,input]`
