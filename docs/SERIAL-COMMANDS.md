@@ -17,7 +17,8 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 
 | Cmd | Name | Format | Description |
 |-----|------|--------|-------------|
-| 1 | Assign Input to Value | `1,inputType,inputNum,valueId` | Assign a sensor input to a physical value |
+| 1 | Enable Value | `1,valueId[,input]` | Enable a value (BME280, EGT, or assign input) |
+| 2 | Disable Value | `2,valueId` | Disable a value |
 | 3 | Set Pressure Range | `3,input,psiHi,psiLo` | Set pressure sensor max PSI |
 | 4 | Set TC Type | `4,type` | Set thermocouple type (0-7) |
 | 5 | Query Config | `5,query_type` | Query configuration |
@@ -27,68 +28,67 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 | 9 | Pressure Preset | `9,input,preset` | Apply pressure sensor preset |
 | 10 | Read Sensors | `10,type` | Read live sensor values |
 
-> **Note:** Command 2 (Set NTC Param) was removed. Use Command 8 (NTC Preset) instead.
-
 ---
 
 ## Command Details
 
-### Command 1: Assign Input to Value
+### Command 1: Enable Value
 
 ```
-1,inputType,inputNum,valueId
+1,valueId[,input]
 ```
 
 | Parameter | Description |
 |-----------|-------------|
-| inputType | 0 = temperature input, 1 = pressure input |
-| inputNum | 1-8 for temp, 1-7 for pressure |
 | valueId | EValueId enum value (see table below) |
+| input | Sensor input number (optional, required for temperature/pressure only) |
 
-To disable an input, use `valueId = 255` (or any value >= VALUE_ID_COUNT).
+**Values without input (BME280, EGT):**
+- `valueId 0,1,2` = BME280 (AMBIENT_PRES, AMBIENT_TEMP, AMBIENT_HUMIDITY)
+- `valueId 7` = EGT (MAX31856 thermocouple)
 
-**EValueId Values:**
-
-| ID | Name | Description |
-|----|------|-------------|
-| 0 | AMBIENT_PRES | Ambient/barometric pressure |
-| 1 | AMBIENT_TEMP | Ambient air temperature |
-| 2 | AMBIENT_HUMIDITY | Relative humidity |
-| 3 | TURBO1_COMP_INLET_PRES | Turbo 1 compressor inlet pressure |
-| 4 | TURBO1_COMP_INLET_TEMP | Turbo 1 compressor inlet temperature |
-| 5 | TURBO1_COMP_OUTLET_PRES | Turbo 1 compressor outlet pressure |
-| 6 | TURBO1_COMP_OUTLET_TEMP | Turbo 1 compressor outlet temperature |
-| 7 | TURBO1_TURB_INLET_TEMP | EGT - turbo 1 turbine inlet temperature |
-| 8 | CAC1_INLET_PRES | Charge air cooler 1 inlet pressure |
-| 9 | CAC1_INLET_TEMP | Charge air cooler 1 inlet temperature |
-| 10 | CAC1_OUTLET_PRES | Charge air cooler 1 outlet pressure |
-| 11 | CAC1_OUTLET_TEMP | Charge air cooler 1 outlet temperature |
-| 12 | MANIFOLD1_ABS_PRES | Intake manifold 1 absolute pressure |
-| 13 | MANIFOLD1_TEMP | Intake manifold 1 temperature |
-| 14 | OIL_PRES | Engine oil pressure |
-| 15 | OIL_TEMP | Engine oil temperature |
-| 16 | COOLANT_PRES | Coolant pressure |
-| 17 | COOLANT_TEMP | Coolant temperature |
-| 18 | FUEL_PRES | Fuel delivery pressure |
-| 19 | FUEL_TEMP | Fuel temperature |
-| 20 | ENGINE_BAY_TEMP | Engine bay ambient temperature |
+**Values requiring input (temperature/pressure sensors):**
+- For temperature: `input` = 1-8 (temp1-temp8)
+- For pressure: `input` = 1-7 (pres1-pres7)
 
 **Examples:**
 ```
-1,0,3,15     # Assign temp3 to OIL_TEMP (15)
-1,0,2,17     # Assign temp2 to COOLANT_TEMP (17)
-1,1,1,14     # Assign pres1 to OIL_PRES (14)
-1,1,6,12     # Assign pres6 to MANIFOLD1_ABS_PRES (12)
-1,0,3,255    # Disable temp3
+1,0        # Enable BME280 (AMBIENT_PRES)
+1,1        # Enable BME280 (AMBIENT_TEMP)
+1,2        # Enable BME280 (AMBIENT_HUMIDITY)
+1,7        # Enable EGT (MAX31856)
+
+1,15,1     # Assign temp1 to OIL_TEMP (15)
+1,17,2     # Assign temp2 to COOLANT_TEMP (17)
+1,14,1     # Assign pres1 to OIL_PRES (14)
+1,12,6     # Assign pres6 to MANIFOLD1_ABS_PRES (12)
+1,255,1    # Disable temp1 (assign to invalid value)
 ```
 
 **Auto-enabled SPNs:**
 
-When you assign an input to a value, all SPNs that source from that value are automatically enabled. For example, assigning any input to `MANIFOLD1_ABS_PRES` (12) enables both:
-- SPN 102 (Boost Pressure, 2 kPa/bit resolution)
-- SPN 4817 (High Resolution Manifold Pressure, 0.1 kPa/bit)
+When you enable a value, all SPNs that source from that value are automatically enabled. For example:
+- `1,0` or `1,1` or `1,2` enables all BME280 SPNs (108, 171, 354)
+- `1,7` enables EGT SPN 173
+- `1,12` enables both SPN 102 and SPN 4817 (same value, different resolutions)
 
 See [SPN Reference](SPN-REFERENCE.md) for the complete mapping of values to SPNs.
+
+---
+
+### Command 2: Disable Value
+
+```
+2,valueId
+```
+
+Disable a previously enabled value. This removes the value from any sensor inputs.
+
+**Examples:**
+```
+2,7        # Disable EGT
+2,14       # Disable OIL_PRES (removes it from any pressure input)
+```
 
 ---
 
@@ -158,7 +158,8 @@ See [SPN Reference](SPN-REFERENCE.md) for the complete mapping of values to SPNs
 temp3: OIL_TEMP
 pres1: OIL_PRES
 pres6: MANIFOLD1_ABS_PRES
-BME280: AMBIENT_PRES, AMBIENT_TEMP, AMBIENT_HUMIDITY
+BME280: enabled
+EGT: enabled
 
 === Active SPNs (auto-enabled) ===
 SPN 175 (OIL_TEMP) -> PGN 65262
@@ -188,7 +189,7 @@ Saves current configuration to EEPROM. Configuration persists across power cycle
 ```
 
 Resets all configuration to factory defaults:
-- All SPNs disabled
+- All values disabled
 - Default NTC calibration values
 - Default pressure ranges
 - J1939 source address reset to 149
@@ -276,13 +277,13 @@ Configure oil temp on temp3 and oil pressure on pres1:
 
 ```
 # Assign temp3 to OIL_TEMP (15)
-1,0,3,15
+1,15,3
 
 # Set temp3 to AEM sensor preset
 8,3,0
 
 # Assign pres1 to OIL_PRES (14)
-1,1,1,14
+1,14,1
 
 # Set pres1 to 150 PSI
 3,1,0,150
@@ -295,6 +296,27 @@ Configure oil temp on temp3 and oil pressure on pres1:
 ```
 
 This auto-enables SPN 175 (oil temp) on PGN 65262 and SPN 100 (oil pressure) on PGN 65263.
+
+---
+
+## EGT and BME280 Setup
+
+**Enable EGT:**
+```
+# Set thermocouple type (K-type is default)
+4,3
+
+# Enable EGT
+1,7
+```
+
+**Enable BME280:**
+```
+# Enable any BME280 value (they're all enabled together)
+1,0    # or 1,1 or 1,2
+```
+
+Note: BME280 is a single sensor that provides ambient temperature, humidity, and barometric pressure. Enabling any one value enables all three.
 
 ---
 
@@ -313,3 +335,7 @@ This auto-enables SPN 175 (oil temp) on PGN 65262 and SPN 100 (oil pressure) on 
 **Configuration not saving:**
 - Run command `6` after making changes
 - EEPROM has limited write cycles - avoid excessive saves
+
+**Unknown command error:**
+- Ensure command format matches: `1,valueId[,input]`
+- For BME280/EGT, no input number is needed: `1,7` not `1,7,1`
