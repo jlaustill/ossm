@@ -66,15 +66,15 @@ Reusable testing checklist for OSSM firmware releases.
 
 ### Serial Commands
 
-- [ ] Command 1: Enable/disable SPN works
+- [ ] Command 1: Enable/disable value works
 - [ ] Command 3: Set pressure range works
 - [ ] Command 4: Set thermocouple type works
 - [ ] Command 5: Query configuration works
-- [ ] Command 6: Save to EEPROM works
-- [ ] Command 7: Factory reset works
-- [ ] Command 8: NTC preset works
-- [ ] Command 9: Pressure preset works
-- [ ] Command 10: Read sensors works
+- [ ] Command 7: NTC preset works
+- [ ] Command 8: Pressure preset works
+- [ ] Command 9: Read sensors works
+
+**Note:** All configuration changes are auto-saved to EEPROM. No explicit save command needed.
 
 ### J1939 Commands (PGN 65280)
 

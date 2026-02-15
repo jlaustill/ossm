@@ -247,5 +247,5 @@ J1939 requires 120Ω termination resistors at each end of the bus. If OSSM is at
 ### EEPROM Issues
 
 1. Run factory reset (command 7)
-2. Reconfigure and save (command 6)
+2. Reconfigure (auto-saved after each change)
 3. If persistent, EEPROM may be worn

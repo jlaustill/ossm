@@ -125,15 +125,13 @@ Output formatting and protocol encoding:
 ```
 Serial input "1,0,3,15" (assign temp3 to OIL_TEMP)
    └─► SerialCommandHandler.update()
-       └─► Parses bytes: inputType=0, inputNum=3, valueId=15
-       └─► CommandHandler.assignValue(appConfig, ...)
-           └─► Updates appConfig.tempConfig[3].assignedValue = OIL_TEMP
+       └─► Parses bytes: valueId=15, inputNum=3
+       └─► CommandHandler.enableValue(appConfig, ...)
+           └─► Updates appConfig.tempInputs[2].assignedValue = OIL_TEMP
            └─► SensorValues.setHasHardware(OIL_TEMP, true)
-
-Save command "6"
-   └─► ConfigStorage.saveConfig(appConfig)
-       └─► CRC32 calculated
-       └─► Written to EEPROM
+           └─► ConfigStorage.saveConfig(appConfig)  // Auto-saved
+               └─► CRC32 calculated
+               └─► Written to EEPROM
 ```
 
 ### J1939 Encoding Flow

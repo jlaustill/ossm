@@ -22,9 +22,11 @@ Commands use **byte format** - all values are 0-255. Multi-byte values (PSI) are
 | 3 | Set Pressure Range | `3,input,psiHi,psiLo` | Set pressure sensor max PSI |
 | 4 | Set TC Type | `4,type` | Set thermocouple type (0-7) |
 | 5 | Query Config | `5,query_type` | Query configuration |
-| 8 | NTC Preset | `8,input,preset` | Apply NTC sensor preset |
-| 9 | Pressure Preset | `9,input,preset` | Apply pressure sensor preset |
-| 10 | Read Sensors | `10,type` | Read live sensor values |
+| 7 | NTC Preset | `7,input,preset` | Apply NTC sensor preset |
+| 8 | Pressure Preset | `8,input,preset` | Apply pressure sensor preset |
+| 9 | Read Sensors | `9[,type]` | Read live sensor values |
+
+**Note:** All configuration changes are automatically saved to EEPROM. No explicit save command needed.
 
 ---
 
