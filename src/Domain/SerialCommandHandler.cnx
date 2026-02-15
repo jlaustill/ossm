@@ -130,8 +130,7 @@ scope SerialCommandHandler {
                 for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
                     EValueId val <- appConfig.tempInputs[i].assignedValue;
                     if (val != EValueId.VALUE_UNASSIGNED) {
-                        Serial.print("temp");
-                        Serial.print(i + 1);
+                        ValueName.print(val);
                         Serial.print(": ");
                         Serial.print(SensorValues.current[val].value,1);
                         Serial.println(" C");
@@ -140,8 +139,7 @@ scope SerialCommandHandler {
                 for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
                     EValueId val <- appConfig.pressureInputs[i].assignedValue;
                     if (val != EValueId.VALUE_UNASSIGNED) {
-                        Serial.print("pres");
-                        Serial.print(i + 1);
+                        ValueName.print(val);
                         Serial.print(": ");
                         Serial.print(SensorValues.current[val].value,2);
                         Serial.println(" kPa");

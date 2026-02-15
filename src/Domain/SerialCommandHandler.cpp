@@ -167,8 +167,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i = i + 1) {
                 EValueId val = appConfig.tempInputs[i].assignedValue;
                 if (val != EValueId_VALUE_UNASSIGNED) {
-                    Serial.print("temp");
-                    Serial.print(i + 1);
+                    ValueName_print(val);
                     Serial.print(": ");
                     Serial.print(SensorValues_current[val].value, 1);
                     Serial.println(" C");
@@ -177,8 +176,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i = i + 1) {
                 EValueId val = appConfig.pressureInputs[i].assignedValue;
                 if (val != EValueId_VALUE_UNASSIGNED) {
-                    Serial.print("pres");
-                    Serial.print(i + 1);
+                    ValueName_print(val);
                     Serial.print(": ");
                     Serial.print(SensorValues_current[val].value, 2);
                     Serial.println(" kPa");
