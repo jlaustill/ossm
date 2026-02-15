@@ -27,33 +27,33 @@ scope Presets {
 
     // Get NTC coefficient A for preset (returns 0 if invalid)
     public f32 ntcCoeffA(u8 preset) {
-        if (preset = 0) { return this.AEM_COEFF_A; }
-        if (preset = 1) { return this.BOSCH_COEFF_A; }
-        if (preset = 2) { return this.GM_COEFF_A; }
+        if (preset = 0) { return AEM_COEFF_A; }
+        if (preset = 1) { return BOSCH_COEFF_A; }
+        if (preset = 2) { return GM_COEFF_A; }
         return 0.0;
     }
 
     // Get NTC coefficient B for preset
     public f32 ntcCoeffB(u8 preset) {
-        if (preset = 0) { return this.AEM_COEFF_B; }
-        if (preset = 1) { return this.BOSCH_COEFF_B; }
-        if (preset = 2) { return this.GM_COEFF_B; }
+        if (preset = 0) { return AEM_COEFF_B; }
+        if (preset = 1) { return BOSCH_COEFF_B; }
+        if (preset = 2) { return GM_COEFF_B; }
         return 0.0;
     }
 
     // Get NTC coefficient C for preset
     public f32 ntcCoeffC(u8 preset) {
-        if (preset = 0) { return this.AEM_COEFF_C; }
-        if (preset = 1) { return this.BOSCH_COEFF_C; }
-        if (preset = 2) { return this.GM_COEFF_C; }
+        if (preset = 0) { return AEM_COEFF_C; }
+        if (preset = 1) { return BOSCH_COEFF_C; }
+        if (preset = 2) { return GM_COEFF_C; }
         return 0.0;
     }
 
     // Get NTC pull-up resistor value for preset
     public f32 ntcResistor(u8 preset) {
-        if (preset = 0) { return this.AEM_RESISTOR; }
-        if (preset = 1) { return this.BOSCH_RESISTOR; }
-        if (preset = 2) { return this.GM_RESISTOR; }
+        if (preset = 0) { return AEM_RESISTOR; }
+        if (preset = 1) { return BOSCH_RESISTOR; }
+        if (preset = 2) { return GM_RESISTOR; }
         return 0.0;
     }
 
@@ -121,9 +121,9 @@ scope Presets {
 
     // Check if any pressure preset is valid
     public bool isValidPressurePreset(u8 preset) {
-        bool isBar <- this.isBarPreset(preset);
+        bool isBar <- isBarPreset(preset);
         if (isBar) { return true; }
-        bool isPsi <- this.isPsiPreset(preset);
+        bool isPsi <- isPsiPreset(preset);
         return isPsi;
     }
 

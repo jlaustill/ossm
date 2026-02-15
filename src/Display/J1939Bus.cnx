@@ -34,27 +34,27 @@ scope J1939Bus {
     }
 
     bool isValueEnabled(EValueId valueId) {
-        return global.SensorValues.current[valueId].hasHardware;
+        return SensorValues.current[valueId].hasHardware;
     }
 
     public void sendMessage(u16 pgn, const u8[8] buf) {
         CAN_message_t msg;
         msg.flags.extended <- 1;
-        msg.id <- this.buildCanId(pgn, 6, global.appConfig.j1939SourceAddress);
+        msg.id <- buildCanId(pgn, 6, appConfig.j1939SourceAddress);
         msg.len <- 8;
 
         for (u8 i <- 0; i < 8; i +<- 1) {
             msg.buf[i] <- buf[i];
         }
 
-        this.canBus.write(msg);
+        canBus.write(msg);
     }
 
     // ─── Generic PGN sender ─────────────────────────────────────────
 
     public void sendPgnGeneric(u16 pgn) {
         u8[8] buf;
-        this.fillBuffer(buf);
+        fillBuffer(buf);
 
         for (u8 i <- 0; i < SPN_CONFIG_COUNT; i <- i + 1) {
             TSpnConfig cfg <- SPN_CONFIGS[i];
@@ -63,13 +63,13 @@ scope J1939Bus {
                 continue;
             }
 
-            bool hasHw <- this.isValueEnabled(cfg.source);
+            bool hasHw <- isValueEnabled(cfg.source);
             if (!hasHw) {
                 continue;
             }
 
-            f32 value <- global.SensorValues.current[cfg.source].value;
-            u16 encoded <- global.J1939Encode.encode(value, cfg.resolution, cfg.offset);
+            f32 value <- SensorValues.current[cfg.source].value;
+            u16 encoded <- J1939Encode.encode(value, cfg.resolution, cfg.offset);
 
             u8 pos <- cfg.bytePos - 1;
             buf[pos] <- (u8)(encoded & 0xFF);
@@ -78,7 +78,7 @@ scope J1939Bus {
             }
         }
 
-        this.sendMessage(pgn, buf);
+        sendMessage(pgn, buf);
     }
 
     // ─── Pending config command interface ────────────────────────────
@@ -114,7 +114,7 @@ scope J1939Bus {
 
         // PGN 59904 - Request: repeat on bus
         if (message.pgn = 59904) {
-            this.canBus.write(msg);
+            canBus.write(msg);
         }
     }
 
@@ -123,15 +123,15 @@ scope J1939Bus {
     public void initialize() {
         Serial.println("J1939 Bus initializing");
 
-        this.canBus.begin();
-        this.canBus.setBaudRate(250 * 1000);
-        this.canBus.setMaxMB(16);
-        this.canBus.enableFIFO();
-        this.canBus.enableFIFOInterrupt();
-        this.canBus.onReceive(this.sniffDataPrivateISR);
-        this.canBus.mailboxStatus();
+        canBus.begin();
+        canBus.setBaudRate(250 * 1000);
+        canBus.setMaxMB(16);
+        canBus.enableFIFO();
+        canBus.enableFIFOInterrupt();
+        canBus.onReceive(sniffDataPrivateISR);
+        canBus.mailboxStatus();
 
         Serial.print("J1939 Source Address: ");
-        Serial.println(global.appConfig.j1939SourceAddress);
+        Serial.println(appConfig.j1939SourceAddress);
     }
 }

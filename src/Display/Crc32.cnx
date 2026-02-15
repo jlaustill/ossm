@@ -20,10 +20,10 @@ scope Crc32 {
     u32 crcFloat(u32 crc, f32 value) {
         string<4> buf <- "";
         buf[0, 4] <- value;
-        crc <- this.crcByte(crc, buf[0]);
-        crc <- this.crcByte(crc, buf[1]);
-        crc <- this.crcByte(crc, buf[2]);
-        crc <- this.crcByte(crc, buf[3]);
+        crc <- crcByte(crc, buf[0]);
+        crc <- crcByte(crc, buf[1]);
+        crc <- crcByte(crc, buf[2]);
+        crc <- crcByte(crc, buf[3]);
         return crc;
     }
 
@@ -32,41 +32,41 @@ scope Crc32 {
         u32 crc <- 0xFFFFFFFF;
 
         // Header: magic (4 bytes, little-endian)
-        crc <- this.crcByte(crc, config.magic[0,8]);
-        crc <- this.crcByte(crc, config.magic[8,8]);
-        crc <- this.crcByte(crc, config.magic[16,8]);
-        crc <- this.crcByte(crc, config.magic[24,8]);
+        crc <- crcByte(crc, config.magic[0,8]);
+        crc <- crcByte(crc, config.magic[8,8]);
+        crc <- crcByte(crc, config.magic[16,8]);
+        crc <- crcByte(crc, config.magic[24,8]);
 
         // Header: version and j1939SourceAddress
-        crc <- this.crcByte(crc, config.version);
-        crc <- this.crcByte(crc, config.j1939SourceAddress);
+        crc <- crcByte(crc, config.version);
+        crc <- crcByte(crc, config.j1939SourceAddress);
         // Skip reserved[2]
 
         // Temperature inputs (8 structs × 17 bytes each)
         for (u32 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-            crc <- this.crcByte(crc, (u8)config.tempInputs[i].assignedValue);
-            crc <- this.crcFloat(crc, config.tempInputs[i].coeffA);
-            crc <- this.crcFloat(crc, config.tempInputs[i].coeffB);
-            crc <- this.crcFloat(crc, config.tempInputs[i].coeffC);
-            crc <- this.crcFloat(crc, config.tempInputs[i].resistorValue);
+            crc <- crcByte(crc, (u8)config.tempInputs[i].assignedValue);
+            crc <- crcFloat(crc, config.tempInputs[i].coeffA);
+            crc <- crcFloat(crc, config.tempInputs[i].coeffB);
+            crc <- crcFloat(crc, config.tempInputs[i].coeffC);
+            crc <- crcFloat(crc, config.tempInputs[i].resistorValue);
         }
 
         // Pressure inputs (7 structs × 4 bytes each)
         for (u32 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-            crc <- this.crcByte(crc, (u8)config.pressureInputs[i].assignedValue);
-            crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[0,8]);
-            crc <- this.crcByte(crc, config.pressureInputs[i].maxPressure[8,8]);
-            crc <- this.crcByte(crc, config.pressureInputs[i].pressureType);
+            crc <- crcByte(crc, (u8)config.pressureInputs[i].assignedValue);
+            crc <- crcByte(crc, config.pressureInputs[i].maxPressure[0,8]);
+            crc <- crcByte(crc, config.pressureInputs[i].maxPressure[8,8]);
+            crc <- crcByte(crc, config.pressureInputs[i].pressureType);
             // Skip reserved byte
         }
 
         // Thermocouple config
-        crc <- this.crcByte(crc, config.egtEnabled);
-        crc <- this.crcByte(crc, config.thermocoupleType);
+        crc <- crcByte(crc, config.egtEnabled);
+        crc <- crcByte(crc, config.thermocoupleType);
         // Skip tcReserved[2]
 
         // BME280 config
-        crc <- this.crcByte(crc, config.bme280Enabled);
+        crc <- crcByte(crc, config.bme280Enabled);
         // Skip bme280Reserved[3]
 
         return ~crc;

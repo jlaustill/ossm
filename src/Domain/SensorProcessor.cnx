@@ -21,76 +21,76 @@ scope SensorProcessor {
 
     // Get atmospheric pressure for PSIG conversion (from BME280 or default)
     f32 getAtmosphericPressurekPa() {
-        f32 baro <- global.SensorValues.current[global.EValueId.AMBIENT_PRES].value;
+        f32 baro <- SensorValues.current[EValueId.AMBIENT_PRES].value;
         if (baro > 0.0) {
             return baro;
         }
-        return global.SensorConvert.defaultAtmosphericPressure();
+        return SensorConvert.defaultAtmosphericPressure();
     }
 
     // Process temperature inputs
     void processTempInputs() {
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-            EValueId val <- global.appConfig.tempInputs[i].assignedValue;
-            if (val = global.EValueId.VALUE_UNASSIGNED) {
+            EValueId val <- appConfig.tempInputs[i].assignedValue;
+            if (val = EValueId.VALUE_UNASSIGNED) {
                 continue;
             }
 
-            u8 device <- global.HardwareMap.tempDevice(i);
-            u8 channel <- global.HardwareMap.tempChannel(i);
-            f32 voltage <- global.ADS1115Manager.getVoltage(device, channel);
-            f32 tempC <- global.SensorConvert.ntcTemperature(voltage, global.appConfig.tempInputs[i]);
+            u8 device <- HardwareMap.tempDevice(i);
+            u8 channel <- HardwareMap.tempChannel(i);
+            f32 voltage <- ADS1115Manager.getVoltage(device, channel);
+            f32 tempC <- SensorConvert.ntcTemperature(voltage, appConfig.tempInputs[i]);
 
-            global.SensorValues.current[val].value <- tempC;
+            SensorValues.current[val].value <- tempC;
         }
     }
 
     // Process pressure inputs
     void processPressureInputs() {
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-            EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
-            if (val = global.EValueId.VALUE_UNASSIGNED) {
+            EValueId val <- appConfig.pressureInputs[i].assignedValue;
+            if (val = EValueId.VALUE_UNASSIGNED) {
                 continue;
             }
 
-            u8 device <- global.HardwareMap.pressureDevice(i);
-            u8 channel <- global.HardwareMap.pressureChannel(i);
-            f32 voltage <- global.ADS1115Manager.getVoltage(device, channel);
-            f32 atm <- this.getAtmosphericPressurekPa();
-            f32 pressurekPa <- global.SensorConvert.pressure(voltage, global.appConfig.pressureInputs[i], atm);
+            u8 device <- HardwareMap.pressureDevice(i);
+            u8 channel <- HardwareMap.pressureChannel(i);
+            f32 voltage <- ADS1115Manager.getVoltage(device, channel);
+            f32 atm <- getAtmosphericPressurekPa();
+            f32 pressurekPa <- SensorConvert.pressure(voltage, appConfig.pressureInputs[i], atm);
 
-            global.SensorValues.current[val].value <- pressurekPa;
+            SensorValues.current[val].value <- pressurekPa;
         }
     }
 
     // Process EGT from MAX31856
     void processEgt() {
-        bool egtReady <- global.MAX31856Manager.isEnabled();
-        if (global.appConfig.egtEnabled && egtReady) {
-            f32 temp <- global.MAX31856Manager.getTemperatureC();
-            global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value <- temp;
+        bool egtReady <- MAX31856Manager.isEnabled();
+        if (appConfig.egtEnabled && egtReady) {
+            f32 temp <- MAX31856Manager.getTemperatureC();
+            SensorValues.current[EValueId.TURBO1_TURB_INLET_TEMP].value <- temp;
         }
     }
 
     // Process BME280 ambient sensors
     void processBme280() {
-        bool bmeReady <- global.BME280Manager.isEnabled();
-        if (global.appConfig.bme280Enabled && bmeReady) {
-            f32 temp <- global.BME280Manager.getTemperatureC();
-            f32 humidity <- global.BME280Manager.getHumidity();
-            f32 pressure <- global.BME280Manager.getPressurekPa();
-            global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value <- temp;
-            global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value <- humidity;
-            global.SensorValues.current[global.EValueId.AMBIENT_PRES].value <- pressure;
+        bool bmeReady <- BME280Manager.isEnabled();
+        if (appConfig.bme280Enabled && bmeReady) {
+            f32 temp <- BME280Manager.getTemperatureC();
+            f32 humidity <- BME280Manager.getHumidity();
+            f32 pressure <- BME280Manager.getPressurekPa();
+            SensorValues.current[EValueId.AMBIENT_TEMP].value <- temp;
+            SensorValues.current[EValueId.AMBIENT_HUMIDITY].value <- humidity;
+            SensorValues.current[EValueId.AMBIENT_PRES].value <- pressure;
         }
     }
 
     // Process all enabled inputs
     void processAllInputs() {
-        this.processTempInputs();
-        this.processPressureInputs();
-        this.processEgt();
-        this.processBme280();
+        processTempInputs();
+        processPressureInputs();
+        processEgt();
+        processBme280();
     }
 
     // Poll all hardware managers and process readings
@@ -98,7 +98,7 @@ scope SensorProcessor {
         ADS1115Manager.update();
         MAX31856Manager.update();
         BME280Manager.update();
-        this.processAllInputs();
+        processAllInputs();
     }
 
     public void initialize() {
@@ -108,7 +108,7 @@ scope SensorProcessor {
     // Called from main loop - checks ISR flag and processes if ready
     public void update() {
         if (sensorUpdateReady) {
-            this.pollAndProcess();
+            pollAndProcess();
             sensorUpdateReady <- false;
         }
     }

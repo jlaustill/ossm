@@ -10,35 +10,35 @@ struct TValueInfo {
 }
 
 const TValueInfo[EValueId.VALUE_ID_COUNT] VALUE_NAMES <- [
-    { id: global.EValueId.AMBIENT_PRES,            name: "Ambient Pres" },
-    { id: global.EValueId.AMBIENT_TEMP,            name: "Ambient Temp" },
-    { id: global.EValueId.AMBIENT_HUMIDITY,         name: "Ambient Humidity" },
-    { id: global.EValueId.TURBO1_COMP_INLET_PRES,  name: "Turbo Comp In Pres" },
-    { id: global.EValueId.TURBO1_COMP_INLET_TEMP,  name: "Turbo Comp In Temp" },
-    { id: global.EValueId.TURBO1_COMP_OUTLET_PRES, name: "Turbo Comp Out Pres" },
-    { id: global.EValueId.TURBO1_COMP_OUTLET_TEMP, name: "Turbo Comp Out Temp" },
-    { id: global.EValueId.TURBO1_TURB_INLET_TEMP,  name: "EGT" },
-    { id: global.EValueId.CAC1_INLET_PRES,         name: "CAC Inlet Pres" },
-    { id: global.EValueId.CAC1_INLET_TEMP,         name: "CAC Inlet Temp" },
-    { id: global.EValueId.CAC1_OUTLET_PRES,        name: "CAC Outlet Pres" },
-    { id: global.EValueId.CAC1_OUTLET_TEMP,        name: "CAC Outlet Temp" },
-    { id: global.EValueId.MANIFOLD1_ABS_PRES,      name: "Manifold Pres" },
-    { id: global.EValueId.MANIFOLD1_TEMP,           name: "Manifold Temp" },
-    { id: global.EValueId.OIL_PRES,                name: "Oil Pres" },
-    { id: global.EValueId.OIL_TEMP,                name: "Oil Temp" },
-    { id: global.EValueId.COOLANT_PRES,            name: "Coolant Pres" },
-    { id: global.EValueId.COOLANT_TEMP,            name: "Coolant Temp" },
-    { id: global.EValueId.FUEL_PRES,               name: "Fuel Pres" },
-    { id: global.EValueId.FUEL_TEMP,               name: "Fuel Temp" },
-    { id: global.EValueId.ENGINE_BAY_TEMP,         name: "Engine Bay Temp" }
+    { id: EValueId.AMBIENT_PRES,            name: "Ambient Pres" },
+    { id: EValueId.AMBIENT_TEMP,            name: "Ambient Temp" },
+    { id: EValueId.AMBIENT_HUMIDITY,         name: "Ambient Humidity" },
+    { id: EValueId.TURBO1_COMP_INLET_PRES,  name: "Turbo Comp In Pres" },
+    { id: EValueId.TURBO1_COMP_INLET_TEMP,  name: "Turbo Comp In Temp" },
+    { id: EValueId.TURBO1_COMP_OUTLET_PRES, name: "Turbo Comp Out Pres" },
+    { id: EValueId.TURBO1_COMP_OUTLET_TEMP, name: "Turbo Comp Out Temp" },
+    { id: EValueId.TURBO1_TURB_INLET_TEMP,  name: "EGT" },
+    { id: EValueId.CAC1_INLET_PRES,         name: "CAC Inlet Pres" },
+    { id: EValueId.CAC1_INLET_TEMP,         name: "CAC Inlet Temp" },
+    { id: EValueId.CAC1_OUTLET_PRES,        name: "CAC Outlet Pres" },
+    { id: EValueId.CAC1_OUTLET_TEMP,        name: "CAC Outlet Temp" },
+    { id: EValueId.MANIFOLD1_ABS_PRES,      name: "Manifold Pres" },
+    { id: EValueId.MANIFOLD1_TEMP,           name: "Manifold Temp" },
+    { id: EValueId.OIL_PRES,                name: "Oil Pres" },
+    { id: EValueId.OIL_TEMP,                name: "Oil Temp" },
+    { id: EValueId.COOLANT_PRES,            name: "Coolant Pres" },
+    { id: EValueId.COOLANT_TEMP,            name: "Coolant Temp" },
+    { id: EValueId.FUEL_PRES,               name: "Fuel Pres" },
+    { id: EValueId.FUEL_TEMP,               name: "Fuel Temp" },
+    { id: EValueId.ENGINE_BAY_TEMP,         name: "Engine Bay Temp" }
 ];
 
 scope ValueName {
     // Print the human-readable name for a value ID
     public void print(EValueId id) {
         u8 idx <- (u8)id;
-        if (idx < global.EValueId.VALUE_ID_COUNT) {
-            Serial.print(global.VALUE_NAMES[idx].name);
+        if (idx < EValueId.VALUE_ID_COUNT) {
+            Serial.print(VALUE_NAMES[idx].name);
         } else {
             Serial.print("Unknown");
         }

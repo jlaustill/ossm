@@ -29,13 +29,13 @@ scope Hardware {
     void populateHardwareFlags(const AppConfig config) {
         for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i +<- 1) {
             EValueId id <- (EValueId)i;
-            bool has <- this.isValueAssigned(config, id);
-            SensorValues.current[id].hasHardware <- has;
+            bool hasHardwareAssigned <- isValueAssigned(config, id);
+            SensorValues.current[id].hasHardware <- hasHardwareAssigned;
         }
     }
 
     public void initialize(const AppConfig config) {
-        this.populateHardwareFlags(config);
+        populateHardwareFlags(config);
         ADS1115Manager.initialize(config);
         MAX31856Manager.initialize(config);
         BME280Manager.initialize(config);

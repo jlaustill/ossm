@@ -25,7 +25,7 @@ scope ADS1115Manager {
 
     // Reading buffers
     // TODO: Re-enable atomic when C-Next supports Arduino/Teensy critical sections
-    volatile TAdcReading readings[ADS_DEVICE_COUNT][this.ADS_CHANNEL_COUNT];
+    volatile TAdcReading readings[ADS_DEVICE_COUNT][ADS_CHANNEL_COUNT];
 
     // State machine for round-robin cycling
     u8 currentDevice <- 0;
@@ -44,61 +44,61 @@ scope ADS1115Manager {
     // Private functions
 
     void startConversion() {
-        if (this.currentDevice >= ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
-            this.conversionStarted <- false;
+        if (currentDevice >= ADS_DEVICE_COUNT || !deviceInitialized[currentDevice]) {
+            conversionStarted <- false;
             return;
         }
 
-        this.ads[this.currentDevice].startADCReading(this.MUX_SINGLE[this.currentChannel], false);
-        this.conversionStarted <- true;
-        this.conversionStartTime <- millis();
+        ads[currentDevice].startADCReading(MUX_SINGLE[currentChannel], false);
+        conversionStarted <- true;
+        conversionStartTime <- millis();
     }
 
     bool isConversionComplete() {
-        if (!this.conversionStarted || this.currentDevice >= ADS_DEVICE_COUNT) {
+        if (!conversionStarted || currentDevice >= ADS_DEVICE_COUNT) {
             return false;
         }
 
-        i32 pinState <- digitalRead(this.drdyPins[this.currentDevice]);
+        i32 pinState <- digitalRead(drdyPins[currentDevice]);
         if (pinState = LOW) {
             return true;
         }
 
-        return this.ads[this.currentDevice].conversionComplete();
+        return ads[currentDevice].conversionComplete();
     }
 
     void readResult() {
-        if (this.currentDevice >= ADS_DEVICE_COUNT || !this.deviceInitialized[this.currentDevice]) {
+        if (currentDevice >= ADS_DEVICE_COUNT || !deviceInitialized[currentDevice]) {
             return;
         }
 
-        i16 result <- this.ads[this.currentDevice].getLastConversionResults();
+        i16 result <- ads[currentDevice].getLastConversionResults();
         u32 now <- millis();
 
         // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
-        this.readings[this.currentDevice][this.currentChannel].rawValue <- result;
-        this.readings[this.currentDevice][this.currentChannel].timestamp <- now;
-        this.readings[this.currentDevice][this.currentChannel].valid <- true;
+        readings[currentDevice][currentChannel].rawValue <- result;
+        readings[currentDevice][currentChannel].timestamp <- now;
+        readings[currentDevice][currentChannel].valid <- true;
 
-        this.conversionStarted <- false;
+        conversionStarted <- false;
     }
 
     void advanceChannel() {
-        this.currentChannel <- this.currentChannel + 1;
+        currentChannel <- currentChannel + 1;
 
-        if (this.currentChannel >= this.ADS_CHANNEL_COUNT) {
-            this.currentChannel <- 0;
-            this.currentDevice <- this.currentDevice + 1;
+        if (currentChannel >= ADS_CHANNEL_COUNT) {
+            currentChannel <- 0;
+            currentDevice <- currentDevice + 1;
 
-            while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
-                this.currentDevice <- this.currentDevice + 1;
+            while (currentDevice < ADS_DEVICE_COUNT && !deviceInitialized[currentDevice]) {
+                currentDevice <- currentDevice + 1;
             }
 
-            if (this.currentDevice >= ADS_DEVICE_COUNT) {
-                this.currentDevice <- 0;
+            if (currentDevice >= ADS_DEVICE_COUNT) {
+                currentDevice <- 0;
 
-                while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
-                    this.currentDevice <- this.currentDevice + 1;
+                while (currentDevice < ADS_DEVICE_COUNT && !deviceInitialized[currentDevice]) {
+                    currentDevice <- currentDevice + 1;
                 }
             }
         }
@@ -109,105 +109,105 @@ scope ADS1115Manager {
     public void initialize(const AppConfig config) {
         // Initialize reading buffers
         for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
-            for (u8 c <- 0; c < this.ADS_CHANNEL_COUNT; c <- c + 1) {
-                this.readings[d][c].rawValue <- 0;
-                this.readings[d][c].timestamp <- 0;
-                this.readings[d][c].valid <- false;
+            for (u8 c <- 0; c < ADS_CHANNEL_COUNT; c <- c + 1) {
+                readings[d][c].rawValue <- 0;
+                readings[d][c].timestamp <- 0;
+                readings[d][c].valid <- false;
             }
         }
 
         // Determine which ADS devices need to be enabled based on input usage
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-            if (config.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
-                u8 dev <- global.HardwareMap.tempDevice(i);
-                this.deviceEnabled[dev] <- true;
+            if (config.tempInputs[i].assignedValue != EValueId.VALUE_UNASSIGNED) {
+                u8 dev <- HardwareMap.tempDevice(i);
+                deviceEnabled[dev] <- true;
             }
         }
 
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-            if (config.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
-                u8 dev <- global.HardwareMap.pressureDevice(i);
-                this.deviceEnabled[dev] <- true;
+            if (config.pressureInputs[i].assignedValue != EValueId.VALUE_UNASSIGNED) {
+                u8 dev <- HardwareMap.pressureDevice(i);
+                deviceEnabled[dev] <- true;
             }
         }
 
         // Initialize each enabled ADS1115 device
         for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
-            this.drdyPins[d] <- ADS_DRDY_PINS[d];
+            drdyPins[d] <- ADS_DRDY_PINS[d];
 
-            if (!this.deviceEnabled[d]) {
-                this.deviceInitialized[d] <- false;
+            if (!deviceEnabled[d]) {
+                deviceInitialized[d] <- false;
                 continue;
             }
 
-            pinMode(this.drdyPins[d], INPUT);
+            pinMode(drdyPins[d], INPUT);
 
             u8 addr <- ADS_I2C_ADDRESSES[d];
-            bool beginResult <- this.ads[d].begin(addr);
+            bool beginResult <- ads[d].begin(addr);
             if (beginResult) {
-                this.deviceInitialized[d] <- true;
+                deviceInitialized[d] <- true;
                 // GAIN_TWOTHIRDS is default (±6.144V, allows 0-5V with 5V VDD)
                 // RATE_ADS1115_128SPS = 0x0080
-                this.ads[d].setDataRate(0x0080);
+                ads[d].setDataRate(0x0080);
 
                 Serial.print("ADS1115 @ 0x");
                 Serial.print(addr, HEX);
                 Serial.print(" initialized, DRDY pin D");
-                Serial.println(this.drdyPins[d]);
+                Serial.println(drdyPins[d]);
             } else {
-                this.deviceInitialized[d] <- false;
+                deviceInitialized[d] <- false;
                 Serial.print("ADS1115 @ 0x");
                 Serial.print(addr, HEX);
                 Serial.println(" FAILED to initialize");
             }
         }
 
-        this.currentDevice <- 0;
-        this.currentChannel <- 0;
-        this.conversionStarted <- false;
+        currentDevice <- 0;
+        currentChannel <- 0;
+        conversionStarted <- false;
 
-        while (this.currentDevice < ADS_DEVICE_COUNT && !this.deviceInitialized[this.currentDevice]) {
-            this.currentDevice <- this.currentDevice + 1;
+        while (currentDevice < ADS_DEVICE_COUNT && !deviceInitialized[currentDevice]) {
+            currentDevice <- currentDevice + 1;
         }
 
-        if (this.currentDevice < ADS_DEVICE_COUNT) {
-            this.startConversion();
+        if (currentDevice < ADS_DEVICE_COUNT) {
+            startConversion();
         }
     }
 
     public bool update() {
-        if (this.currentDevice >= ADS_DEVICE_COUNT) {
+        if (currentDevice >= ADS_DEVICE_COUNT) {
             return false;
         }
 
-        if (!this.conversionStarted) {
-            this.startConversion();
+        if (!conversionStarted) {
+            startConversion();
             return false;
         }
 
-        bool conversionDone <- this.isConversionComplete();
+        bool conversionDone <- isConversionComplete();
         if (conversionDone) {
-            this.readResult();
-            this.advanceChannel();
+            readResult();
+            advanceChannel();
 
-            if (this.currentDevice < ADS_DEVICE_COUNT) {
-                this.startConversion();
+            if (currentDevice < ADS_DEVICE_COUNT) {
+                startConversion();
             }
             return true;
         }
 
-        u32 elapsed <- millis() - this.conversionStartTime;
-        if (elapsed > this.CONVERSION_TIMEOUT_MS) {
+        u32 elapsed <- millis() - conversionStartTime;
+        if (elapsed > CONVERSION_TIMEOUT_MS) {
             Serial.print("ADS1115 timeout on device ");
-            Serial.print(this.currentDevice);
+            Serial.print(currentDevice);
             Serial.print(" channel ");
-            Serial.println(this.currentChannel);
+            Serial.println(currentChannel);
 
-            this.readings[this.currentDevice][this.currentChannel].valid <- false;
-            this.advanceChannel();
+            readings[currentDevice][currentChannel].valid <- false;
+            advanceChannel();
 
-            if (this.currentDevice < ADS_DEVICE_COUNT) {
-                this.startConversion();
+            if (currentDevice < ADS_DEVICE_COUNT) {
+                startConversion();
             }
         }
 
@@ -217,33 +217,33 @@ scope ADS1115Manager {
     public TAdcReading getReading(u8 device, u8 channel) {
         TAdcReading copy <- { rawValue: 0, timestamp: 0, valid: false };
 
-        if (device >= ADS_DEVICE_COUNT || channel >= this.ADS_CHANNEL_COUNT) {
+        if (device >= ADS_DEVICE_COUNT || channel >= ADS_CHANNEL_COUNT) {
             return copy;
         }
 
         // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
-        copy.rawValue <- this.readings[device][channel].rawValue;
-        copy.timestamp <- this.readings[device][channel].timestamp;
-        copy.valid <- this.readings[device][channel].valid;
+        copy.rawValue <- readings[device][channel].rawValue;
+        copy.timestamp <- readings[device][channel].timestamp;
+        copy.valid <- readings[device][channel].valid;
 
         return copy;
     }
 
     public f32 getVoltage(u8 device, u8 channel) {
-        TAdcReading reading <- this.getReading(device, channel);
+        TAdcReading reading <- getReading(device, channel);
 
         if (!reading.valid) {
             return 0.0;
         }
 
-        return this.ads[device].computeVolts(reading.rawValue);
+        return ads[device].computeVolts(reading.rawValue);
     }
 
     public bool isDeviceEnabled(u8 device) {
         if (device >= ADS_DEVICE_COUNT) {
             return false;
         }
-        return this.deviceEnabled[device] && this.deviceInitialized[device];
+        return deviceEnabled[device] && deviceInitialized[device];
     }
 
     // Debug function to print all ADC readings
@@ -255,13 +255,13 @@ scope ADS1115Manager {
             Serial.print(" (0x");
             Serial.print(ADS_I2C_ADDRESSES[d], HEX);
             Serial.print("): enabled=");
-            Serial.print(this.deviceEnabled[d]);
+            Serial.print(deviceEnabled[d]);
             Serial.print(" init=");
-            Serial.println(this.deviceInitialized[d]);
+            Serial.println(deviceInitialized[d]);
 
-            if (this.deviceInitialized[d]) {
-                for (u8 c <- 0; c < this.ADS_CHANNEL_COUNT; c <- c + 1) {
-                    TAdcReading reading <- this.readings[d][c];
+            if (deviceInitialized[d]) {
+                for (u8 c <- 0; c < ADS_CHANNEL_COUNT; c <- c + 1) {
+                    TAdcReading reading <- readings[d][c];
                     Serial.print("  Ch");
                     Serial.print(c);
                     Serial.print(": raw=");
@@ -269,7 +269,7 @@ scope ADS1115Manager {
                     Serial.print(" valid=");
                     Serial.print(reading.valid);
                     if (reading.valid) {
-                        f32 volts <- this.ads[d].computeVolts(reading.rawValue);
+                        f32 volts <- ads[d].computeVolts(reading.rawValue);
                         Serial.print(" volts=");
                         Serial.print(volts, 3);
                     }

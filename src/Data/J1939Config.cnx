@@ -92,6 +92,6 @@ scope J1939Config {
                 return cfg.source;
             }
         }
-        return global.EValueId.VALUE_UNASSIGNED;
+        return EValueId.VALUE_UNASSIGNED;
     }
 }

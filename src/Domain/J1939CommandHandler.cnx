@@ -69,7 +69,7 @@ scope J1939CommandHandler {
         u8 queryType <- data[1];
         u8 subQuery <- data[2];
         u8[8] respData;
-        this.fillBuffer(respData);
+        fillBuffer(respData);
 
         switch (queryType) {
             case 0 {
@@ -77,28 +77,28 @@ scope J1939CommandHandler {
                 u8 tempCount <- 0;
                 u8 presCount <- 0;
                 for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
-                    if (global.appConfig.tempInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                    if (appConfig.tempInputs[i].assignedValue != EValueId.VALUE_UNASSIGNED) {
                         tempCount +<- 1;
                     }
                 }
                 for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
-                    if (global.appConfig.pressureInputs[i].assignedValue != global.EValueId.VALUE_UNASSIGNED) {
+                    if (appConfig.pressureInputs[i].assignedValue != EValueId.VALUE_UNASSIGNED) {
                         presCount +<- 1;
                     }
                 }
                 respData[0] <- tempCount;
                 respData[1] <- presCount;
-                if (global.appConfig.egtEnabled) {
+                if (appConfig.egtEnabled) {
                     respData[2] <- 1;
                 } else {
                     respData[2] <- 0;
                 }
-                if (global.appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled) {
                     respData[3] <- 1;
                 } else {
                     respData[3] <- 0;
                 }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 4);
+                sendConfigResponse(5, (u8)ECommandResult.CMD_SUCCESS, respData, 4);
             }
             case 1 {
                 // Temp value IDs (6 per sub-query, 1 byte each)
@@ -106,12 +106,12 @@ scope J1939CommandHandler {
                 for (u8 i <- 0; i < 6; i +<- 1) {
                     u8 idx <- startIdx + i;
                     if (idx < TEMP_INPUT_COUNT) {
-                        respData[i] <- (u8)global.appConfig.tempInputs[idx].assignedValue;
+                        respData[i] <- (u8)appConfig.tempInputs[idx].assignedValue;
                     } else {
-                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                        respData[i] <- (u8)EValueId.VALUE_UNASSIGNED;
                     }
                 }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+                sendConfigResponse(5, (u8)ECommandResult.CMD_SUCCESS, respData, 6);
             }
             case 2 {
                 // Pressure value IDs (6 per sub-query, 1 byte each)
@@ -119,21 +119,21 @@ scope J1939CommandHandler {
                 for (u8 i <- 0; i < 6; i +<- 1) {
                     u8 idx <- startIdx + i;
                     if (idx < PRESSURE_INPUT_COUNT) {
-                        respData[i] <- (u8)global.appConfig.pressureInputs[idx].assignedValue;
+                        respData[i] <- (u8)appConfig.pressureInputs[idx].assignedValue;
                     } else {
-                        respData[i] <- (u8)global.EValueId.VALUE_UNASSIGNED;
+                        respData[i] <- (u8)EValueId.VALUE_UNASSIGNED;
                     }
                 }
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 6);
+                sendConfigResponse(5, (u8)ECommandResult.CMD_SUCCESS, respData, 6);
             }
             case 4 {
                 // Full config
-                respData[0] <- global.appConfig.j1939SourceAddress;
-                respData[1] <- (u8)global.appConfig.thermocoupleType;
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_SUCCESS, respData, 2);
+                respData[0] <- appConfig.j1939SourceAddress;
+                respData[1] <- (u8)appConfig.thermocoupleType;
+                sendConfigResponse(5, (u8)ECommandResult.CMD_SUCCESS, respData, 2);
             }
             default {
-                this.sendConfigResponse(5, (u8)global.ECommandResult.CMD_UNKNOWN_COMMAND, respData, 0);
+                sendConfigResponse(5, (u8)ECommandResult.CMD_UNKNOWN_COMMAND, respData, 0);
             }
         }
     }
@@ -143,11 +143,11 @@ scope J1939CommandHandler {
     void handleNtcParam(const u8[8] data) {
         u8 input <- data[1];
         u8 param <- data[2];
-        f32 value <- global.FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
+        f32 value <- FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
 
-        ECommandResult result <- global.CommandHandler.setNtcParam(input, param, value);
+        ECommandResult result <- CommandHandler.setNtcParam(input, param, value);
         u8[8] emptyData <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
-        this.sendConfigResponse(10, (u8)result, emptyData, 0);
+        sendConfigResponse(10, (u8)result, emptyData, 0);
     }
 
     // ─── Command dispatch ────────────────────────────────────────────
@@ -157,21 +157,21 @@ scope J1939CommandHandler {
 
         // CAN-only commands
         switch (cmd) {
-            case 5 { this.handleQuery(data); return; }
-            case 10 { this.handleNtcParam(data); return; }
+            case 5 { handleQuery(data); return; }
+            case 10 { handleNtcParam(data); return; }
         }
 
         // Forward to unified CommandHandler
-        ECommandResult result <- global.CommandHandler.process(data);
+        ECommandResult result <- CommandHandler.process(data);
         u8[8] emptyData <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
-        this.sendConfigResponse(cmd, (u8)result, emptyData, 0);
+        sendConfigResponse(cmd, (u8)result, emptyData, 0);
     }
 
     // ─── Public interface ────────────────────────────────────────────
 
     // Called from main loop - sends scheduled PGNs and processes inbound commands
     public void update() {
-        this.sendScheduledPgns();
+        sendScheduledPgns();
 
         bool pending <- J1939Bus.hasPendingCommand();
         if (!pending) {
@@ -180,6 +180,6 @@ scope J1939CommandHandler {
 
         u8[8] data;
         J1939Bus.getPendingCommand(data);
-        this.processCommand(data);
+        processCommand(data);
     }
 }

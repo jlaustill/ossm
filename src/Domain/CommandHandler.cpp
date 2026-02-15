@@ -7,7 +7,7 @@
 
 // CommandHandler.cnx - Unified command processing for OSSM
 // Both serial and CAN pass u8[8] here. Zero SPN knowledge.
-// Uses global.appConfig directly - no config passing.
+// Uses appConfig directly - no config passing.
 #include <AppConfig.h>
 #include <Data/ConfigStorage.h>
 #include <Domain/Hardware.h>

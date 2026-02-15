@@ -23,7 +23,7 @@ scope SensorConvert {
 
     // Default atmospheric pressure when BME280 not available
     public f32 defaultAtmosphericPressure() {
-        return this.STANDARD_ATMOSPHERE_KPA;
+        return STANDARD_ATMOSPHERE_KPA;
     }
 
     // Convert NTC thermistor voltage to temperature using Steinhart-Hart equation
@@ -35,12 +35,12 @@ scope SensorConvert {
         if (voltage <= 0.0) {
             return -273.15;
         }
-        if (voltage >= this.VREF) {
+        if (voltage >= VREF) {
             return -273.15;
         }
 
         // Calculate NTC resistance
-        f32 r_ntc <- cfg.resistorValue * voltage / (this.VREF - voltage);
+        f32 r_ntc <- cfg.resistorValue * voltage / (VREF - voltage);
 
         // Steinhart-Hart equation
         f32 lnR <- log(r_ntc);
@@ -56,38 +56,38 @@ scope SensorConvert {
     // Voltage range: 0.5V = 0, 4.5V = max
     public f32 pressure(f32 voltage, const TPressureInputConfig cfg, f32 atmosphericPressurekPa) {
         // Clamp voltage to valid range
-        if (voltage < this.PRESSURE_VOLTAGE_MIN) {
+        if (voltage < PRESSURE_VOLTAGE_MIN) {
             return 0.0;
         }
 
         f32 clampedVoltage <- voltage;
-        if (clampedVoltage > this.PRESSURE_VOLTAGE_MAX) {
-            clampedVoltage <- this.PRESSURE_VOLTAGE_MAX;
+        if (clampedVoltage > PRESSURE_VOLTAGE_MAX) {
+            clampedVoltage <- PRESSURE_VOLTAGE_MAX;
         }
 
         // Calculate voltage ratio (0.0 to 1.0)
-        f32 ratio <- (clampedVoltage - this.PRESSURE_VOLTAGE_MIN) /
-                     (this.PRESSURE_VOLTAGE_MAX - this.PRESSURE_VOLTAGE_MIN);
+        f32 ratio <- (clampedVoltage - PRESSURE_VOLTAGE_MIN) /
+                     (PRESSURE_VOLTAGE_MAX - PRESSURE_VOLTAGE_MIN);
 
         // Convert based on pressure type
-        if (cfg.pressureType = global.EPressureType.PRESSURE_TYPE_PSIA) {
+        if (cfg.pressureType = EPressureType.PRESSURE_TYPE_PSIA) {
             // Bar sensor (absolute)
             if (cfg.maxPressure > 20000) {
                 // Large bar values: stored as 20000 + bar_value
                 f32 maxBar <- (f32)(cfg.maxPressure - 20000);
                 f32 bar <- ratio * maxBar;
-                return this.clampPositive(bar * this.BAR_TO_KPA);
+                return clampPositive(bar * BAR_TO_KPA);
             } else {
                 // Normal values in centibar (1 centibar = 1 kPa)
                 f32 maxkPa <- (f32)cfg.maxPressure;
-                return this.clampPositive(ratio * maxkPa);
+                return clampPositive(ratio * maxkPa);
             }
         } else {
             // PSI sensor (gauge): maxPressure is in PSI
             f32 maxPsi <- (f32)cfg.maxPressure;
             f32 psi <- ratio * maxPsi;
-            f32 gaugekPa <- psi * this.PSI_TO_KPA;
-            return this.clampPositive(gaugekPa + atmosphericPressurekPa);
+            f32 gaugekPa <- psi * PSI_TO_KPA;
+            return clampPositive(gaugekPa + atmosphericPressurekPa);
         }
     }
 }

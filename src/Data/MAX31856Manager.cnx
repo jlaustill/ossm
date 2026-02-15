@@ -34,125 +34,125 @@ scope MAX31856Manager {
 
     // Start a one-shot conversion
     void startConversion() {
-        if (!this.enabled || !this.initialized) {
-            this.conversionStarted <- false;
+        if (!enabled || !initialized) {
+            conversionStarted <- false;
             return;
         }
 
-        global.thermocouple.triggerOneShot();
-        this.conversionStarted <- true;
-        this.conversionStartTime <- global.millis();
+        thermocouple.triggerOneShot();
+        conversionStarted <- true;
+        conversionStartTime <- millis();
     }
 
     // Check if conversion is complete
     bool isConversionComplete() {
-        if (!this.conversionStarted || !this.enabled || !this.initialized) {
+        if (!conversionStarted || !enabled || !initialized) {
             return false;
         }
 
         // Check DRDY pin (active low when data ready)
-        i32 drdyState <- global.digitalRead(this.drdyPin);
+        i32 drdyState <- digitalRead(drdyPin);
         if (drdyState = LOW) {
             return true;
         }
 
         // Fallback: poll the conversion complete status
-        return global.thermocouple.conversionComplete();
+        return thermocouple.conversionComplete();
     }
 
     // Read the conversion result
     void readResult() {
-        if (!this.enabled || !this.initialized) {
+        if (!enabled || !initialized) {
             return;
         }
 
         // Check for faults first
-        this.faultCode <- global.thermocouple.readFault();
+        faultCode <- thermocouple.readFault();
 
-        if (this.faultCode != 0) {
+        if (faultCode != 0) {
             // Fault detected - reading invalid
-            this.readingValid <- false;
+            readingValid <- false;
         } else {
             // Read temperatures
-            this.temperatureC <- global.thermocouple.readThermocoupleTemperature();
-            this.coldJunctionC <- global.thermocouple.readCJTemperature();
-            this.readingValid <- true;
+            temperatureC <- thermocouple.readThermocoupleTemperature();
+            coldJunctionC <- thermocouple.readCJTemperature();
+            readingValid <- true;
         }
 
-        this.conversionStarted <- false;
+        conversionStarted <- false;
     }
 
     // Initialize the MAX31856 based on config
     public void initialize(const AppConfig config) {
-        this.enabled <- config.egtEnabled;
+        enabled <- config.egtEnabled;
 
-        if (!this.enabled) {
-            global.Serial.println("MAX31856 disabled in config");
+        if (!enabled) {
+            Serial.println("MAX31856 disabled in config");
             return;
         }
 
         // Configure pins
-        global.pinMode(this.drdyPin, INPUT);
-        global.pinMode(this.faultPin, INPUT);
+        pinMode(drdyPin, INPUT);
+        pinMode(faultPin, INPUT);
 
-        bool began <- global.thermocouple.begin();
+        bool began <- thermocouple.begin();
         if (began) {
-            this.initialized <- true;
+            initialized <- true;
 
             // Configure thermocouple type from config
             // Cast enum to u8 for C++ library compatibility
-            global.thermocouple.setThermocoupleType((u8)config.thermocoupleType);
+            thermocouple.setThermocoupleType((u8)config.thermocoupleType);
 
             // Set noise rejection (60Hz for North America)
             // MAX31856_NOISE_FILTER_60HZ = 0
-            global.thermocouple.setNoiseFilter(0);
+            thermocouple.setNoiseFilter(0);
 
             // Use one-shot mode for lower power
             // MAX31856_ONESHOT = 0
-            global.thermocouple.setConversionMode(0);
+            thermocouple.setConversionMode(0);
 
-            global.Serial.println("MAX31856 initialized");
+            Serial.println("MAX31856 initialized");
 
             // Start first conversion
-            this.startConversion();
+            startConversion();
         } else {
-            this.initialized <- false;
-            global.Serial.println("MAX31856 FAILED to initialize");
+            initialized <- false;
+            Serial.println("MAX31856 FAILED to initialize");
         }
     }
 
     // Call from main loop to update readings
     // Returns true if a new reading is available
     public bool update() {
-        if (!this.enabled || !this.initialized) {
+        if (!enabled || !initialized) {
             return false;
         }
 
         // No conversion in progress, start one
-        if (!this.conversionStarted) {
-            this.startConversion();
+        if (!conversionStarted) {
+            startConversion();
             return false;
         }
 
         // Check if conversion is complete
-        bool complete <- this.isConversionComplete();
+        bool complete <- isConversionComplete();
         if (complete) {
-            this.readResult();
+            readResult();
 
             // Start next conversion immediately
-            this.startConversion();
+            startConversion();
             return true;
         }
 
         // Check for timeout
-        u32 now <- global.millis();
-        if (now - this.conversionStartTime > this.CONVERSION_TIMEOUT_MS) {
+        u32 now <- millis();
+        if (now - conversionStartTime > CONVERSION_TIMEOUT_MS) {
             // Timeout - reading invalid, will retry
-            this.readingValid <- false;
-            this.conversionStarted <- false;
+            readingValid <- false;
+            conversionStarted <- false;
 
             // Try to start a new conversion
-            this.startConversion();
+            startConversion();
         }
 
         return false;
@@ -160,27 +160,27 @@ scope MAX31856Manager {
 
     // Get the latest temperature reading in Celsius
     public f32 getTemperatureC() {
-        if (!this.readingValid) {
+        if (!readingValid) {
             return -273.15;  // Return absolute zero as error indicator
         }
-        return this.temperatureC;
+        return temperatureC;
     }
 
     // Get the latest cold junction temperature in Celsius
     public f32 getColdJunctionC() {
-        if (!this.readingValid) {
+        if (!readingValid) {
             return -273.15;
         }
-        return this.coldJunctionC;
+        return coldJunctionC;
     }
 
     // Check if the device is enabled and initialized
     public bool isEnabled() {
-        return this.enabled && this.initialized;
+        return enabled && initialized;
     }
 
     // Get the fault status code
     public u8 getFaultStatus() {
-        return this.faultCode;
+        return faultCode;
     }
 }

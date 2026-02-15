@@ -11,52 +11,52 @@ scope InputValid {
     // Temperature input validation (1-indexed, user-facing)
     public bool isValidTempInput(u8 input) {
         if (input < 1) { return false; }
-        if (input > this.TEMP_COUNT) { return false; }
+        if (input > TEMP_COUNT) { return false; }
         return true;
     }
 
     // Temperature input validation (0-indexed, internal)
     public bool isValidTempIndex(u8 index) {
-        if (index >= this.TEMP_COUNT) { return false; }
+        if (index >= TEMP_COUNT) { return false; }
         return true;
     }
 
     // Convert 1-indexed temp input to 0-indexed
     public u8 tempInputToIndex(u8 input) {
         if (input < 1) { return 255; }
-        if (input > this.TEMP_COUNT) { return 255; }
+        if (input > TEMP_COUNT) { return 255; }
         return input - 1;
     }
 
     // Convert 0-indexed temp to 1-indexed input
     public u8 tempIndexToInput(u8 index) {
-        if (index >= this.TEMP_COUNT) { return 0; }
+        if (index >= TEMP_COUNT) { return 0; }
         return index + 1;
     }
 
     // Pressure input validation (1-indexed, user-facing)
     public bool isValidPressureInput(u8 input) {
         if (input < 1) { return false; }
-        if (input > this.PRESSURE_COUNT) { return false; }
+        if (input > PRESSURE_COUNT) { return false; }
         return true;
     }
 
     // Pressure input validation (0-indexed, internal)
     public bool isValidPressureIndex(u8 index) {
-        if (index >= this.PRESSURE_COUNT) { return false; }
+        if (index >= PRESSURE_COUNT) { return false; }
         return true;
     }
 
     // Convert 1-indexed pressure input to 0-indexed
     public u8 pressureInputToIndex(u8 input) {
         if (input < 1) { return 255; }
-        if (input > this.PRESSURE_COUNT) { return 255; }
+        if (input > PRESSURE_COUNT) { return 255; }
         return input - 1;
     }
 
     // Convert 0-indexed pressure to 1-indexed input
     public u8 pressureIndexToInput(u8 index) {
-        if (index >= this.PRESSURE_COUNT) { return 0; }
+        if (index >= PRESSURE_COUNT) { return 0; }
         return index + 1;
     }
 

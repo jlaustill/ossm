@@ -46,8 +46,8 @@ static bool Hardware_isValueAssigned(const AppConfig& config, EValueId id) {
 static void Hardware_populateHardwareFlags(const AppConfig& config) {
     for (uint8_t i = 0; i < EValueId_VALUE_ID_COUNT; i += 1) {
         EValueId id = static_cast<EValueId>(i);
-        bool has = Hardware_isValueAssigned(config, id);
-        SensorValues_current[id].hasHardware = has;
+        bool hasHardwareAssigned = Hardware_isValueAssigned(config, id);
+        SensorValues_current[id].hasHardware = hasHardwareAssigned;
     }
 }
 

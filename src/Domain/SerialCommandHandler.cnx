@@ -44,62 +44,62 @@ scope SerialCommandHandler {
     void printEnabledValues() {
         Serial.println("=== Enabled Values ===");
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-            EValueId val <- global.appConfig.tempInputs[i].assignedValue;
-            if (val != global.EValueId.VALUE_UNASSIGNED) {
+            EValueId val <- appConfig.tempInputs[i].assignedValue;
+            if (val != EValueId.VALUE_UNASSIGNED) {
                 Serial.print("temp");
                 Serial.print(i + 1);
                 Serial.print(": ");
-                global.ValueName.print(val);
+                ValueName.print(val);
                 Serial.println();
             }
         }
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-            EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
-            if (val != global.EValueId.VALUE_UNASSIGNED) {
+            EValueId val <- appConfig.pressureInputs[i].assignedValue;
+            if (val != EValueId.VALUE_UNASSIGNED) {
                 Serial.print("pres");
                 Serial.print(i + 1);
                 Serial.print(": ");
-                global.ValueName.print(val);
+                ValueName.print(val);
                 Serial.println();
             }
         }
-        if (global.appConfig.egtEnabled) {
+        if (appConfig.egtEnabled) {
             Serial.println("EGT: enabled");
         }
-        if (global.appConfig.bme280Enabled) {
+        if (appConfig.bme280Enabled) {
             Serial.println("BME280: enabled");
         }
     }
 
     void handleQuery() {
         u8 queryType <- 0;
-        if (global.parsed.count > 1) {
-            queryType <- global.parsed.data[1];
+        if (parsed.count > 1) {
+            queryType <- parsed.data[1];
         }
 
         switch (queryType) {
             case 0 {
-                this.printEnabledValues();
+                printEnabledValues();
             }
             case 4 {
                 Serial.println("=== Full Configuration ===");
                 Serial.print("J1939 Address: ");
-                Serial.println(global.appConfig.j1939SourceAddress);
+                Serial.println(appConfig.j1939SourceAddress);
                 Serial.print("EGT Enabled: ");
-                if (global.appConfig.egtEnabled) {
+                if (appConfig.egtEnabled) {
                     Serial.println("Yes");
                 } else {
                     Serial.println("No");
                 }
                 Serial.print("TC Type: ");
-                Serial.println(global.appConfig.thermocoupleType);
+                Serial.println(appConfig.thermocoupleType);
                 Serial.print("BME280 Enabled: ");
-                if (global.appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled) {
                     Serial.println("Yes");
                 } else {
                     Serial.println("No");
                 }
-                this.printEnabledValues();
+                printEnabledValues();
             }
             default {
                 Serial.println("ERR,Query type 0 or 4");
@@ -111,64 +111,64 @@ scope SerialCommandHandler {
 
     void handleReadSensors() {
         u8 sensorType <- 0;
-        if (global.parsed.count > 1) {
-            sensorType <- global.parsed.data[1];
+        if (parsed.count > 1) {
+            sensorType <- parsed.data[1];
         }
 
         switch (sensorType) {
             case 0 {
                 Serial.println("=== Live Sensor Values ===");
-                if (global.appConfig.egtEnabled) {
+                if (appConfig.egtEnabled) {
                     Serial.print("EGT: ");
-                    u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
+                    u8 faultStatus <- MAX31856Manager.getFaultStatus();
                     if (faultStatus = 0) {
-                        Serial.print(global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value,1);
+                        Serial.print(SensorValues.current[EValueId.TURBO1_TURB_INLET_TEMP].value,1);
                         Serial.println(" C");
                     } else {
                         Serial.println("FAULT");
                     }
                 }
                 for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-                    EValueId val <- global.appConfig.tempInputs[i].assignedValue;
-                    if (val != global.EValueId.VALUE_UNASSIGNED) {
+                    EValueId val <- appConfig.tempInputs[i].assignedValue;
+                    if (val != EValueId.VALUE_UNASSIGNED) {
                         Serial.print("temp");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.current[val].value,1);
+                        Serial.print(SensorValues.current[val].value,1);
                         Serial.println(" C");
                     }
                 }
                 for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-                    EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
-                    if (val != global.EValueId.VALUE_UNASSIGNED) {
+                    EValueId val <- appConfig.pressureInputs[i].assignedValue;
+                    if (val != EValueId.VALUE_UNASSIGNED) {
                         Serial.print("pres");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.current[val].value,2);
+                        Serial.print(SensorValues.current[val].value,2);
                         Serial.println(" kPa");
                     }
                 }
-                if (global.appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled) {
                     Serial.print("Ambient Temp: ");
-                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value,1);
+                    Serial.print(SensorValues.current[EValueId.AMBIENT_TEMP].value,1);
                     Serial.println(" C");
                     Serial.print("Humidity: ");
-                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value,1);
+                    Serial.print(SensorValues.current[EValueId.AMBIENT_HUMIDITY].value,1);
                     Serial.println(" %");
                     Serial.print("Baro: ");
-                    Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_PRES].value,2);
+                    Serial.print(SensorValues.current[EValueId.AMBIENT_PRES].value,2);
                     Serial.println(" kPa");
                 }
             }
             case 1 {
-                if (!global.appConfig.egtEnabled) {
+                if (!appConfig.egtEnabled) {
                     Serial.println("ERR,EGT not enabled");
                     return;
                 }
                 Serial.print("EGT: ");
-                u8 faultStatus <- global.MAX31856Manager.getFaultStatus();
+                u8 faultStatus <- MAX31856Manager.getFaultStatus();
                 if (faultStatus = 0) {
-                    Serial.print(global.SensorValues.current[global.EValueId.TURBO1_TURB_INLET_TEMP].value,1);
+                    Serial.print(SensorValues.current[EValueId.TURBO1_TURB_INLET_TEMP].value,1);
                     Serial.println(" C");
                 } else {
                     Serial.print("FAULT (0x");
@@ -179,12 +179,12 @@ scope SerialCommandHandler {
             case 2 {
                 Serial.println("=== Temperature Sensors ===");
                 for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
-                    EValueId val <- global.appConfig.tempInputs[i].assignedValue;
-                    if (val != global.EValueId.VALUE_UNASSIGNED) {
+                    EValueId val <- appConfig.tempInputs[i].assignedValue;
+                    if (val != EValueId.VALUE_UNASSIGNED) {
                         Serial.print("temp");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.current[val].value,1);
+                        Serial.print(SensorValues.current[val].value,1);
                         Serial.println(" C");
                     }
                 }
@@ -192,30 +192,30 @@ scope SerialCommandHandler {
             case 3 {
                 Serial.println("=== Pressure Sensors ===");
                 for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i <- i + 1) {
-                    EValueId val <- global.appConfig.pressureInputs[i].assignedValue;
-                    if (val != global.EValueId.VALUE_UNASSIGNED) {
+                    EValueId val <- appConfig.pressureInputs[i].assignedValue;
+                    if (val != EValueId.VALUE_UNASSIGNED) {
                         Serial.print("pres");
                         Serial.print(i + 1);
                         Serial.print(": ");
-                        Serial.print(global.SensorValues.current[val].value,2);
+                        Serial.print(SensorValues.current[val].value,2);
                         Serial.println(" kPa");
                     }
                 }
             }
             case 4 {
-                if (!global.appConfig.bme280Enabled) {
+                if (!appConfig.bme280Enabled) {
                     Serial.println("ERR,BME280 not enabled");
                     return;
                 }
                 Serial.println("=== BME280 Ambient ===");
                 Serial.print("Ambient Temp: ");
-                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_TEMP].value,1);
+                Serial.print(SensorValues.current[EValueId.AMBIENT_TEMP].value,1);
                 Serial.println(" C");
                 Serial.print("Humidity: ");
-                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_HUMIDITY].value,1);
+                Serial.print(SensorValues.current[EValueId.AMBIENT_HUMIDITY].value,1);
                 Serial.println(" %");
                 Serial.print("Baro: ");
-                Serial.print(global.SensorValues.current[global.EValueId.AMBIENT_PRES].value,2);
+                Serial.print(SensorValues.current[EValueId.AMBIENT_PRES].value,2);
                 Serial.println(" kPa");
             }
             default {
@@ -227,8 +227,8 @@ scope SerialCommandHandler {
     // ─── Serial-only: Diagnostics ───────────────────────────────────
 
     void reportFaults() {
-        u8 egtFault <- global.MAX31856Manager.getFaultStatus();
-        bool hasFault <- global.FaultDecode.hasFault(egtFault);
+        u8 egtFault <- MAX31856Manager.getFaultStatus();
+        bool hasFault <- FaultDecode.hasFault(egtFault);
 
         if (hasFault) {
             Serial.println("--- FAULTS ---");
@@ -236,26 +236,26 @@ scope SerialCommandHandler {
             Serial.print(egtFault, HEX);
             Serial.print(" (");
 
-            bool isOpen <- global.FaultDecode.isOpen(egtFault);
+            bool isOpen <- FaultDecode.isOpen(egtFault);
             if (isOpen) { Serial.print("OPEN "); }
-            bool isOvuv <- global.FaultDecode.isOvuv(egtFault);
+            bool isOvuv <- FaultDecode.isOvuv(egtFault);
             if (isOvuv) { Serial.print("OVUV "); }
-            bool isTcLow <- global.FaultDecode.isTcLow(egtFault);
+            bool isTcLow <- FaultDecode.isTcLow(egtFault);
             if (isTcLow) { Serial.print("TC_LOW "); }
-            bool isTcHigh <- global.FaultDecode.isTcHigh(egtFault);
+            bool isTcHigh <- FaultDecode.isTcHigh(egtFault);
             if (isTcHigh) { Serial.print("TC_HIGH "); }
-            bool isCjLow <- global.FaultDecode.isCjLow(egtFault);
+            bool isCjLow <- FaultDecode.isCjLow(egtFault);
             if (isCjLow) { Serial.print("CJ_LOW "); }
-            bool isCjHigh <- global.FaultDecode.isCjHigh(egtFault);
+            bool isCjHigh <- FaultDecode.isCjHigh(egtFault);
             if (isCjHigh) { Serial.print("CJ_HIGH "); }
-            bool isTcRange <- global.FaultDecode.isTcRange(egtFault);
+            bool isTcRange <- FaultDecode.isTcRange(egtFault);
             if (isTcRange) { Serial.print("TC_RANGE "); }
-            bool isCjRange <- global.FaultDecode.isCjRange(egtFault);
+            bool isCjRange <- FaultDecode.isCjRange(egtFault);
             if (isCjRange) { Serial.print("CJ_RANGE "); }
 
             Serial.println(")");
 
-            bool isCritical <- global.FaultDecode.isCritical(egtFault);
+            bool isCritical <- FaultDecode.isCritical(egtFault);
             if (isCritical) {
                 Serial.println("WARNING: Critical fault - check sensor connection");
             }
@@ -296,45 +296,45 @@ scope SerialCommandHandler {
     // ─── Command dispatch ───────────────────────────────────────────
 
     void processCommand() {
-        u32 len <- global.cmdBuffer.length;
+        u32 len <- cmdBuffer.length;
         if (len = 0) {
             return;
         }
 
-        global.parsed <- SeaDash.Parse.parse(global.cmdBuffer, ',');
-        if (!global.parsed.success || global.parsed.count < 1) {
+        parsed <- SeaDash.Parse.parse(cmdBuffer, ',');
+        if (!parsed.success || parsed.count < 1) {
             Serial.println("ERR,Parse failed");
             return;
         }
 
-        u8 cmdNum <- global.parsed.data[0];
+        u8 cmdNum <- parsed.data[0];
 
         // Serial-only commands
         switch (cmdNum) {
-            case 5 { this.handleQuery(); this.reportFaults(); return; }
-            case 10 { this.handleReadSensors(); this.reportFaults(); return; }
-            case 11 { this.handleDumpEeprom(); return; }
-            case 12 { global.ADS1115Manager.printDebugInfo(); return; }
+            case 5 { handleQuery(); reportFaults(); return; }
+            case 10 { handleReadSensors(); reportFaults(); return; }
+            case 11 { handleDumpEeprom(); return; }
+            case 12 { ADS1115Manager.printDebugInfo(); return; }
         }
 
         // Pack parsed values into u8[8] and forward to CommandHandler
         u8[8] data <- [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
         for (u8 i <- 0; i < 8; i +<- 1) {
-            if (i < global.parsed.count) {
-                data[i] <- (u8)global.parsed.data[i];
+            if (i < parsed.count) {
+                data[i] <- (u8)parsed.data[i];
             }
         }
 
-        ECommandResult result <- global.CommandHandler.process(data);
-        this.printResult(result);
-        this.reportFaults();
+        ECommandResult result <- CommandHandler.process(data);
+        printResult(result);
+        reportFaults();
     }
 
     // ─── Public interface ───────────────────────────────────────────
 
     public void initialize() {
-        global.cmdIndex <- 0;
-        global.cmdBuffer <- "";
+        cmdIndex <- 0;
+        cmdBuffer <- "";
 
         Serial.println("OSSM Command Interface Ready");
         Serial.println("Commands: 1,valueId[,input] | 2,valueId | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
@@ -347,14 +347,14 @@ scope SerialCommandHandler {
             char c <- readResult[0, 8];
 
             if (c = '\n' || c = '\r') {
-                if (global.cmdIndex > 0) {
-                    this.processCommand();
-                    global.cmdIndex <- 0;
-                    global.cmdBuffer <- "";
+                if (cmdIndex > 0) {
+                    processCommand();
+                    cmdIndex <- 0;
+                    cmdBuffer <- "";
                 }
-            } else if (global.cmdIndex < 127) {
-                global.cmdBuffer[global.cmdIndex] <- c;
-                global.cmdIndex <- global.cmdIndex + 1;
+            } else if (cmdIndex < 127) {
+                cmdBuffer[cmdIndex] <- c;
+                cmdIndex <- cmdIndex + 1;
             }
             available <- Serial.available();
         }

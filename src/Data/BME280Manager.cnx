@@ -28,106 +28,106 @@ scope BME280Manager {
     // Call from main loop to update readings
     // Returns true if readings were updated
     public bool update() {
-        if (!this.enabled || !this.initialized) {
+        if (!enabled || !initialized) {
             return false;
         }
 
         // Only read periodically to reduce I2C traffic
-        u32 now <- global.millis();
-        if (now - this.lastReadTime < this.READ_INTERVAL_MS) {
+        u32 now <- millis();
+        if (now - lastReadTime < READ_INTERVAL_MS) {
             return false;
         }
 
         // Read all values (BME280 reads are fast, ~1ms)
-        this.temperatureC <- this.bme.readTemperature();
-        this.humidity <- this.bme.readHumidity();
+        temperatureC <- bme.readTemperature();
+        humidity <- bme.readHumidity();
 
         // Convert from Pa to kPa
-        this.pressurekPa <- this.bme.readPressure() / 1000.0;
+        pressurekPa <- bme.readPressure() / 1000.0;
 
         // Check for valid readings (NaN check)
-        bool tempNan <- global.isnan(this.temperatureC);
-        bool humNan <- global.isnan(this.humidity);
-        bool presNan <- global.isnan(this.pressurekPa);
+        bool tempNan <- global.isnan(temperatureC);
+        bool humNan <- global.isnan(humidity);
+        bool presNan <- global.isnan(pressurekPa);
         if (tempNan || humNan || presNan) {
-            this.readingValid <- false;
+            readingValid <- false;
             return false;
         }
 
-        this.readingValid <- true;
-        this.lastReadTime <- now;
+        readingValid <- true;
+        lastReadTime <- now;
 
         return true;
     }
 
     // Initialize the BME280 based on config
     public void initialize(const AppConfig config) {
-        this.enabled <- config.bme280Enabled;
+        enabled <- config.bme280Enabled;
 
-        if (!this.enabled) {
-            global.Serial.println("BME280 disabled in config");
+        if (!enabled) {
+            Serial.println("BME280 disabled in config");
             return;
         }
 
         // Fixed I2C address (0x76 is standard for BME280)
-        this.i2cAddress <- 0x76;
+        i2cAddress <- 0x76;
 
-        bool began <- this.bme.begin(this.i2cAddress);
+        bool began <- bme.begin(i2cAddress);
         if (began) {
-            this.initialized <- true;
+            initialized <- true;
 
             // Configure for weather monitoring (low power, low oversampling)
             // Using numeric values for C++ enums:
             // MODE_NORMAL=3, SAMPLING_X1=1, FILTER_OFF=0, STANDBY_MS_1000=5
-            this.bme.setSampling(3, 1, 1, 1, 0, 5);
+            bme.setSampling(3, 1, 1, 1, 0, 5);
 
-            global.Serial.print("BME280 initialized at 0x");
-            global.Serial.println(this.i2cAddress, HEX);
+            Serial.print("BME280 initialized at 0x");
+            Serial.println(i2cAddress, HEX);
 
             // Do initial read
-            this.update();
+            update();
         } else {
-            this.initialized <- false;
-            global.Serial.print("BME280 FAILED to initialize at 0x");
-            global.Serial.print(this.i2cAddress, HEX);
-            global.Serial.println(" - check wiring");
+            initialized <- false;
+            Serial.print("BME280 FAILED to initialize at 0x");
+            Serial.print(i2cAddress, HEX);
+            Serial.println(" - check wiring");
 
             // Print sensor ID for debugging
-            global.Serial.print("  Sensor ID: 0x");
-            global.Serial.println(this.bme.sensorID(), HEX);
-            global.Serial.println("  ID 0xFF = bad address or no sensor");
-            global.Serial.println("  ID 0x56-0x58 = BMP280");
-            global.Serial.println("  ID 0x60 = BME280");
-            global.Serial.println("  ID 0x61 = BME680");
+            Serial.print("  Sensor ID: 0x");
+            Serial.println(bme.sensorID(), HEX);
+            Serial.println("  ID 0xFF = bad address or no sensor");
+            Serial.println("  ID 0x56-0x58 = BMP280");
+            Serial.println("  ID 0x60 = BME280");
+            Serial.println("  ID 0x61 = BME680");
         }
     }
 
     // Get the latest temperature reading in Celsius
     public f32 getTemperatureC() {
-        if (!this.readingValid) {
+        if (!readingValid) {
             return -273.15;  // Return absolute zero as error indicator
         }
-        return this.temperatureC;
+        return temperatureC;
     }
 
     // Get the latest humidity reading in %
     public f32 getHumidity() {
-        if (!this.readingValid) {
+        if (!readingValid) {
             return 0.0;
         }
-        return this.humidity;
+        return humidity;
     }
 
     // Get the latest pressure reading in kPa
     public f32 getPressurekPa() {
-        if (!this.readingValid) {
+        if (!readingValid) {
             return 0.0;
         }
-        return this.pressurekPa;
+        return pressurekPa;
     }
 
     // Check if the device is enabled and initialized
     public bool isEnabled() {
-        return this.enabled && this.initialized;
+        return enabled && initialized;
     }
 }
