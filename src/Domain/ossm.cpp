@@ -15,16 +15,12 @@
 #include <Data/SensorValues.h>
 #include "J1939CommandHandler.h"
 #include "SerialCommandHandler.h"
+#include "TimingDebugHandler.h"
 
 #include <stdint.h>
 
 /* Scope: Ossm */
 static elapsedMicros Ossm_loopTimer = {};
-static elapsedMillis Ossm_reportTimer = {};
-static uint32_t Ossm_maxSensor = 0;
-static uint32_t Ossm_maxSerial = 0;
-static uint32_t Ossm_maxJ1939 = 0;
-static uint32_t Ossm_maxTotal = 0;
 
 void Ossm_setup(void) {
     Serial.begin(115200);
@@ -42,6 +38,7 @@ void Ossm_setup(void) {
     SensorProcessor_initialize();
     J1939Bus_initialize();
     SerialCommandHandler_initialize();
+    TimingDebugHandler_initialize();
     Serial.println("OSSM Ready");
 }
 
@@ -50,41 +47,13 @@ void Ossm_loop(void) {
         Ossm_loopTimer = 0;
         uint32_t t0 = micros();
         SensorProcessor_update();
+        TimingDebugHandler_recordSensor(t0);
         uint32_t t1 = micros();
         SerialCommandHandler_update();
+        TimingDebugHandler_recordSerial(t1);
         uint32_t t2 = micros();
         J1939CommandHandler_update();
-        uint32_t t3 = micros();
-        uint32_t dSensor = t1 - t0;
-        uint32_t dSerial = t2 - t1;
-        uint32_t dJ1939 = t3 - t2;
-        uint32_t dTotal = t3 - t0;
-        if (dSensor > Ossm_maxSensor) {
-            Ossm_maxSensor = dSensor;
-        }
-        if (dSerial > Ossm_maxSerial) {
-            Ossm_maxSerial = dSerial;
-        }
-        if (dJ1939 > Ossm_maxJ1939) {
-            Ossm_maxJ1939 = dJ1939;
-        }
-        if (dTotal > Ossm_maxTotal) {
-            Ossm_maxTotal = dTotal;
-        }
-        if (Ossm_reportTimer >= 5000) {
-            Serial.print("LOOP us max: sensor=");
-            Serial.print(Ossm_maxSensor);
-            Serial.print(" serial=");
-            Serial.print(Ossm_maxSerial);
-            Serial.print(" j1939=");
-            Serial.print(Ossm_maxJ1939);
-            Serial.print(" total=");
-            Serial.println(Ossm_maxTotal);
-            Ossm_maxSensor = 0;
-            Ossm_maxSerial = 0;
-            Ossm_maxJ1939 = 0;
-            Ossm_maxTotal = 0;
-            Ossm_reportTimer = 0;
-        }
+        TimingDebugHandler_recordJ1939(t2);
+        TimingDebugHandler_maybeReport();
     }
 }

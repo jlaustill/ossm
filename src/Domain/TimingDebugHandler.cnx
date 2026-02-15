@@ -1,0 +1,76 @@
+/**
+ * Timing Debug Handler
+ * Monitors loop timing and reports max execution durations
+ * Wrap with #ifdef DEBUG_TIMING to exclude from release builds
+ */
+
+#include <Arduino.h>
+#include <AppConfig.cnx>
+
+scope TimingDebugHandler {
+    // Timing audit - track max durations
+    elapsedMillis reportTimer;
+    u32 maxSensor <- 0;
+    u32 maxSerial <- 0;
+    u32 maxJ1939 <- 0;
+    u32 maxTotal <- 0;
+
+    public void initialize() {
+        // Reset timing tracking
+        this.reportTimer <- 0;
+        this.maxSensor <- 0;
+        this.maxSerial <- 0;
+        this.maxJ1939 <- 0;
+        this.maxTotal <- 0;
+    }
+
+    // Record SensorProcessor duration
+    public void recordSensor(u32 t0) {
+        u32 t1 <- micros();
+        u32 duration <- t1 - t0;
+        if (duration > this.maxSensor) {
+            this.maxSensor <- duration;
+        }
+    }
+
+    // Record SerialCommandHandler duration
+    public void recordSerial(u32 t0) {
+        u32 t1 <- micros();
+        u32 duration <- t1 - t0;
+        if (duration > this.maxSerial) {
+            this.maxSerial <- duration;
+        }
+    }
+
+    // Record J1939CommandHandler duration and total
+    public void recordJ1939(u32 t0) {
+        u32 t1 <- micros();
+        u32 duration <- t1 - t0;
+        if (duration > this.maxJ1939) {
+            this.maxJ1939 <- duration;
+        }
+        u32 total <- t1 - t0;  // t0 was start of SensorProcessor
+        if (total > this.maxTotal) {
+            this.maxTotal <- total;
+        }
+    }
+
+    // Report timing if 5 seconds have elapsed
+    public void maybeReport() {
+        if (this.reportTimer >= 5000) {
+            Serial.print("LOOP us max: sensor=");
+            Serial.print(this.maxSensor);
+            Serial.print(" serial=");
+            Serial.print(this.maxSerial);
+            Serial.print(" j1939=");
+            Serial.print(this.maxJ1939);
+            Serial.print(" total=");
+            Serial.println(this.maxTotal);
+            this.maxSensor <- 0;
+            this.maxSerial <- 0;
+            this.maxJ1939 <- 0;
+            this.maxTotal <- 0;
+            this.reportTimer <- 0;
+        }
+    }
+}

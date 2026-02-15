@@ -15,6 +15,7 @@
 #include <Data/SensorValues.h>
 #include "J1939CommandHandler.h"
 #include "SerialCommandHandler.h"
+#include "TimingDebugHandler.h"
 
 #ifdef __cplusplus
 extern "C" {
