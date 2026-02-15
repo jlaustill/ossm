@@ -4877,19 +4877,19 @@
      y="25.854176"
      class="pin-header"
      text-anchor="middle"
-     id="text4048">B</text>
+     id="text4050">C</text>
   <text
      x="59"
      y="25.854176"
      class="pin-header"
      text-anchor="middle"
-     id="text4050">C</text>
+     id="text4052">D</text>
   <text
      x="82"
      y="25.854176"
      class="pin-header"
      text-anchor="middle"
-     id="text4052">D</text>
+     id="text4048">B</text>
   <!-- Column dividers -->
   <line
      x1="24.45023"
@@ -4989,227 +4989,227 @@
      class="pin-text"
      id="text4082"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">12. temp8 -</text>
-  <!-- Pin rows - Column B -->
-  <text
-     x="25.5"
-     y="29.554176"
-     class="pin-text"
-     id="text4084"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">1. temp1 -</text>
-  <text
-     x="25.5"
-     y="34.054176"
-     class="pin-text"
-     id="text4086"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">2. temp1 +</text>
-  <text
-     x="25.5"
-     y="38.554176"
-     class="pin-text"
-     id="text4088"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3. pres1 Sig</text>
-  <text
-     x="25.5"
-     y="43.054176"
-     class="pin-text"
-     id="text4090"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">4. temp2 +</text>
-  <text
-     x="25.5"
-     y="47.554176"
-     class="pin-text"
-     id="text4092"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">5. pres2 Sig</text>
-  <text
-     x="25.5"
-     y="52.054176"
-     class="pin-text"
-     id="text4094"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">6. pres1 +</text>
-  <text
-     x="25.5"
-     y="56.554176"
-     class="pin-text"
-     id="text4096"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">7. pres2 +</text>
-  <text
-     x="25.5"
-     y="61.054176"
-     class="pin-text"
-     id="text4098"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">8. pres1 -</text>
-  <text
-     x="25.5"
-     y="65.554176"
-     class="pin-text"
-     id="text4100"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">9. temp2 -</text>
-  <text
-     x="25.5"
-     y="70.054176"
-     class="pin-text"
-     id="text4102"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">10. pres2 -</text>
-  <text
-     x="25.5"
-     y="74.554176"
-     class="pin-text"
-     id="text4104"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">11. temp4 +</text>
-  <text
-     x="25.5"
-     y="79.054176"
-     class="pin-text"
-     id="text4106"
-     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">12. pres6 Sig</text>
   <!-- Pin rows - Column C -->
   <text
-     x="48.5"
+     x="25.5"
      y="29.554176"
      class="pin-text"
      id="text4108"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">1. temp3 +</text>
   <text
-     x="48.5"
+     x="25.5"
      y="34.054176"
      class="pin-text"
      id="text4110"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">2. pres5 +</text>
   <text
-     x="48.5"
+     x="25.5"
      y="38.554176"
      class="pin-text"
      id="text4112"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3. pres6 +</text>
   <text
-     x="48.5"
+     x="25.5"
      y="43.054176"
      class="pin-text"
      id="text4114"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">4. pres4 Sig</text>
   <text
-     x="48.5"
+     x="25.5"
      y="47.554176"
      class="pin-text"
      id="text4116"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">5. temp6 +</text>
   <text
-     x="48.5"
+     x="25.5"
      y="52.054176"
      class="pin-text"
      id="text4118"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">6. temp5 +</text>
   <text
-     x="48.5"
+     x="25.5"
      y="56.554176"
      class="pin-text"
      id="text4120"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">7. pres3 Sig</text>
   <text
-     x="48.5"
+     x="25.5"
      y="61.054176"
      class="pin-text"
      id="text4122"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">8. pres3 -</text>
   <text
-     x="48.5"
+     x="25.5"
      y="65.554176"
      class="pin-text"
      id="text4124"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">9. temp5 -</text>
   <text
-     x="48.5"
+     x="25.5"
      y="70.054176"
      class="pin-text"
      id="text4126"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">10. temp6 -</text>
   <text
-     x="48.5"
+     x="25.5"
      y="74.554176"
      class="pin-text"
      id="text4128"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">11. pres4 -</text>
   <text
-     x="48.5"
+     x="25.5"
      y="79.054176"
      class="pin-text"
      id="text4130"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">12. pres3 +</text>
   <!-- Pin rows - Column D -->
   <text
-     x="71.5"
+     x="48.5"
      y="29.554176"
      class="pin-text"
      id="text4132"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">1. SCL</text>
   <text
-     x="71.5"
+     x="48.5"
      y="34.054176"
      class="pin-text"
      id="text4134"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">2. SDA</text>
   <text
-     x="71.5"
+     x="48.5"
      y="38.554176"
      class="pin-text"
      id="text4136"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3. GND</text>
   <text
-     x="71.5"
+     x="48.5"
      y="43.054176"
      class="pin-text"
      id="text4138"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">4. temp3 -</text>
   <text
-     x="71.5"
+     x="48.5"
      y="47.554176"
      class="pin-text"
      id="text4140"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">5. pres5 -</text>
   <text
-     x="71.5"
+     x="48.5"
      y="52.054176"
      class="pin-text"
      id="text4142"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">6. pres5 Sig</text>
   <text
-     x="71.5"
+     x="48.5"
      y="56.554176"
      class="pin-text"
      font-weight="bold"
      id="text4144"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">7. CANL</text>
   <text
-     x="71.5"
+     x="48.5"
      y="61.054176"
      class="pin-text"
      font-weight="bold"
      id="text4146"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">8. CANH</text>
   <text
-     x="71.5"
+     x="48.5"
      y="65.554176"
      class="pin-text"
      id="text4148"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">9. EGT -</text>
   <text
-     x="71.5"
+     x="48.5"
      y="70.054176"
      class="pin-text"
      id="text4150"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">10. EGT +</text>
   <text
-     x="71.5"
+     x="48.5"
      y="74.554176"
      class="pin-text"
      id="text4152"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">11. pres6 -</text>
   <text
-     x="71.5"
+     x="48.5"
      y="79.054176"
      class="pin-text"
      id="text4154"
      style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">12. temp4 -</text>
+  <!-- Pin rows - Column B -->
+  <text
+     x="71.5"
+     y="29.554176"
+     class="pin-text"
+     id="text4084"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">1. temp1 -</text>
+  <text
+     x="71.5"
+     y="34.054176"
+     class="pin-text"
+     id="text4086"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">2. temp1 +</text>
+  <text
+     x="71.5"
+     y="38.554176"
+     class="pin-text"
+     id="text4088"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3. pres1 Sig</text>
+  <text
+     x="71.5"
+     y="43.054176"
+     class="pin-text"
+     id="text4090"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">4. temp2 +</text>
+  <text
+     x="71.5"
+     y="47.554176"
+     class="pin-text"
+     id="text4092"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">5. pres2 Sig</text>
+  <text
+     x="71.5"
+     y="52.054176"
+     class="pin-text"
+     id="text4094"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">6. pres1 +</text>
+  <text
+     x="71.5"
+     y="56.554176"
+     class="pin-text"
+     id="text4096"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">7. pres2 +</text>
+  <text
+     x="71.5"
+     y="61.054176"
+     class="pin-text"
+     id="text4098"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">8. pres1 -</text>
+  <text
+     x="71.5"
+     y="65.554176"
+     class="pin-text"
+     id="text4100"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">9. temp2 -</text>
+  <text
+     x="71.5"
+     y="70.054176"
+     class="pin-text"
+     id="text4102"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">10. pres2 -</text>
+  <text
+     x="71.5"
+     y="74.554176"
+     class="pin-text"
+     id="text4104"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">11. temp4 +</text>
+  <text
+     x="71.5"
+     y="79.054176"
+     class="pin-text"
+     id="text4106"
+     style="-inkscape-font-specification:'Courier New, monospace, Normal';font-family:'Courier New', monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:2.11666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">12. pres6 Sig</text>
   <!-- Row dividers (light) -->
   <line
      x1="1"

@@ -28,77 +28,22 @@ Physical installation and wiring guide for OSSM.
 
 ## Connector Pinout
 
-OSSM uses four 12-pin Deutsch connectors (A, B, C, D).
+OSSM uses four 12-pin Deutsch connectors (A, C, D, B) (Left to Right).
 
-### Connector A
-
-| Pin | Function              | Notes                    |
-|-----|-----------------------|--------------------------|
-| 1   | Ground                | Chassis ground           |
-| 2   | pres2 Signal          | Pressure sensor 2        |
-| 3   | temp2 +               | Temperature 2 positive   |
-| 4   | temp1 +               | Temperature 1 positive   |
-| 5   | pres2 +               | Pressure 2 power (5V)    |
-| 6   | pres7 +               | Pressure 7 power (5V)    |
-| 7   | 12V Power             | Main power input         |
-| 8   | 5V Output             | For BME280               |
-| 9   | Ground                | Sensor ground            |
-| 10  | pres2 -               | Pressure 2 ground        |
-| 11  | temp2 -               | Temperature 2 negative   |
-| 12  | temp1 -               | Temperature 1 negative   |
-
-### Connector B
-
-| Pin | Function              | Notes                    |
-|-----|-----------------------|--------------------------|
-| 1   | temp3 -               | Temperature 3 negative   |
-| 2   | temp3 Signal          | Temperature 3            |
-| 3   | pres1 Signal          | Pressure sensor 1        |
-| 4   | temp4 +               | Temperature 4 positive   |
-| 5   | pres5 +               | Pressure 5 power (5V)    |
-| 6   | pres1 +               | Pressure 1 power (5V)    |
-| 7   | pres5 +               | Pressure 5 power (5V)    |
-| 8   | pres1 -               | Pressure 1 ground        |
-| 9   | temp4 -               | Temperature 4 negative   |
-| 10  | pres5 -               | Pressure 5 ground        |
-| 11  | temp8 Signal          | Temperature 8            |
-| 12  | pres6 Signal          | Pressure sensor 6        |
-
-### Connector C
-
-| Pin | Function              | Notes                    |
-|-----|-----------------------|--------------------------|
-| 1   | temp5 +               | Temperature 5 positive   |
-| 2   | pres3 +               | Pressure 3 power (5V)    |
-| 3   | pres6 +               | Pressure 6 power (5V)    |
-| 4   | pres4 Signal          | Pressure sensor 4        |
-| 5   | temp7 +               | Temperature 7 positive   |
-| 6   | temp6 +               | Temperature 6 positive   |
-| 7   | pres4 Signal          | Pressure 4 (duplicate?)  |
-| 8   | pres4 -               | Pressure 4 ground        |
-| 9   | temp6 -               | Temperature 6 negative   |
-| 10  | temp8 -               | Temperature 8 negative   |
-| 11  | pres7 -               | Pressure 7 ground        |
-| 12  | pres4 +               | Pressure 4 power (5V)    |
-
-### Connector D
-
-| Pin | Function              | Notes                    |
-|-----|-----------------------|--------------------------|
-| 1   | SCL                   | I2C clock for BME280     |
-| 2   | SDA                   | I2C data for BME280      |
-| 3   | Ground                | BME280 ground            |
-| 4   | temp5 -               | Temperature 5 negative   |
-| 5   | pres3 -               | Pressure 3 ground        |
-| 6   | pres3 Signal          | Pressure sensor 3        |
-| 7   | CANL                  | CAN bus low              |
-| 8   | CANH                  | CAN bus high             |
-| 9   | EGT -                 | Thermocouple negative    |
-| 10  | EGT +                 | Thermocouple positive    |
-| 11  | pres6 -               | Pressure 6 ground        |
-| 12  | temp8 -               | Temperature 8 negative   |
-
----
+| Pin A            | Pin C                | Pin D                | Pin B                |
+|------------------|----------------------|----------------------|----------------------|
+| 1. Ground        | 1. temp3 +           | 1. SCL (BME280)      | 1. temp1 -           |
+| 2. pres7 Signal  | 2. pres5 +           | 2. SDA (BME280)      | 2. temp1 +           |
+| 3. temp7 +       | 3. pres6 +           | 3. Ground (BME280)   | 3. pres1 Signal      |
+| 4. temp8 +       | 4. pres4 Signal      | 4. temp3 -           | 4. temp2 +           |
+| 5. pres7 +       | 5. temp6 +           | 5. pres5 -           | 5. pres2 Signal      |
+| 6. pres4 +       | 6. temp5 +           | 6. pres5 Signal      | 6. pres1 +           |
+| 7. **12V Power** | 7. pres3 Signal      | 7. **CANL**          | 7. pres2 +           |
+| 8. 5V (BME280)   | 8. pres3 -           | 8. **CANH**          | 8. pres1 -           |
+| 9. Ground        | 9. temp5 -           | 9. EGT -             | 9. temp2 -           |
+| 10. pres7 -      | 10. temp6 -          | 10. EGT +            | 10. pres2 -          |
+| 11. temp7 -      | 11. pres4 -          | 11. pres6 -          | 11. temp4 +          |
+| 12. temp8 -      | 12. pres3 +          | 12. temp4 -          | 12. pres6 Signal     |
 
 ## Sensor Wiring
 

@@ -23,20 +23,20 @@ OSSM is an open-source automotive sensor module that reads temperature, pressure
 
 ## Pinout
 
-| Pin A            | Pin B                | Pin C                | Pin D                |
+| Pin A            | Pin C                | Pin D                | Pin B                |
 |------------------|----------------------|----------------------|----------------------|
-| 1. Ground        | 1. temp1 -           | 1. temp3 +           | 1. SCL (BME280)      |
-| 2. pres7 Signal  | 2. temp1 +           | 2. pres5 +           | 2. SDA (BME280)      |
-| 3. temp7 +       | 3. pres1 Signal      | 3. pres6 +           | 3. Ground (BME280)   |
-| 4. temp8 +       | 4. temp2 +           | 4. pres4 Signal      | 4. temp3 -           |
-| 5. pres7 +       | 5. pres2 Signal      | 5. temp6 +           | 5. pres5 -           |
-| 6. pres4 +       | 6. pres1 +           | 6. temp5 +           | 6. pres5 Signal      |
-| 7. **12V Power** | 7. pres2 +           | 7. pres3 Signal      | 7. **CANL**          |
-| 8. 5V (BME280)   | 8. pres1 -           | 8. pres3 -           | 8. **CANH**          |
-| 9. Ground        | 9. temp2 -           | 9. temp5 -           | 9. EGT -             |
-| 10. pres7 -      | 10. pres2 -          | 10. temp6 -          | 10. EGT +            |
-| 11. temp7 -      | 11. temp4 +          | 11. pres4 -          | 11. pres6 -          |
-| 12. temp8 -      | 12. pres6 Signal     | 12. pres3 +          | 12. temp4 -          |
+| 1. Ground        | 1. temp3 +           | 1. SCL (BME280)      | 1. temp1 -           |
+| 2. pres7 Signal  | 2. pres5 +           | 2. SDA (BME280)      | 2. temp1 +           |
+| 3. temp7 +       | 3. pres6 +           | 3. Ground (BME280)   | 3. pres1 Signal      |
+| 4. temp8 +       | 4. pres4 Signal      | 4. temp3 -           | 4. temp2 +           |
+| 5. pres7 +       | 5. temp6 +           | 5. pres5 -           | 5. pres2 Signal      |
+| 6. pres4 +       | 6. temp5 +           | 6. pres5 Signal      | 6. pres1 +           |
+| 7. **12V Power** | 7. pres3 Signal      | 7. **CANL**          | 7. pres2 +           |
+| 8. 5V (BME280)   | 8. pres3 -           | 8. **CANH**          | 8. pres1 -           |
+| 9. Ground        | 9. temp5 -           | 9. EGT -             | 9. temp2 -           |
+| 10. pres7 -      | 10. temp6 -          | 10. EGT +            | 10. pres2 -          |
+| 11. temp7 -      | 11. pres4 -          | 11. pres6 -          | 11. temp4 +          |
+| 12. temp8 -      | 12. pres3 +          | 12. temp4 -          | 12. pres6 Signal     |
 
 ## Quick Start
 
