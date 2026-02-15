@@ -18,6 +18,39 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// ADR-050: Platform-portable IRQ wrappers for critical sections
+#if defined(__arm__) || defined(__ARM_ARCH)
+// ARM platforms (including ARM Arduino like Teensy 4.x, Due, Zero)
+// Provide inline assembly PRIMASK access to avoid CMSIS header dependencies
+__attribute__((always_inline)) static inline uint32_t __cnx_get_PRIMASK(void) {
+    uint32_t result;
+    __asm volatile ("MRS %0, primask" : "=r" (result));
+    return result;
+}
+__attribute__((always_inline)) static inline void __cnx_set_PRIMASK(uint32_t mask) {
+    __asm volatile ("MSR primask, %0" :: "r" (mask) : "memory");
+}
+#if defined(ARDUINO)
+static inline void __cnx_disable_irq(void) { noInterrupts(); }
+#else
+__attribute__((always_inline)) static inline void __cnx_disable_irq(void) {
+    __asm volatile ("cpsid i" ::: "memory");
+}
+#endif
+#elif defined(__AVR__)
+// AVR Arduino: use SREG for interrupt state
+// Note: Uses PRIMASK naming for API consistency across platforms (AVR has no PRIMASK)
+// Returns uint8_t which is implicitly widened to uint32_t at call sites - this is intentional
+static inline uint8_t __cnx_get_PRIMASK(void) { return SREG; }
+static inline void __cnx_set_PRIMASK(uint8_t mask) { SREG = mask; }
+static inline void __cnx_disable_irq(void) { cli(); }
+#else
+// Fallback: assume CMSIS is available
+static inline void __cnx_disable_irq(void) { __disable_irq(); }
+static inline uint32_t __cnx_get_PRIMASK(void) { return __get_PRIMASK(); }
+static inline void __cnx_set_PRIMASK(uint32_t mask) { __set_PRIMASK(mask); }
+#endif
+
 /* Scope: ADS1115Manager */
 static Adafruit_ADS1115 ADS1115Manager_ads[4] = {};
 static uint8_t ADS1115Manager_drdyPins[4] = {0, 0, 0, 0};
@@ -57,9 +90,14 @@ static void ADS1115Manager_readResult(void) {
     }
     int16_t result = ADS1115Manager_ads[ADS1115Manager_currentDevice].getLastConversionResults();
     uint32_t now = millis();
-    ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].rawValue = result;
-    ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].timestamp = now;
-    ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].valid = true;
+    {
+        uint32_t __primask = __cnx_get_PRIMASK();
+        __cnx_disable_irq();
+        ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].rawValue = result;
+        ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].timestamp = now;
+        ADS1115Manager_readings[ADS1115Manager_currentDevice][ADS1115Manager_currentChannel].valid = true;
+        __cnx_set_PRIMASK(__primask);
+    }
     ADS1115Manager_conversionStarted = false;
 }
 
@@ -171,9 +209,14 @@ TAdcReading ADS1115Manager_getReading(uint8_t device, uint8_t channel) {
     if (device >= ADS_DEVICE_COUNT || channel >= 4) {
         return copy;
     }
-    copy.rawValue = ADS1115Manager_readings[device][channel].rawValue;
-    copy.timestamp = ADS1115Manager_readings[device][channel].timestamp;
-    copy.valid = ADS1115Manager_readings[device][channel].valid;
+    {
+        uint32_t __primask = __cnx_get_PRIMASK();
+        __cnx_disable_irq();
+        copy.rawValue = ADS1115Manager_readings[device][channel].rawValue;
+        copy.timestamp = ADS1115Manager_readings[device][channel].timestamp;
+        copy.valid = ADS1115Manager_readings[device][channel].valid;
+        __cnx_set_PRIMASK(__primask);
+    }
     return copy;
 }
 

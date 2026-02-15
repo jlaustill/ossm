@@ -24,8 +24,8 @@ scope ADS1115Manager {
     bool[ADS_DEVICE_COUNT] deviceInitialized <- [false, false, false, false];
 
     // Reading buffers
-    // TODO: Re-enable atomic when C-Next supports Arduino/Teensy critical sections
-    volatile TAdcReading readings[ADS_DEVICE_COUNT][ADS_CHANNEL_COUNT];
+    // Access must be protected with critical blocks for ISR safety
+    TAdcReading[ADS_DEVICE_COUNT][ADS_CHANNEL_COUNT] readings;
 
     // State machine for round-robin cycling
     u8 currentDevice <- 0;
@@ -75,10 +75,11 @@ scope ADS1115Manager {
         i16 result <- ads[currentDevice].getLastConversionResults();
         u32 now <- millis();
 
-        // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
-        readings[currentDevice][currentChannel].rawValue <- result;
-        readings[currentDevice][currentChannel].timestamp <- now;
-        readings[currentDevice][currentChannel].valid <- true;
+        critical {
+            readings[currentDevice][currentChannel].rawValue <- result;
+            readings[currentDevice][currentChannel].timestamp <- now;
+            readings[currentDevice][currentChannel].valid <- true;
+        }
 
         conversionStarted <- false;
     }
@@ -221,10 +222,11 @@ scope ADS1115Manager {
             return copy;
         }
 
-        // TODO: Re-enable critical section when C-Next supports Arduino/Teensy
-        copy.rawValue <- readings[device][channel].rawValue;
-        copy.timestamp <- readings[device][channel].timestamp;
-        copy.valid <- readings[device][channel].valid;
+        critical {
+            copy.rawValue <- readings[device][channel].rawValue;
+            copy.timestamp <- readings[device][channel].timestamp;
+            copy.valid <- readings[device][channel].valid;
+        }
 
         return copy;
     }
