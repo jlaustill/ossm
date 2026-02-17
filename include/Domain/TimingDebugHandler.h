@@ -16,9 +16,12 @@ extern "C" {
 
 /* Function prototypes */
 void TimingDebugHandler_initialize(void);
-void TimingDebugHandler_recordSensor(uint32_t t0);
-void TimingDebugHandler_recordSerial(uint32_t t0);
-void TimingDebugHandler_recordJ1939(uint32_t t0);
+void TimingDebugHandler_startSensor(void);
+void TimingDebugHandler_finishSensor(void);
+void TimingDebugHandler_startSerial(void);
+void TimingDebugHandler_finishSerial(void);
+void TimingDebugHandler_startJ1939(void);
+void TimingDebugHandler_finishJ1939(void);
 void TimingDebugHandler_maybeReport(void);
 
 #ifdef __cplusplus

@@ -45,15 +45,15 @@ void Ossm_setup(void) {
 void Ossm_loop(void) {
     if (Ossm_loopTimer >= 500) {
         Ossm_loopTimer = 0;
-        uint32_t t0 = micros();
+        TimingDebugHandler_startSensor();
         SensorProcessor_update();
-        TimingDebugHandler_recordSensor(t0);
-        uint32_t t1 = micros();
+        TimingDebugHandler_finishSensor();
+        TimingDebugHandler_startSerial();
         SerialCommandHandler_update();
-        TimingDebugHandler_recordSerial(t1);
-        uint32_t t2 = micros();
+        TimingDebugHandler_finishSerial();
+        TimingDebugHandler_startJ1939();
         J1939CommandHandler_update();
-        TimingDebugHandler_recordJ1939(t2);
+        TimingDebugHandler_finishJ1939();
         TimingDebugHandler_maybeReport();
     }
 }

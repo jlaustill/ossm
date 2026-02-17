@@ -8,69 +8,81 @@
 #include <AppConfig.cnx>
 
 scope TimingDebugHandler {
-    // Timing audit - track max durations
+    elapsedMicros phaseTimer;
     elapsedMillis reportTimer;
+
+    u32 currentSensor <- 0;
     u32 maxSensor <- 0;
+    u32 currentSerial <- 0;
     u32 maxSerial <- 0;
+    u32 currentJ1939 <- 0;
     u32 maxJ1939 <- 0;
     u32 maxTotal <- 0;
 
     public void initialize() {
-        // Reset timing tracking
-        this.reportTimer <- 0;
-        this.maxSensor <- 0;
-        this.maxSerial <- 0;
-        this.maxJ1939 <- 0;
-        this.maxTotal <- 0;
+        reportTimer <- 0;
+        currentSensor <- 0;
+        maxSensor <- 0;
+        currentSerial <- 0;
+        maxSerial <- 0;
+        currentJ1939 <- 0;
+        maxJ1939 <- 0;
+        maxTotal <- 0;
     }
 
-    // Record SensorProcessor duration
-    public void recordSensor(u32 t0) {
-        u32 t1 <- micros();
-        u32 duration <- t1 - t0;
-        if (duration > this.maxSensor) {
-            this.maxSensor <- duration;
+    public void startSensor() {
+        phaseTimer <- 0;
+    }
+
+    public void finishSensor() {
+        currentSensor <- phaseTimer;
+        if (currentSensor > maxSensor) {
+            maxSensor <- currentSensor;
         }
     }
 
-    // Record SerialCommandHandler duration
-    public void recordSerial(u32 t0) {
-        u32 t1 <- micros();
-        u32 duration <- t1 - t0;
-        if (duration > this.maxSerial) {
-            this.maxSerial <- duration;
+    public void startSerial() {
+        phaseTimer <- 0;
+    }
+
+    public void finishSerial() {
+        currentSerial <- phaseTimer;
+        if (currentSerial > maxSerial) {
+            maxSerial <- currentSerial;
         }
     }
 
-    // Record J1939CommandHandler duration and total
-    public void recordJ1939(u32 t0) {
-        u32 t1 <- micros();
-        u32 duration <- t1 - t0;
-        if (duration > this.maxJ1939) {
-            this.maxJ1939 <- duration;
-        }
-        u32 total <- t1 - t0;  // t0 was start of SensorProcessor
-        if (total > this.maxTotal) {
-            this.maxTotal <- total;
+    public void startJ1939() {
+        phaseTimer <- 0;
+    }
+
+    public void finishJ1939() {
+        currentJ1939 <- phaseTimer;
+        if (currentJ1939 > maxJ1939) {
+            maxJ1939 <- currentJ1939;
         }
     }
 
-    // Report timing if 5 seconds have elapsed
     public void maybeReport() {
-        if (this.reportTimer >= 5000) {
+        u32 currentTotal <- currentSensor + currentSerial + currentJ1939;
+        if (currentTotal > maxTotal) {
+            maxTotal <- currentTotal;
+        }
+
+        if (reportTimer >= 5000) {
             Serial.print("LOOP us max: sensor=");
-            Serial.print(this.maxSensor);
+            Serial.print(maxSensor);
             Serial.print(" serial=");
-            Serial.print(this.maxSerial);
+            Serial.print(maxSerial);
             Serial.print(" j1939=");
-            Serial.print(this.maxJ1939);
+            Serial.print(maxJ1939);
             Serial.print(" total=");
-            Serial.println(this.maxTotal);
-            this.maxSensor <- 0;
-            this.maxSerial <- 0;
-            this.maxJ1939 <- 0;
-            this.maxTotal <- 0;
-            this.reportTimer <- 0;
+            Serial.println(maxTotal);
+            maxSensor <- 0;
+            maxSerial <- 0;
+            maxJ1939 <- 0;
+            maxTotal <- 0;
+            reportTimer <- 0;
         }
     }
 }

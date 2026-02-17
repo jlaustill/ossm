@@ -16,49 +16,65 @@
 #include <stdint.h>
 
 /* Scope: TimingDebugHandler */
+static elapsedMicros TimingDebugHandler_phaseTimer = {};
 static elapsedMillis TimingDebugHandler_reportTimer = {};
+static uint32_t TimingDebugHandler_currentSensor = 0;
 static uint32_t TimingDebugHandler_maxSensor = 0;
+static uint32_t TimingDebugHandler_currentSerial = 0;
 static uint32_t TimingDebugHandler_maxSerial = 0;
+static uint32_t TimingDebugHandler_currentJ1939 = 0;
 static uint32_t TimingDebugHandler_maxJ1939 = 0;
 static uint32_t TimingDebugHandler_maxTotal = 0;
 
 void TimingDebugHandler_initialize(void) {
     TimingDebugHandler_reportTimer = 0;
+    TimingDebugHandler_currentSensor = 0;
     TimingDebugHandler_maxSensor = 0;
+    TimingDebugHandler_currentSerial = 0;
     TimingDebugHandler_maxSerial = 0;
+    TimingDebugHandler_currentJ1939 = 0;
     TimingDebugHandler_maxJ1939 = 0;
     TimingDebugHandler_maxTotal = 0;
 }
 
-void TimingDebugHandler_recordSensor(uint32_t t0) {
-    uint32_t t1 = micros();
-    uint32_t duration = t1 - t0;
-    if (duration > TimingDebugHandler_maxSensor) {
-        TimingDebugHandler_maxSensor = duration;
+void TimingDebugHandler_startSensor(void) {
+    TimingDebugHandler_phaseTimer = 0;
+}
+
+void TimingDebugHandler_finishSensor(void) {
+    TimingDebugHandler_currentSensor = TimingDebugHandler_phaseTimer;
+    if (TimingDebugHandler_currentSensor > TimingDebugHandler_maxSensor) {
+        TimingDebugHandler_maxSensor = TimingDebugHandler_currentSensor;
     }
 }
 
-void TimingDebugHandler_recordSerial(uint32_t t0) {
-    uint32_t t1 = micros();
-    uint32_t duration = t1 - t0;
-    if (duration > TimingDebugHandler_maxSerial) {
-        TimingDebugHandler_maxSerial = duration;
+void TimingDebugHandler_startSerial(void) {
+    TimingDebugHandler_phaseTimer = 0;
+}
+
+void TimingDebugHandler_finishSerial(void) {
+    TimingDebugHandler_currentSerial = TimingDebugHandler_phaseTimer;
+    if (TimingDebugHandler_currentSerial > TimingDebugHandler_maxSerial) {
+        TimingDebugHandler_maxSerial = TimingDebugHandler_currentSerial;
     }
 }
 
-void TimingDebugHandler_recordJ1939(uint32_t t0) {
-    uint32_t t1 = micros();
-    uint32_t duration = t1 - t0;
-    if (duration > TimingDebugHandler_maxJ1939) {
-        TimingDebugHandler_maxJ1939 = duration;
-    }
-    uint32_t total = t1 - t0;
-    if (total > TimingDebugHandler_maxTotal) {
-        TimingDebugHandler_maxTotal = total;
+void TimingDebugHandler_startJ1939(void) {
+    TimingDebugHandler_phaseTimer = 0;
+}
+
+void TimingDebugHandler_finishJ1939(void) {
+    TimingDebugHandler_currentJ1939 = TimingDebugHandler_phaseTimer;
+    if (TimingDebugHandler_currentJ1939 > TimingDebugHandler_maxJ1939) {
+        TimingDebugHandler_maxJ1939 = TimingDebugHandler_currentJ1939;
     }
 }
 
 void TimingDebugHandler_maybeReport(void) {
+    uint32_t currentTotal = TimingDebugHandler_currentSensor + TimingDebugHandler_currentSerial + TimingDebugHandler_currentJ1939;
+    if (currentTotal > TimingDebugHandler_maxTotal) {
+        TimingDebugHandler_maxTotal = currentTotal;
+    }
     if (TimingDebugHandler_reportTimer >= 5000) {
         Serial.print("LOOP us max: sensor=");
         Serial.print(TimingDebugHandler_maxSensor);
