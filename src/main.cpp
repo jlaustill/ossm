@@ -6,7 +6,7 @@
 // Main entry point for OSSM
 // Delegates to ossm class for setup and loop
 #include <Arduino.h>
-#include <Domain/ossm.h>
+#include <Domain/ossm.hpp>
 
 void setup(void) {
     Ossm_setup();

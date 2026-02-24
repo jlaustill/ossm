@@ -3,11 +3,10 @@
  * A safer C for embedded systems
  */
 
-#include "FloatBytes.h"
+#include "FloatBytes.hpp"
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
 
 static_assert(sizeof(float) == 4, "Float bit indexing requires 32-bit float");
 static_assert(sizeof(double) == 8, "Float bit indexing requires 64-bit double");
@@ -19,40 +18,56 @@ static_assert(sizeof(double) == 8, "Float bit indexing requires 64-bit double");
 
 float FloatBytes_fromBytesLE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
     float result = 0.0;
-    uint32_t __bits_result; memcpy(&__bits_result, &result, sizeof(result)); __bits_result = (__bits_result & ~(0xFFU << 0)) | (((uint32_t)b0 & 0xFFU) << 0); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 8)) | (((uint32_t)b1 & 0xFFU) << 8); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 16)) | (((uint32_t)b2 & 0xFFU) << 16); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 24)) | (((uint32_t)b3 & 0xFFU) << 24); memcpy(&result, &__bits_result, sizeof(result));
+    union { float f; uint32_t u; } __bits_result;
+    __bits_result.f = result;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 0)) | (((uint32_t)b0 & 0xFFU) << 0);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 8)) | (((uint32_t)b1 & 0xFFU) << 8);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 16)) | (((uint32_t)b2 & 0xFFU) << 16);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 24)) | (((uint32_t)b3 & 0xFFU) << 24);
+    result = __bits_result.f;
     return result;
 }
 
 float FloatBytes_fromBytesBE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
     float result = 0.0;
-    uint32_t __bits_result; memcpy(&__bits_result, &result, sizeof(result)); __bits_result = (__bits_result & ~(0xFFU << 0)) | (((uint32_t)b3 & 0xFFU) << 0); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 8)) | (((uint32_t)b2 & 0xFFU) << 8); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 16)) | (((uint32_t)b1 & 0xFFU) << 16); memcpy(&result, &__bits_result, sizeof(result));
-    __bits_result = (__bits_result & ~(0xFFU << 24)) | (((uint32_t)b0 & 0xFFU) << 24); memcpy(&result, &__bits_result, sizeof(result));
+    union { float f; uint32_t u; } __bits_result;
+    __bits_result.f = result;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 0)) | (((uint32_t)b3 & 0xFFU) << 0);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 8)) | (((uint32_t)b2 & 0xFFU) << 8);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 16)) | (((uint32_t)b1 & 0xFFU) << 16);
+    result = __bits_result.f;
+    __bits_result.u = (__bits_result.u & ~(0xFFU << 24)) | (((uint32_t)b0 & 0xFFU) << 24);
+    result = __bits_result.f;
     return result;
 }
 
 uint8_t FloatBytes_getByte0(float value) {
-    uint32_t __bits_value;
-    return (memcpy(&__bits_value, &value, sizeof(value)), (__bits_value & 0xFFU));
+    union { float f; uint32_t u; } __bits_value;
+    __bits_value.f = value;
+    return (__bits_value.u & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte1(float value) {
-    uint32_t __bits_value;
-    return (memcpy(&__bits_value, &value, sizeof(value)), ((__bits_value >> 8) & 0xFFU));
+    union { float f; uint32_t u; } __bits_value;
+    __bits_value.f = value;
+    return ((__bits_value.u >> 8U) & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte2(float value) {
-    uint32_t __bits_value;
-    return (memcpy(&__bits_value, &value, sizeof(value)), ((__bits_value >> 16) & 0xFFU));
+    union { float f; uint32_t u; } __bits_value;
+    __bits_value.f = value;
+    return ((__bits_value.u >> 16U) & 0xFFU);
 }
 
 uint8_t FloatBytes_getByte3(float value) {
-    uint32_t __bits_value;
-    return (memcpy(&__bits_value, &value, sizeof(value)), ((__bits_value >> 24) & 0xFFU));
+    union { float f; uint32_t u; } __bits_value;
+    __bits_value.f = value;
+    return ((__bits_value.u >> 24U) & 0xFFU);
 }
 
 bool FloatBytes_isValidFloat(float value) {

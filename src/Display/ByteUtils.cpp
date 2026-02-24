@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "ByteUtils.h"
+#include "ByteUtils.hpp"
 
 #include <stdint.h>
 
@@ -13,21 +13,21 @@
 /* Scope: ByteUtils */
 
 uint16_t ByteUtils_makeU16BE(uint8_t high, uint8_t low) {
-    uint16_t result = 0;
-    result = (result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0);
-    result = (result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8);
+    uint16_t result = 0U;
+    result = (uint16_t)((result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0));
+    result = (uint16_t)((result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8));
     return result;
 }
 
 uint16_t ByteUtils_makeU16LE(uint8_t low, uint8_t high) {
-    uint16_t result = 0;
-    result = (result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0);
-    result = (result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8);
+    uint16_t result = 0U;
+    result = (uint16_t)((result & ~(0xFFU << 0)) | ((low & 0xFFU) << 0));
+    result = (uint16_t)((result & ~(0xFFU << 8)) | ((high & 0xFFU) << 8));
     return result;
 }
 
 uint8_t ByteUtils_highByte(uint16_t value) {
-    return ((value >> 8) & 0xFFU);
+    return ((value >> 8U) & 0xFFU);
 }
 
 uint8_t ByteUtils_lowByte(uint16_t value) {
@@ -35,7 +35,7 @@ uint8_t ByteUtils_lowByte(uint16_t value) {
 }
 
 uint32_t ByteUtils_makeU32BE(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0) {
-    uint32_t result = 0;
+    uint32_t result = 0U;
     result = (result & ~(0xFFU << 0)) | ((b0 & 0xFFU) << 0);
     result = (result & ~(0xFFU << 8)) | ((b1 & 0xFFU) << 8);
     result = (result & ~(0xFFU << 16)) | ((b2 & 0xFFU) << 16);
@@ -44,7 +44,7 @@ uint32_t ByteUtils_makeU32BE(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0) {
 }
 
 uint32_t ByteUtils_makeU32LE(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
-    uint32_t result = 0;
+    uint32_t result = 0U;
     result = (result & ~(0xFFU << 0)) | ((b0 & 0xFFU) << 0);
     result = (result & ~(0xFFU << 8)) | ((b1 & 0xFFU) << 8);
     result = (result & ~(0xFFU << 16)) | ((b2 & 0xFFU) << 16);
@@ -57,15 +57,15 @@ uint8_t ByteUtils_byte0(uint32_t value) {
 }
 
 uint8_t ByteUtils_byte1(uint32_t value) {
-    return ((value >> 8) & 0xFFU);
+    return ((value >> 8U) & 0xFFU);
 }
 
 uint8_t ByteUtils_byte2(uint32_t value) {
-    return ((value >> 16) & 0xFFU);
+    return ((value >> 16U) & 0xFFU);
 }
 
 uint8_t ByteUtils_byte3(uint32_t value) {
-    return ((value >> 24) & 0xFFU);
+    return ((value >> 24U) & 0xFFU);
 }
 
 uint8_t ByteUtils_clampU8(uint8_t value, uint8_t minVal, uint8_t maxVal) {

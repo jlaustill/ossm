@@ -3,19 +3,19 @@
  * A safer C for embedded systems
  */
 
-#include "ossm.h"
+#include "ossm.hpp"
 
 // Main OSSM application logic
 // Handles sensor polling, J1939 messaging, and command processing
 #include <Arduino.h>
-#include <AppConfig.h>
-#include "../Data/ConfigStorage.h"
-#include "SensorProcessor.h"
-#include "Hardware.h"
-#include <Data/SensorValues.h>
-#include "J1939CommandHandler.h"
-#include "SerialCommandHandler.h"
-#include "TimingDebugHandler.h"
+#include <AppConfig.hpp>
+#include "../Data/ConfigStorage.hpp"
+#include "SensorProcessor.hpp"
+#include "Hardware.hpp"
+#include <Data/SensorValues.hpp>
+#include "J1939CommandHandler.hpp"
+#include "SerialCommandHandler.hpp"
+#include "TimingDebugHandler.hpp"
 
 #include <stdint.h>
 

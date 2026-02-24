@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "MAX31856Manager.h"
+#include "MAX31856Manager.hpp"
 
 // MAX31856 Thermocouple Manager
 // Handles EGT (Exhaust Gas Temperature) readings via SPI
@@ -16,7 +16,7 @@
 #include <stdbool.h>
 
 // Pin configuration - must be const for C++ constructor
-extern const uint8_t thermoCoupleCs = 10;
+extern const uint8_t thermoCoupleCs = 10U;
 
 // MAX31856 instance with CS pin (file-level for constructor syntax)
 Adafruit_MAX31856 thermocouple(thermoCoupleCs);
@@ -25,10 +25,10 @@ Adafruit_MAX31856 thermocouple(thermoCoupleCs);
 static bool MAX31856Manager_enabled = false;
 static bool MAX31856Manager_initialized = false;
 static bool MAX31856Manager_conversionStarted = false;
-static uint32_t MAX31856Manager_conversionStartTime = 0;
+static uint32_t MAX31856Manager_conversionStartTime = 0U;
 static float MAX31856Manager_temperatureC = 0.0;
 static float MAX31856Manager_coldJunctionC = 0.0;
-static uint8_t MAX31856Manager_faultCode = 0;
+static uint8_t MAX31856Manager_faultCode = 0U;
 static bool MAX31856Manager_readingValid = false;
 
 static void MAX31856Manager_startConversion(void) {

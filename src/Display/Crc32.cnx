@@ -7,7 +7,7 @@ scope Crc32 {
     u32 crcByte(u32 crc, u8 byte) {
         u32 c <- crc ^ byte;
         for (i32 j <- 0; j < 8; j +<- 1) {
-            if (c & 1) {
+            if ((c & 1) != 0) {
                 c <- (c >> 1) ^ 0xEDB88320;
             } else {
                 c <- c >> 1;

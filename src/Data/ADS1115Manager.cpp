@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "ADS1115Manager.h"
+#include "ADS1115Manager.hpp"
 
 /**
  * ADS1115 ADC Manager
@@ -11,9 +11,9 @@
  */
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
-#include "../AppConfig.h"
-#include "types/TAdcReading.h"
-#include <Display/HardwareMap.h>
+#include "../AppConfig.hpp"
+#include "types/TAdcReading.hpp"
+#include <Display/HardwareMap.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -53,14 +53,14 @@ static inline void __cnx_set_PRIMASK(uint32_t mask) { __set_PRIMASK(mask); }
 
 /* Scope: ADS1115Manager */
 static Adafruit_ADS1115 ADS1115Manager_ads[4] = {};
-static uint8_t ADS1115Manager_drdyPins[4] = {0, 0, 0, 0};
+static uint8_t ADS1115Manager_drdyPins[4] = {0U, 0U, 0U, 0U};
 static bool ADS1115Manager_deviceEnabled[4] = {false, false, false, false};
 static bool ADS1115Manager_deviceInitialized[4] = {false, false, false, false};
 static TAdcReading ADS1115Manager_readings[4][4] = {0};
-static uint8_t ADS1115Manager_currentDevice = 0;
-static uint8_t ADS1115Manager_currentChannel = 0;
+static uint8_t ADS1115Manager_currentDevice = 0U;
+static uint8_t ADS1115Manager_currentChannel = 0U;
 static bool ADS1115Manager_conversionStarted = false;
-static uint32_t ADS1115Manager_conversionStartTime = 0;
+static uint32_t ADS1115Manager_conversionStartTime = 0U;
 static const uint16_t ADS1115Manager_MUX_SINGLE[4] = {ADS1X15_REG_CONFIG_MUX_SINGLE_0, ADS1X15_REG_CONFIG_MUX_SINGLE_1, ADS1X15_REG_CONFIG_MUX_SINGLE_2, ADS1X15_REG_CONFIG_MUX_SINGLE_3};
 
 static void ADS1115Manager_startConversion(void) {
@@ -102,17 +102,17 @@ static void ADS1115Manager_readResult(void) {
 }
 
 static void ADS1115Manager_advanceChannel(void) {
-    ADS1115Manager_currentChannel = ADS1115Manager_currentChannel + 1;
+    ADS1115Manager_currentChannel = ADS1115Manager_currentChannel + 1U;
     if (ADS1115Manager_currentChannel >= 4) {
-        ADS1115Manager_currentChannel = 0;
-        ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1;
+        ADS1115Manager_currentChannel = 0U;
+        ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1U;
         while (ADS1115Manager_currentDevice < ADS_DEVICE_COUNT && !ADS1115Manager_deviceInitialized[ADS1115Manager_currentDevice]) {
-            ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1;
+            ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1U;
         }
         if (ADS1115Manager_currentDevice >= ADS_DEVICE_COUNT) {
-            ADS1115Manager_currentDevice = 0;
+            ADS1115Manager_currentDevice = 0U;
             while (ADS1115Manager_currentDevice < ADS_DEVICE_COUNT && !ADS1115Manager_deviceInitialized[ADS1115Manager_currentDevice]) {
-                ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1;
+                ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1U;
             }
         }
     }
@@ -122,7 +122,7 @@ void ADS1115Manager_initialize(const AppConfig& config) {
     for (uint8_t d = 0; d < ADS_DEVICE_COUNT; d = d + 1) {
         for (uint8_t c = 0; c < 4; c = c + 1) {
             ADS1115Manager_readings[d][c].rawValue = 0;
-            ADS1115Manager_readings[d][c].timestamp = 0;
+            ADS1115Manager_readings[d][c].timestamp = 0U;
             ADS1115Manager_readings[d][c].valid = false;
         }
     }
@@ -147,7 +147,7 @@ void ADS1115Manager_initialize(const AppConfig& config) {
         pinMode(ADS1115Manager_drdyPins[d], INPUT);
         uint8_t addr = ADS_I2C_ADDRESSES[d];
         bool beginResult = ADS1115Manager_ads[d].begin(addr);
-        if (beginResult) {
+        if (beginResult == true) {
             ADS1115Manager_deviceInitialized[d] = true;
             ADS1115Manager_ads[d].setDataRate(0x0080);
             Serial.print("ADS1115 @ 0x");
@@ -161,11 +161,11 @@ void ADS1115Manager_initialize(const AppConfig& config) {
             Serial.println(" FAILED to initialize");
         }
     }
-    ADS1115Manager_currentDevice = 0;
-    ADS1115Manager_currentChannel = 0;
+    ADS1115Manager_currentDevice = 0U;
+    ADS1115Manager_currentChannel = 0U;
     ADS1115Manager_conversionStarted = false;
     while (ADS1115Manager_currentDevice < ADS_DEVICE_COUNT && !ADS1115Manager_deviceInitialized[ADS1115Manager_currentDevice]) {
-        ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1;
+        ADS1115Manager_currentDevice = ADS1115Manager_currentDevice + 1U;
     }
     if (ADS1115Manager_currentDevice < ADS_DEVICE_COUNT) {
         ADS1115Manager_startConversion();
@@ -181,7 +181,7 @@ bool ADS1115Manager_update(void) {
         return false;
     }
     bool conversionDone = ADS1115Manager_isConversionComplete();
-    if (conversionDone) {
+    if (conversionDone == true) {
         ADS1115Manager_readResult();
         ADS1115Manager_advanceChannel();
         if (ADS1115Manager_currentDevice < ADS_DEVICE_COUNT) {
@@ -205,7 +205,7 @@ bool ADS1115Manager_update(void) {
 }
 
 TAdcReading ADS1115Manager_getReading(uint8_t device, uint8_t channel) {
-    TAdcReading copy = (TAdcReading){ .rawValue = 0, .timestamp = 0, .valid = false };
+    TAdcReading copy = (TAdcReading){ .rawValue = 0, .timestamp = 0U, .valid = false };
     if (device >= ADS_DEVICE_COUNT || channel >= 4) {
         return copy;
     }
@@ -246,7 +246,7 @@ void ADS1115Manager_printDebugInfo(void) {
         Serial.print(ADS1115Manager_deviceEnabled[d]);
         Serial.print(" init=");
         Serial.println(ADS1115Manager_deviceInitialized[d]);
-        if (ADS1115Manager_deviceInitialized[d]) {
+        if (ADS1115Manager_deviceInitialized[d] == true) {
             for (uint8_t c = 0; c < 4; c = c + 1) {
                 TAdcReading reading = ADS1115Manager_readings[d][c];
                 Serial.print("  Ch");
@@ -255,7 +255,7 @@ void ADS1115Manager_printDebugInfo(void) {
                 Serial.print(reading.rawValue);
                 Serial.print(" valid=");
                 Serial.print(reading.valid);
-                if (reading.valid) {
+                if (reading.valid == true) {
                     float volts = ADS1115Manager_ads[d].computeVolts(reading.rawValue);
                     Serial.print(" volts=");
                     Serial.print(volts, 3);

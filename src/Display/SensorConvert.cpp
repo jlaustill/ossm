@@ -3,12 +3,12 @@
  * A safer C for embedded systems
  */
 
-#include "SensorConvert.h"
+#include "SensorConvert.hpp"
 
 // Sensor Conversion Functions
 // Physics calculations for NTC thermistors and pressure sensors
 #include <math.h>
-#include "../AppConfig.h"
+#include "../AppConfig.hpp"
 
 #include <stdint.h>
 

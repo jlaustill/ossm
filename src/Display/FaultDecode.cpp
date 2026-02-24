@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "FaultDecode.h"
+#include "FaultDecode.hpp"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,22 +12,22 @@
 // MAX31856 thermocouple fault bit interpretation
 // Provides pure functions for checking individual fault conditions
 /* Scope: FaultDecode */
-const uint8_t FaultDecode_FAULT_OPEN = 0x01;
-const uint8_t FaultDecode_FAULT_OVUV = 0x02;
-const uint8_t FaultDecode_FAULT_TC_LOW = 0x04;
-const uint8_t FaultDecode_FAULT_TC_HIGH = 0x08;
-const uint8_t FaultDecode_FAULT_CJ_LOW = 0x10;
-const uint8_t FaultDecode_FAULT_CJ_HIGH = 0x20;
-const uint8_t FaultDecode_FAULT_TC_RANGE = 0x40;
-const uint8_t FaultDecode_FAULT_CJ_RANGE = 0x80;
-const uint8_t FaultDecode_IDX_OPEN = 0;
-const uint8_t FaultDecode_IDX_OVUV = 1;
-const uint8_t FaultDecode_IDX_TC_LOW = 2;
-const uint8_t FaultDecode_IDX_TC_HIGH = 3;
-const uint8_t FaultDecode_IDX_CJ_LOW = 4;
-const uint8_t FaultDecode_IDX_CJ_HIGH = 5;
-const uint8_t FaultDecode_IDX_TC_RANGE = 6;
-const uint8_t FaultDecode_IDX_CJ_RANGE = 7;
+const uint8_t FaultDecode_FAULT_OPEN = 0x01U;
+const uint8_t FaultDecode_FAULT_OVUV = 0x02U;
+const uint8_t FaultDecode_FAULT_TC_LOW = 0x04U;
+const uint8_t FaultDecode_FAULT_TC_HIGH = 0x08U;
+const uint8_t FaultDecode_FAULT_CJ_LOW = 0x10U;
+const uint8_t FaultDecode_FAULT_CJ_HIGH = 0x20U;
+const uint8_t FaultDecode_FAULT_TC_RANGE = 0x40U;
+const uint8_t FaultDecode_FAULT_CJ_RANGE = 0x80U;
+const uint8_t FaultDecode_IDX_OPEN = 0U;
+const uint8_t FaultDecode_IDX_OVUV = 1U;
+const uint8_t FaultDecode_IDX_TC_LOW = 2U;
+const uint8_t FaultDecode_IDX_TC_HIGH = 3U;
+const uint8_t FaultDecode_IDX_CJ_LOW = 4U;
+const uint8_t FaultDecode_IDX_CJ_HIGH = 5U;
+const uint8_t FaultDecode_IDX_TC_RANGE = 6U;
+const uint8_t FaultDecode_IDX_CJ_RANGE = 7U;
 
 bool FaultDecode_hasFault(uint8_t faultCode) {
     if (faultCode != 0) {
@@ -101,58 +101,58 @@ bool FaultDecode_isCjRange(uint8_t faultCode) {
 }
 
 uint8_t FaultDecode_getFirstFaultIndex(uint8_t faultCode) {
-    if (faultCode & FaultDecode_FAULT_OPEN) {
+    if ((faultCode & FaultDecode_FAULT_OPEN) != 0) {
         return FaultDecode_IDX_OPEN;
     }
-    if (faultCode & FaultDecode_FAULT_OVUV) {
+    if ((faultCode & FaultDecode_FAULT_OVUV) != 0) {
         return FaultDecode_IDX_OVUV;
     }
-    if (faultCode & FaultDecode_FAULT_TC_LOW) {
+    if ((faultCode & FaultDecode_FAULT_TC_LOW) != 0) {
         return FaultDecode_IDX_TC_LOW;
     }
-    if (faultCode & FaultDecode_FAULT_TC_HIGH) {
+    if ((faultCode & FaultDecode_FAULT_TC_HIGH) != 0) {
         return FaultDecode_IDX_TC_HIGH;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_LOW) {
+    if ((faultCode & FaultDecode_FAULT_CJ_LOW) != 0) {
         return FaultDecode_IDX_CJ_LOW;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_HIGH) {
+    if ((faultCode & FaultDecode_FAULT_CJ_HIGH) != 0) {
         return FaultDecode_IDX_CJ_HIGH;
     }
-    if (faultCode & FaultDecode_FAULT_TC_RANGE) {
+    if ((faultCode & FaultDecode_FAULT_TC_RANGE) != 0) {
         return FaultDecode_IDX_TC_RANGE;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_RANGE) {
+    if ((faultCode & FaultDecode_FAULT_CJ_RANGE) != 0) {
         return FaultDecode_IDX_CJ_RANGE;
     }
     return 255;
 }
 
 uint8_t FaultDecode_countFaults(uint8_t faultCode) {
-    uint8_t count = 0;
-    if (faultCode & FaultDecode_FAULT_OPEN) {
-        count = count + 1;
+    uint8_t count = 0U;
+    if ((faultCode & FaultDecode_FAULT_OPEN) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_OVUV) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_OVUV) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_TC_LOW) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_TC_LOW) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_TC_HIGH) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_TC_HIGH) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_LOW) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_CJ_LOW) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_HIGH) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_CJ_HIGH) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_TC_RANGE) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_TC_RANGE) != 0) {
+        count = count + 1U;
     }
-    if (faultCode & FaultDecode_FAULT_CJ_RANGE) {
-        count = count + 1;
+    if ((faultCode & FaultDecode_FAULT_CJ_RANGE) != 0) {
+        count = count + 1U;
     }
     return count;
 }

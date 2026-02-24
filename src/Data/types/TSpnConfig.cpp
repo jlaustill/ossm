@@ -5,7 +5,7 @@
 
 // SPN encoding configuration
 // Maps J1939 SPNs to physical values with encoding parameters
-#include "EValueId.h"
+#include "EValueId.hpp"
 
 #include <stdint.h>
 

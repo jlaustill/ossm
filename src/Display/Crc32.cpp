@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Crc32.h"
+#include "Crc32.hpp"
 
 // crc32.cnx - Memory-safe CRC32 checksum calculation
 // Requires C-Next v0.1.12+ for full C++ mode support
-#include "../AppConfig.h"
+#include "../AppConfig.hpp"
 
 #include <stdint.h>
 #include <string.h>
@@ -17,10 +17,10 @@
 static uint32_t Crc32_crcByte(uint32_t crc, uint8_t byte) {
     uint32_t c = crc ^ byte;
     for (int32_t j = 0; j < 8; j += 1) {
-        if (c & 1) {
-            c = (c >> 1) ^ 0xEDB88320;
+        if ((c & 1) != 0) {
+            c = (c >> 1U) ^ 0xEDB88320U;
         } else {
-            c = c >> 1;
+            c = c >> 1U;
         }
     }
     return c;
@@ -29,19 +29,19 @@ static uint32_t Crc32_crcByte(uint32_t crc, uint8_t byte) {
 static uint32_t Crc32_crcFloat(uint32_t& crc, float value) {
     char buf[5] = "";
     memcpy(&buf[0], &value, 4);
-    crc = Crc32_crcByte(crc, buf[0]);
-    crc = Crc32_crcByte(crc, buf[1]);
-    crc = Crc32_crcByte(crc, buf[2]);
-    crc = Crc32_crcByte(crc, buf[3]);
+    crc = Crc32_crcByte(crc, buf[0U]);
+    crc = Crc32_crcByte(crc, buf[1U]);
+    crc = Crc32_crcByte(crc, buf[2U]);
+    crc = Crc32_crcByte(crc, buf[3U]);
     return crc;
 }
 
 uint32_t Crc32_calculateChecksum(const AppConfig& config) {
-    uint32_t crc = 0xFFFFFFFF;
+    uint32_t crc = 0xFFFFFFFFU;
     crc = Crc32_crcByte(crc, ((config.magic) & 0xFFU));
-    crc = Crc32_crcByte(crc, ((config.magic >> 8) & 0xFFU));
-    crc = Crc32_crcByte(crc, ((config.magic >> 16) & 0xFFU));
-    crc = Crc32_crcByte(crc, ((config.magic >> 24) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config.magic >> 8U) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config.magic >> 16U) & 0xFFU));
+    crc = Crc32_crcByte(crc, ((config.magic >> 24U) & 0xFFU));
     crc = Crc32_crcByte(crc, config.version);
     crc = Crc32_crcByte(crc, config.j1939SourceAddress);
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
@@ -54,11 +54,11 @@ uint32_t Crc32_calculateChecksum(const AppConfig& config) {
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
         crc = Crc32_crcByte(crc, static_cast<uint8_t>(config.pressureInputs[i].assignedValue));
         crc = Crc32_crcByte(crc, ((config.pressureInputs[i].maxPressure) & 0xFFU));
-        crc = Crc32_crcByte(crc, ((config.pressureInputs[i].maxPressure >> 8) & 0xFFU));
+        crc = Crc32_crcByte(crc, ((config.pressureInputs[i].maxPressure >> 8U) & 0xFFU));
         crc = Crc32_crcByte(crc, config.pressureInputs[i].pressureType);
     }
     crc = Crc32_crcByte(crc, config.egtEnabled);
     crc = Crc32_crcByte(crc, config.thermocoupleType);
     crc = Crc32_crcByte(crc, config.bme280Enabled);
-    return ~crc;
+    return static_cast<uint32_t>(~crc);
 }

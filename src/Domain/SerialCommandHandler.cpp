@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "SerialCommandHandler.h"
+#include "SerialCommandHandler.hpp"
 
 /**
  * Serial Command Handler
@@ -12,13 +12,13 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <Parse.hpp>
-#include <AppConfig.h>
-#include <Domain/CommandHandler.h>
-#include <Display/FaultDecode.h>
-#include <Data/ADS1115Manager.h>
-#include <Data/MAX31856Manager.h>
-#include <Data/SensorValues.h>
-#include <Display/ValueName.h>
+#include <AppConfig.hpp>
+#include <Domain/CommandHandler.hpp>
+#include <Display/FaultDecode.hpp>
+#include <Data/ADS1115Manager.hpp>
+#include <Data/MAX31856Manager.hpp>
+#include <Data/SensorValues.hpp>
+#include <Display/ValueName.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,9 +27,9 @@
 // Module state for command buffer
 char cmdBuffer[129] = "";
 
-uint8_t cmdIndex = 0;
+uint8_t cmdIndex = 0U;
 
-SeaDash::Parse::ParseResult parsed = (SeaDash::Parse::ParseResult){ .data = {0}, .count = 0, .success = false };
+SeaDash::Parse::ParseResult parsed = (SeaDash::Parse::ParseResult){ .data = {0U}, .count = 0U, .success = false };
 
 /* Scope: SerialCommandHandler */
 
@@ -100,18 +100,18 @@ static void SerialCommandHandler_printEnabledValues(void) {
             Serial.println();
         }
     }
-    if (appConfig.egtEnabled) {
+    if (appConfig.egtEnabled == true) {
         Serial.println("EGT: enabled");
     }
-    if (appConfig.bme280Enabled) {
+    if (appConfig.bme280Enabled == true) {
         Serial.println("BME280: enabled");
     }
 }
 
 static void SerialCommandHandler_handleQuery(void) {
-    uint8_t queryType = 0;
+    uint8_t queryType = 0U;
     if (parsed.count > 1) {
-        queryType = parsed.data[1];
+        queryType = parsed.data[1U];
     }
     switch (queryType) {
         case 0: {
@@ -123,7 +123,7 @@ static void SerialCommandHandler_handleQuery(void) {
             Serial.print("J1939 Address: ");
             Serial.println(appConfig.j1939SourceAddress);
             Serial.print("EGT Enabled: ");
-            if (appConfig.egtEnabled) {
+            if (appConfig.egtEnabled == true) {
                 Serial.println("Yes");
             } else {
                 Serial.println("No");
@@ -131,7 +131,7 @@ static void SerialCommandHandler_handleQuery(void) {
             Serial.print("TC Type: ");
             Serial.println(appConfig.thermocoupleType);
             Serial.print("BME280 Enabled: ");
-            if (appConfig.bme280Enabled) {
+            if (appConfig.bme280Enabled == true) {
                 Serial.println("Yes");
             } else {
                 Serial.println("No");
@@ -147,14 +147,14 @@ static void SerialCommandHandler_handleQuery(void) {
 }
 
 static void SerialCommandHandler_handleReadSensors(void) {
-    uint8_t sensorType = 0;
+    uint8_t sensorType = 0U;
     if (parsed.count > 1) {
-        sensorType = parsed.data[1];
+        sensorType = parsed.data[1U];
     }
     switch (sensorType) {
         case 0: {
             Serial.println("=== Live Sensor Values ===");
-            if (appConfig.egtEnabled) {
+            if (appConfig.egtEnabled == true) {
                 Serial.print("EGT: ");
                 uint8_t faultStatus = MAX31856Manager_getFaultStatus();
                 if (faultStatus == 0) {
@@ -182,7 +182,7 @@ static void SerialCommandHandler_handleReadSensors(void) {
                     Serial.println(" kPa");
                 }
             }
-            if (appConfig.bme280Enabled) {
+            if (appConfig.bme280Enabled == true) {
                 Serial.print("Ambient Temp: ");
                 Serial.print(SensorValues_current[EValueId_AMBIENT_TEMP].value, 1);
                 Serial.println(" C");
@@ -324,7 +324,7 @@ static void SerialCommandHandler_handleDumpEeprom(void) {
             Serial.print("0");
         }
         Serial.print(byte, HEX);
-        uint32_t pos = i + 1;
+        uint32_t pos = i + 1U;
         if (pos % 16 == 0) {
             Serial.println();
         } else {
@@ -347,7 +347,7 @@ static void SerialCommandHandler_processCommand(void) {
         Serial.println("ERR,Parse failed");
         return;
     }
-    uint8_t cmdNum = parsed.data[0];
+    uint8_t cmdNum = parsed.data[0U];
     switch (cmdNum) {
         case 5: {
             SerialCommandHandler_handleQuery();
@@ -371,8 +371,11 @@ static void SerialCommandHandler_processCommand(void) {
             return;
             break;
         }
+        default: {
+            break;
+        }
     }
-    uint8_t data[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t data[8] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
     for (uint8_t i = 0; i < 8; i += 1) {
         if (i < parsed.count) {
             data[i] = static_cast<uint8_t>(parsed.data[i]);
@@ -384,7 +387,7 @@ static void SerialCommandHandler_processCommand(void) {
 }
 
 void SerialCommandHandler_initialize(void) {
-    cmdIndex = 0;
+    cmdIndex = 0U;
     strncpy(cmdBuffer, "", 128); cmdBuffer[128] = '\0';
     Serial.println("OSSM Command Interface Ready");
     Serial.println("Commands: 1,valueId[,input] | 2,valueId | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
@@ -398,12 +401,12 @@ void SerialCommandHandler_update(void) {
         if (c == '\n' || c == '\r') {
             if (cmdIndex > 0) {
                 SerialCommandHandler_processCommand();
-                cmdIndex = 0;
+                cmdIndex = 0U;
                 strncpy(cmdBuffer, "", 128); cmdBuffer[128] = '\0';
             }
         } else if (cmdIndex < 127) {
             cmdBuffer[cmdIndex] = c;
-            cmdIndex = cmdIndex + 1;
+            cmdIndex = cmdIndex + 1U;
         }
         available = Serial.available();
     }

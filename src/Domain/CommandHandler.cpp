@@ -3,16 +3,16 @@
  * A safer C for embedded systems
  */
 
-#include "CommandHandler.h"
+#include "CommandHandler.hpp"
 
 // CommandHandler.cnx - Unified command processing for OSSM
 // Both serial and CAN pass u8[8] here. Zero SPN knowledge.
 // Uses appConfig directly - no config passing.
-#include <AppConfig.h>
-#include <Data/ConfigStorage.h>
-#include <Domain/Hardware.h>
-#include <Display/Presets.h>
-#include <Display/InputValid.h>
+#include <AppConfig.hpp>
+#include <Data/ConfigStorage.hpp>
+#include <Domain/Hardware.hpp>
+#include <Display/Presets.hpp>
+#include <Display/InputValid.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -113,14 +113,14 @@ EValueCategory CommandHandler_getValueCategory(EValueId valueId) {
 }
 
 static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
-    EValueId valueId = static_cast<EValueId>(data[1]);
+    EValueId valueId = static_cast<EValueId>(data[1U]);
     EValueCategory category = CommandHandler_getValueCategory(valueId);
     if (category == EValueCategory_VALUE_CAT_UNKNOWN) {
         return ECommandResult_CMD_UNKNOWN_VALUE;
     }
     switch (category) {
         case EValueCategory_VALUE_CAT_TEMPERATURE: {
-            bool validInput = InputValid_isValidTempInput(data[2]);
+            bool validInput = InputValid_isValidTempInput(data[2U]);
             if (!validInput) {
                 return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
             }
@@ -129,11 +129,11 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
                     appConfig.tempInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
                 }
             }
-            appConfig.tempInputs[data[2] - 1].assignedValue = valueId;
+            appConfig.tempInputs[data[2U] - 1].assignedValue = valueId;
             break;
         }
         case EValueCategory_VALUE_CAT_PRESSURE: {
-            bool validInput = InputValid_isValidPressureInput(data[2]);
+            bool validInput = InputValid_isValidPressureInput(data[2U]);
             if (!validInput) {
                 return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
             }
@@ -142,7 +142,7 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
                     appConfig.pressureInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
                 }
             }
-            appConfig.pressureInputs[data[2] - 1].assignedValue = valueId;
+            appConfig.pressureInputs[data[2U] - 1].assignedValue = valueId;
             break;
         }
         case EValueCategory_VALUE_CAT_EGT: {
@@ -164,7 +164,7 @@ static ECommandResult CommandHandler_enableValue(const uint8_t data[8]) {
 }
 
 static ECommandResult CommandHandler_disableValue(const uint8_t data[8]) {
-    EValueId valueId = static_cast<EValueId>(data[1]);
+    EValueId valueId = static_cast<EValueId>(data[1U]);
     EValueCategory category = CommandHandler_getValueCategory(valueId);
     if (category == EValueCategory_VALUE_CAT_UNKNOWN) {
         return ECommandResult_CMD_UNKNOWN_VALUE;
@@ -205,60 +205,60 @@ static ECommandResult CommandHandler_disableValue(const uint8_t data[8]) {
 }
 
 static ECommandResult CommandHandler_setPressureRange(const uint8_t data[8]) {
-    bool valid = InputValid_isValidPressureInput(data[1]);
+    bool valid = InputValid_isValidPressureInput(data[1U]);
     if (!valid) {
         return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
     }
-    uint16_t maxPressure = (static_cast<uint16_t>(data[2]) << 8) | static_cast<uint16_t>(data[3]);
-    appConfig.pressureInputs[data[1] - 1].maxPressure = maxPressure;
+    uint16_t maxPressure = (static_cast<uint16_t>(data[2U]) << 8U) | static_cast<uint16_t>(data[3U]);
+    appConfig.pressureInputs[data[1U] - 1].maxPressure = maxPressure;
     ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
 static ECommandResult CommandHandler_setTcType(const uint8_t data[8]) {
-    bool valid = Presets_isValidTcType(data[1]);
+    bool valid = Presets_isValidTcType(data[1U]);
     if (!valid) {
         return ECommandResult_CMD_INVALID_TC_TYPE;
     }
-    appConfig.thermocoupleType = static_cast<EThermocoupleType>(data[1]);
+    appConfig.thermocoupleType = static_cast<EThermocoupleType>(data[1U]);
     ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
 static ECommandResult CommandHandler_applyNtcPreset(const uint8_t data[8]) {
-    bool validInput = InputValid_isValidTempInput(data[1]);
+    bool validInput = InputValid_isValidTempInput(data[1U]);
     if (!validInput) {
         return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
     }
-    bool validPreset = Presets_isValidNtcPreset(data[2]);
+    bool validPreset = Presets_isValidNtcPreset(data[2U]);
     if (!validPreset) {
         return ECommandResult_CMD_INVALID_PRESET;
     }
-    uint8_t idx = data[1] - 1;
-    appConfig.tempInputs[idx].coeffA = Presets_ntcCoeffA(data[2]);
-    appConfig.tempInputs[idx].coeffB = Presets_ntcCoeffB(data[2]);
-    appConfig.tempInputs[idx].coeffC = Presets_ntcCoeffC(data[2]);
-    appConfig.tempInputs[idx].resistorValue = Presets_ntcResistor(data[2]);
+    uint8_t idx = data[1U] - 1U;
+    appConfig.tempInputs[idx].coeffA = Presets_ntcCoeffA(data[2U]);
+    appConfig.tempInputs[idx].coeffB = Presets_ntcCoeffB(data[2U]);
+    appConfig.tempInputs[idx].coeffC = Presets_ntcCoeffC(data[2U]);
+    appConfig.tempInputs[idx].resistorValue = Presets_ntcResistor(data[2U]);
     ConfigStorage_saveConfig(appConfig);
     return ECommandResult_CMD_SUCCESS;
 }
 
 static ECommandResult CommandHandler_applyPressurePreset(const uint8_t data[8]) {
-    bool validInput = InputValid_isValidPressureInput(data[1]);
+    bool validInput = InputValid_isValidPressureInput(data[1U]);
     if (!validInput) {
         return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
     }
-    bool validPreset = Presets_isValidPressurePreset(data[2]);
+    bool validPreset = Presets_isValidPressurePreset(data[2U]);
     if (!validPreset) {
         return ECommandResult_CMD_INVALID_PRESET;
     }
-    uint8_t idx = data[1] - 1;
-    bool isBar = Presets_isBarPreset(data[2]);
+    uint8_t idx = data[1U] - 1U;
+    bool isBar = Presets_isBarPreset(data[2U]);
     if (isBar) {
-        appConfig.pressureInputs[idx].maxPressure = Presets_barPresetValue(data[2]);
+        appConfig.pressureInputs[idx].maxPressure = Presets_barPresetValue(data[2U]);
         appConfig.pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIA;
     } else {
-        appConfig.pressureInputs[idx].maxPressure = Presets_psiPresetValue(data[2]);
+        appConfig.pressureInputs[idx].maxPressure = Presets_psiPresetValue(data[2U]);
         appConfig.pressureInputs[idx].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
     }
     ConfigStorage_saveConfig(appConfig);
@@ -270,7 +270,7 @@ ECommandResult CommandHandler_setNtcParam(uint8_t input, uint8_t param, float va
     if (!validInput) {
         return ECommandResult_CMD_INVALID_SENSOR_NUMBER;
     }
-    uint8_t idx = input - 1;
+    uint8_t idx = input - 1U;
     switch (param) {
         case 0: {
             appConfig.tempInputs[idx].coeffA = value;
@@ -297,7 +297,7 @@ ECommandResult CommandHandler_setNtcParam(uint8_t input, uint8_t param, float va
 }
 
 ECommandResult CommandHandler_process(const uint8_t data[8]) {
-    switch (data[0]) {
+    switch (data[0U]) {
         case 1: {
             return CommandHandler_enableValue(data);
             break;

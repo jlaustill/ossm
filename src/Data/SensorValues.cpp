@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "SensorValues.h"
+#include "SensorValues.hpp"
 
 // Centralized sensor value storage
 // All values stored in standard units (kPa, °C, %)
-#include "types/EValueId.h"
+#include "types/EValueId.hpp"
 
 #include <stdint.h>
 #include <stdbool.h>

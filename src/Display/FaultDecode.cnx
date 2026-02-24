@@ -81,28 +81,28 @@ scope FaultDecode {
     // Get fault index for first set bit (for iterative decoding)
     // Returns 255 if no fault
     public u8 getFirstFaultIndex(u8 faultCode) {
-        if (faultCode & FAULT_OPEN) { return IDX_OPEN; }
-        if (faultCode & FAULT_OVUV) { return IDX_OVUV; }
-        if (faultCode & FAULT_TC_LOW) { return IDX_TC_LOW; }
-        if (faultCode & FAULT_TC_HIGH) { return IDX_TC_HIGH; }
-        if (faultCode & FAULT_CJ_LOW) { return IDX_CJ_LOW; }
-        if (faultCode & FAULT_CJ_HIGH) { return IDX_CJ_HIGH; }
-        if (faultCode & FAULT_TC_RANGE) { return IDX_TC_RANGE; }
-        if (faultCode & FAULT_CJ_RANGE) { return IDX_CJ_RANGE; }
+        if ((faultCode & FAULT_OPEN) != 0) { return IDX_OPEN; }
+        if ((faultCode & FAULT_OVUV) != 0) { return IDX_OVUV; }
+        if ((faultCode & FAULT_TC_LOW) != 0) { return IDX_TC_LOW; }
+        if ((faultCode & FAULT_TC_HIGH) != 0) { return IDX_TC_HIGH; }
+        if ((faultCode & FAULT_CJ_LOW) != 0) { return IDX_CJ_LOW; }
+        if ((faultCode & FAULT_CJ_HIGH) != 0) { return IDX_CJ_HIGH; }
+        if ((faultCode & FAULT_TC_RANGE) != 0) { return IDX_TC_RANGE; }
+        if ((faultCode & FAULT_CJ_RANGE) != 0) { return IDX_CJ_RANGE; }
         return 255;
     }
 
     // Count number of faults
     public u8 countFaults(u8 faultCode) {
         u8 count <- 0;
-        if (faultCode & FAULT_OPEN) { count <- count + 1; }
-        if (faultCode & FAULT_OVUV) { count <- count + 1; }
-        if (faultCode & FAULT_TC_LOW) { count <- count + 1; }
-        if (faultCode & FAULT_TC_HIGH) { count <- count + 1; }
-        if (faultCode & FAULT_CJ_LOW) { count <- count + 1; }
-        if (faultCode & FAULT_CJ_HIGH) { count <- count + 1; }
-        if (faultCode & FAULT_TC_RANGE) { count <- count + 1; }
-        if (faultCode & FAULT_CJ_RANGE) { count <- count + 1; }
+        if ((faultCode & FAULT_OPEN) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_OVUV) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_TC_LOW) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_TC_HIGH) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_CJ_LOW) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_CJ_HIGH) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_TC_RANGE) != 0) { count <- count + 1; }
+        if ((faultCode & FAULT_CJ_RANGE) != 0) { count <- count + 1; }
         return count;
     }
 

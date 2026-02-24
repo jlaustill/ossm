@@ -3,12 +3,12 @@
  * A safer C for embedded systems
  */
 
-#include "BME280Manager.h"
+#include "BME280Manager.hpp"
 
 // BME280 Ambient Sensor Manager
 // Handles temperature, humidity, and barometric pressure readings
 #include <Adafruit_BME280.h>
-#include <AppConfig.h>
+#include <AppConfig.hpp>
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -17,14 +17,14 @@
 
 /* Scope: BME280Manager */
 static Adafruit_BME280 BME280Manager_bme = {};
-static uint8_t BME280Manager_i2cAddress = 0x76;
+static uint8_t BME280Manager_i2cAddress = 0x76U;
 static bool BME280Manager_enabled = false;
 static bool BME280Manager_initialized = false;
 static float BME280Manager_temperatureC = 0.0;
 static float BME280Manager_humidity = 0.0;
 static float BME280Manager_pressurekPa = 0.0;
 static bool BME280Manager_readingValid = false;
-static uint32_t BME280Manager_lastReadTime = 0;
+static uint32_t BME280Manager_lastReadTime = 0U;
 
 bool BME280Manager_update(void) {
     if (!BME280Manager_enabled || !BME280Manager_initialized) {
@@ -55,7 +55,7 @@ void BME280Manager_initialize(const AppConfig& config) {
         Serial.println("BME280 disabled in config");
         return;
     }
-    BME280Manager_i2cAddress = 0x76;
+    BME280Manager_i2cAddress = 0x76U;
     bool began = BME280Manager_bme.begin(BME280Manager_i2cAddress);
     if (began) {
         BME280Manager_initialized = true;

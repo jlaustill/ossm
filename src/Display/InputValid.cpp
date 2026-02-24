@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "InputValid.h"
+#include "InputValid.hpp"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,9 +12,9 @@
 // Centralizes all input range checking for commands
 // Supports both 1-indexed (user-facing) and 0-indexed (internal) inputs
 /* Scope: InputValid */
-const uint8_t InputValid_TEMP_COUNT = 8;
-const uint8_t InputValid_PRESSURE_COUNT = 7;
-const uint8_t InputValid_NTC_PARAM_COUNT = 4;
+const uint8_t InputValid_TEMP_COUNT = 8U;
+const uint8_t InputValid_PRESSURE_COUNT = 7U;
+const uint8_t InputValid_NTC_PARAM_COUNT = 4U;
 
 bool InputValid_isValidTempInput(uint8_t input) {
     if (input < 1) {

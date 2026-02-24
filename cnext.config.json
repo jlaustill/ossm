@@ -4,7 +4,7 @@
     "target": "teensy41",
     "include": [
         "include/",
-        ".pio"
+        ".pio/libdeps/"
     ],
     "noCache": true,
     "headerOut": "include",

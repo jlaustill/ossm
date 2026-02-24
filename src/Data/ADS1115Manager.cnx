@@ -145,7 +145,7 @@ scope ADS1115Manager {
 
             u8 addr <- ADS_I2C_ADDRESSES[d];
             bool beginResult <- ads[d].begin(addr);
-            if (beginResult) {
+            if (beginResult = true) {
                 deviceInitialized[d] <- true;
                 // GAIN_TWOTHIRDS is default (±6.144V, allows 0-5V with 5V VDD)
                 // RATE_ADS1115_128SPS = 0x0080
@@ -187,7 +187,7 @@ scope ADS1115Manager {
         }
 
         bool conversionDone <- isConversionComplete();
-        if (conversionDone) {
+        if (conversionDone = true) {
             readResult();
             advanceChannel();
 
@@ -261,7 +261,7 @@ scope ADS1115Manager {
             Serial.print(" init=");
             Serial.println(deviceInitialized[d]);
 
-            if (deviceInitialized[d]) {
+            if (deviceInitialized[d] = true) {
                 for (u8 c <- 0; c < ADS_CHANNEL_COUNT; c <- c + 1) {
                     TAdcReading reading <- readings[d][c];
                     Serial.print("  Ch");
@@ -270,7 +270,7 @@ scope ADS1115Manager {
                     Serial.print(reading.rawValue);
                     Serial.print(" valid=");
                     Serial.print(reading.valid);
-                    if (reading.valid) {
+                    if (reading.valid = true) {
                         f32 volts <- ads[d].computeVolts(reading.rawValue);
                         Serial.print(" volts=");
                         Serial.print(volts, 3);

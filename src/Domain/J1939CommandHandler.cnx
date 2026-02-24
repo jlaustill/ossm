@@ -88,12 +88,12 @@ scope J1939CommandHandler {
                 }
                 respData[0] <- tempCount;
                 respData[1] <- presCount;
-                if (appConfig.egtEnabled) {
+                if (appConfig.egtEnabled = true) {
                     respData[2] <- 1;
                 } else {
                     respData[2] <- 0;
                 }
-                if (appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled = true) {
                     respData[3] <- 1;
                 } else {
                     respData[3] <- 0;

@@ -3,17 +3,17 @@
  * A safer C for embedded systems
  */
 
-#include "J1939Bus.h"
+#include "J1939Bus.hpp"
 
 // J1939 CAN Bus Communication
 // Handles CAN hardware, outbound sensor PGNs, and inbound message buffering
 #include <Arduino.h>
-#include <AppConfig.h>
+#include <AppConfig.hpp>
 #include "FlexCAN_T4.h"
 #include <J1939Message.h>
-#include "J1939Encode.h"
-#include <Data/J1939Config.h>
-#include <Data/SensorValues.h>
+#include "J1939Encode.hpp"
+#include <Data/J1939Config.hpp>
+#include <Data/SensorValues.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -54,10 +54,10 @@ static inline void __cnx_set_PRIMASK(uint32_t mask) { __set_PRIMASK(mask); }
 /* Scope: J1939Bus */
 static FlexCAN_T4<CAN1,RX_SIZE_256,TX_SIZE_16> J1939Bus_canBus = {};
 static bool J1939Bus_configCmdPending = false;
-static uint8_t J1939Bus_configCmdData[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static uint8_t J1939Bus_configCmdData[8] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
 
 static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sourceAddr) {
-    uint32_t id = 0;
+    uint32_t id = 0U;
     id = (id & ~(((1U << 3) - 1) << 26)) | ((priority & ((1U << 3) - 1)) << 26);
     id = (id & ~(((1U << 18) - 1) << 8)) | ((pgn & ((1U << 18) - 1)) << 8);
     id = (id & ~(0xFFU << 0)) | ((sourceAddr & 0xFFU) << 0);
@@ -66,7 +66,7 @@ static uint32_t J1939Bus_buildCanId(uint16_t pgn, uint8_t priority, uint8_t sour
 
 static void J1939Bus_fillBuffer(uint8_t buf[8]) {
     for (uint8_t i = 0; i < 8; i += 1) {
-        buf[i] = 0xFF;
+        buf[i] = 0xFFU;
     }
 }
 
@@ -77,8 +77,8 @@ static bool J1939Bus_isValueEnabled(EValueId valueId) {
 void J1939Bus_sendMessage(uint16_t pgn, const uint8_t buf[8]) {
     CAN_message_t msg = {};
     msg.flags.extended = 1;
-    msg.id = J1939Bus_buildCanId(pgn, 6, appConfig.j1939SourceAddress);
-    msg.len = 8;
+    msg.id = J1939Bus_buildCanId(pgn, 6U, appConfig.j1939SourceAddress);
+    msg.len = 8U;
     for (uint8_t i = 0; i < 8; i += 1) {
         msg.buf[i] = buf[i];
     }
@@ -99,10 +99,10 @@ void J1939Bus_sendPgnGeneric(uint16_t pgn) {
         }
         float value = SensorValues_current[cfg.source].value;
         uint16_t encoded = J1939Encode_encode(value, cfg.resolution, cfg.offset);
-        uint8_t pos = cfg.bytePos - 1;
-        buf[pos] = static_cast<uint8_t>((encoded & 0xFF));
+        uint8_t pos = cfg.bytePos - 1U;
+        buf[pos] = static_cast<uint8_t>((encoded & 0xFFU));
         if (cfg.dataLength == 2) {
-            buf[pos + 1] = static_cast<uint8_t>(((encoded >> 8) & 0xFF));
+            buf[pos + 1] = static_cast<uint8_t>(((encoded >> 8U) & 0xFFU));
         }
     }
     J1939Bus_sendMessage(pgn, buf);
@@ -126,7 +126,7 @@ void J1939Bus_getPendingCommand(uint8_t outData[8]) {
 
 static void J1939Bus_sniffDataPrivateISR(const CAN_message_t& msg) {
     J1939Message message = {};
-    message.pgn = 0;
+    message.pgn = 0U;
     message.setCanId(msg.id);
     message.setData(msg.buf);
     if (message.pgn == 65280) {

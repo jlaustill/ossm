@@ -3,16 +3,16 @@
  * A safer C for embedded systems
  */
 
-#include "Hardware.h"
+#include "Hardware.hpp"
 
 // Hardware initialization
 // Single entry point for all sensor hardware setup.
 // Called from setup() and after any config change.
-#include <AppConfig.h>
-#include <Data/ADS1115Manager.h>
-#include <Data/MAX31856Manager.h>
-#include <Data/BME280Manager.h>
-#include <Data/SensorValues.h>
+#include <AppConfig.hpp>
+#include <Data/ADS1115Manager.hpp>
+#include <Data/MAX31856Manager.hpp>
+#include <Data/BME280Manager.hpp>
+#include <Data/SensorValues.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -3,18 +3,18 @@
  * A safer C for embedded systems
  */
 
-#include "SensorProcessor.h"
+#include "SensorProcessor.hpp"
 
 // Sensor processing logic
 // Reads from hardware managers and stores values in SensorValues
 #include <Arduino.h>
-#include <AppConfig.h>
-#include <Data/ADS1115Manager.h>
-#include <Data/MAX31856Manager.h>
-#include <Data/BME280Manager.h>
-#include <Display/SensorConvert.h>
-#include <Display/HardwareMap.h>
-#include <Data/SensorValues.h>
+#include <AppConfig.hpp>
+#include <Data/ADS1115Manager.hpp>
+#include <Data/MAX31856Manager.hpp>
+#include <Data/BME280Manager.hpp>
+#include <Display/SensorConvert.hpp>
+#include <Display/HardwareMap.hpp>
+#include <Data/SensorValues.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>

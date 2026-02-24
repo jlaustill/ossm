@@ -62,10 +62,10 @@ scope SerialCommandHandler {
                 Serial.println();
             }
         }
-        if (appConfig.egtEnabled) {
+        if (appConfig.egtEnabled = true) {
             Serial.println("EGT: enabled");
         }
-        if (appConfig.bme280Enabled) {
+        if (appConfig.bme280Enabled = true) {
             Serial.println("BME280: enabled");
         }
     }
@@ -85,7 +85,7 @@ scope SerialCommandHandler {
                 Serial.print("J1939 Address: ");
                 Serial.println(appConfig.j1939SourceAddress);
                 Serial.print("EGT Enabled: ");
-                if (appConfig.egtEnabled) {
+                if (appConfig.egtEnabled = true) {
                     Serial.println("Yes");
                 } else {
                     Serial.println("No");
@@ -93,7 +93,7 @@ scope SerialCommandHandler {
                 Serial.print("TC Type: ");
                 Serial.println(appConfig.thermocoupleType);
                 Serial.print("BME280 Enabled: ");
-                if (appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled = true) {
                     Serial.println("Yes");
                 } else {
                     Serial.println("No");
@@ -117,7 +117,7 @@ scope SerialCommandHandler {
         switch (sensorType) {
             case 0 {
                 Serial.println("=== Live Sensor Values ===");
-                if (appConfig.egtEnabled) {
+                if (appConfig.egtEnabled = true) {
                     Serial.print("EGT: ");
                     u8 faultStatus <- MAX31856Manager.getFaultStatus();
                     if (faultStatus = 0) {
@@ -145,7 +145,7 @@ scope SerialCommandHandler {
                         Serial.println(" kPa");
                     }
                 }
-                if (appConfig.bme280Enabled) {
+                if (appConfig.bme280Enabled = true) {
                     Serial.print("Ambient Temp: ");
                     Serial.print(SensorValues.current[EValueId.AMBIENT_TEMP].value,1);
                     Serial.println(" C");
@@ -293,7 +293,7 @@ scope SerialCommandHandler {
     // ─── Command dispatch ───────────────────────────────────────────
 
     void processCommand() {
-        u32 len <- cmdBuffer.length;
+        u32 len <- cmdBuffer.char_count;
         if (len = 0) {
             return;
         }

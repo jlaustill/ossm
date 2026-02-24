@@ -4,25 +4,25 @@
  */
 
 // AppConfig.cnx - Main configuration types and constants for OSSM
-#include <Data/types/EValueId.h>
+#include <Data/types/EValueId.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
 
 // Configuration magic number and version
-extern const uint32_t CONFIG_MAGIC = 0x4F53534D;
+extern const uint32_t CONFIG_MAGIC = 0x4F53534DU;
 
 // "OSSM" in ASCII
-extern const uint8_t CONFIG_VERSION = 4;
+extern const uint8_t CONFIG_VERSION = 4U;
 
 // EValueId-based config (was SPN-based)
 // Number of user-facing inputs
-extern const uint8_t TEMP_INPUT_COUNT = 8;
+extern const uint8_t TEMP_INPUT_COUNT = 8U;
 
-extern const uint8_t PRESSURE_INPUT_COUNT = 7;
+extern const uint8_t PRESSURE_INPUT_COUNT = 7U;
 
 // ADS1115 device count (internal, fixed)
-extern const uint8_t ADS_DEVICE_COUNT = 4;
+extern const uint8_t ADS_DEVICE_COUNT = 4U;
 
 // Thermocouple types (MAX31856)
 typedef enum {
@@ -169,20 +169,20 @@ extern const float GM_TEMP_RESISTOR = 3000.0;
 
 // Temperature input hardware mappings (fixed)
 // Index 0 = temp1, Index 7 = temp8
-extern const THardwareMapping TEMP_HARDWARE_MAP[8] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 2 }};
+extern const THardwareMapping TEMP_HARDWARE_MAP[8] = {(THardwareMapping){ .adsDevice = 0U, .adsChannel = 0U }, (THardwareMapping){ .adsDevice = 0U, .adsChannel = 2U }, (THardwareMapping){ .adsDevice = 1U, .adsChannel = 0U }, (THardwareMapping){ .adsDevice = 1U, .adsChannel = 3U }, (THardwareMapping){ .adsDevice = 2U, .adsChannel = 1U }, (THardwareMapping){ .adsDevice = 2U, .adsChannel = 2U }, (THardwareMapping){ .adsDevice = 3U, .adsChannel = 1U }, (THardwareMapping){ .adsDevice = 3U, .adsChannel = 2U }};
 
 // Pressure input hardware mappings (fixed)
 // Index 0 = pres1, Index 6 = pres7
-extern const THardwareMapping PRESSURE_HARDWARE_MAP[7] = {(THardwareMapping){ .adsDevice = 0, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 0, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 0 }, (THardwareMapping){ .adsDevice = 2, .adsChannel = 3 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 1 }, (THardwareMapping){ .adsDevice = 1, .adsChannel = 2 }, (THardwareMapping){ .adsDevice = 3, .adsChannel = 0 }};
+extern const THardwareMapping PRESSURE_HARDWARE_MAP[7] = {(THardwareMapping){ .adsDevice = 0U, .adsChannel = 1U }, (THardwareMapping){ .adsDevice = 0U, .adsChannel = 3U }, (THardwareMapping){ .adsDevice = 2U, .adsChannel = 0U }, (THardwareMapping){ .adsDevice = 2U, .adsChannel = 3U }, (THardwareMapping){ .adsDevice = 1U, .adsChannel = 1U }, (THardwareMapping){ .adsDevice = 1U, .adsChannel = 2U }, (THardwareMapping){ .adsDevice = 3U, .adsChannel = 0U }};
 
 // ADS1115 device I2C addresses (fixed)
-extern const uint8_t ADS_I2C_ADDRESSES[4] = {0x48, 0x49, 0x4A, 0x4B};
+extern const uint8_t ADS_I2C_ADDRESSES[4] = {0x48U, 0x49U, 0x4AU, 0x4BU};
 
 // ADS1115 DRDY pins (fixed)
-extern const uint8_t ADS_DRDY_PINS[4] = {0, 1, 4, 5};
+extern const uint8_t ADS_DRDY_PINS[4] = {0U, 1U, 4U, 5U};
 
 // D0, D1, D4, D5
 // Known SPNs lookup table
-extern const TSpnInfo KNOWN_SPNS[20] = {(TSpnInfo){ .spn = 175, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 110, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1637 }, (TSpnInfo){ .spn = 174, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 105, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1363 }, (TSpnInfo){ .spn = 1131, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1132, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1133, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 172, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 441, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 100, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 109, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 94, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 102, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 106, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1127, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 1128, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0 }, (TSpnInfo){ .spn = 173, .category = ESpnCategory_SPN_CAT_EGT, .hiResSpn = 0 }, (TSpnInfo){ .spn = 171, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 108, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }, (TSpnInfo){ .spn = 354, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0 }};
+extern const TSpnInfo KNOWN_SPNS[20] = {(TSpnInfo){ .spn = 175U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 110U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1637U }, (TSpnInfo){ .spn = 174U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 105U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 1363U }, (TSpnInfo){ .spn = 1131U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 1132U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 1133U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 172U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 441U, .category = ESpnCategory_SPN_CAT_TEMPERATURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 100U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 109U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 94U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 102U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 106U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 1127U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 1128U, .category = ESpnCategory_SPN_CAT_PRESSURE, .hiResSpn = 0U }, (TSpnInfo){ .spn = 173U, .category = ESpnCategory_SPN_CAT_EGT, .hiResSpn = 0U }, (TSpnInfo){ .spn = 171U, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0U }, (TSpnInfo){ .spn = 108U, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0U }, (TSpnInfo){ .spn = 354U, .category = ESpnCategory_SPN_CAT_BME280, .hiResSpn = 0U }};
 
-extern const uint8_t KNOWN_SPN_COUNT = 20;
+extern const uint8_t KNOWN_SPN_COUNT = 20U;

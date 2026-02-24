@@ -3,12 +3,12 @@
  * A safer C for embedded systems
  */
 
-#include "ValueName.h"
+#include "ValueName.hpp"
 
 // Human-readable names for EValueId values
 // Data-driven lookup table indexed by (u8)id
 #include <Arduino.h>
-#include <Data/types/EValueId.h>
+#include <Data/types/EValueId.hpp>
 
 #include <stdint.h>
 

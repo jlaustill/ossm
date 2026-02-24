@@ -14,7 +14,7 @@ scope SensorValues {
     public void initialize() {
         for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i <- i + 1) {
             current[i].value <- 0.0;
-            current[i].hasHardware <- false;
+            current[i].hasHardware <- false;  
         }
     }
 }

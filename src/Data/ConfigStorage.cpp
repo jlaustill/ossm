@@ -3,14 +3,14 @@
  * A safer C for embedded systems
  */
 
-#include "ConfigStorage.h"
+#include "ConfigStorage.hpp"
 
 // config_storage.cnx - EEPROM configuration persistence
 // Manages loading, saving, and validating AppConfig in EEPROM
 #include <Arduino.h>
-#include <AppConfig.h>
+#include <AppConfig.hpp>
 #include <EEPROM.h>
-#include <Display/Crc32.h>
+#include <Display/Crc32.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -34,7 +34,7 @@ bool ConfigStorage_validateConfig(const AppConfig& config) {
 void ConfigStorage_loadDefaults(AppConfig& config) {
     config.magic = CONFIG_MAGIC;
     config.version = CONFIG_VERSION;
-    config.j1939SourceAddress = 149;
+    config.j1939SourceAddress = 149U;
     for (uint32_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
         config.tempInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
         config.tempInputs[i].coeffA = AEM_TEMP_COEFF_A;
@@ -44,9 +44,9 @@ void ConfigStorage_loadDefaults(AppConfig& config) {
     }
     for (uint32_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
         config.pressureInputs[i].assignedValue = EValueId_VALUE_UNASSIGNED;
-        config.pressureInputs[i].maxPressure = 100;
+        config.pressureInputs[i].maxPressure = 100U;
         config.pressureInputs[i].pressureType = EPressureType_PRESSURE_TYPE_PSIG;
-        config.pressureInputs[i].reserved = 0;
+        config.pressureInputs[i].reserved = 0U;
     }
     config.egtEnabled = false;
     config.thermocoupleType = EThermocoupleType_TC_TYPE_K;

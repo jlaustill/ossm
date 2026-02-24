@@ -3,17 +3,17 @@
  * A safer C for embedded systems
  */
 
-#include "J1939CommandHandler.h"
+#include "J1939CommandHandler.hpp"
 
 /**
  * J1939 Command Handler
  * Thin transport: poll CAN buffer -> u8[8] -> CommandHandler.process()
  * Sends responses on PGN 65281 via J1939Bus.sendMessage()
  */
-#include <AppConfig.h>
-#include <Display/J1939Bus.h>
-#include <Domain/CommandHandler.h>
-#include <Display/FloatBytes.h>
+#include <AppConfig.hpp>
+#include <Display/J1939Bus.hpp>
+#include <Domain/CommandHandler.hpp>
+#include <Display/FloatBytes.hpp>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -59,7 +59,7 @@ static void J1939CommandHandler_sendScheduledPgns(void) {
 
 static void J1939CommandHandler_fillBuffer(uint8_t buf[8]) {
     for (uint8_t i = 0; i < 8; i += 1) {
-        buf[i] = 0xFF;
+        buf[i] = 0xFFU;
     }
 }
 
@@ -71,48 +71,48 @@ static void J1939CommandHandler_sendConfigResponse(uint8_t cmd, uint8_t resultCo
         if (i < dataLen) {
             buf[2 + i] = data[i];
         } else {
-            buf[2 + i] = 0xFF;
+            buf[2 + i] = 0xFFU;
         }
     }
     J1939Bus_sendMessage(65281, buf);
 }
 
 static void J1939CommandHandler_handleQuery(const uint8_t data[8]) {
-    uint8_t queryType = data[1];
-    uint8_t subQuery = data[2];
+    uint8_t queryType = data[1U];
+    uint8_t subQuery = data[2U];
     uint8_t respData[8] = {0};
     J1939CommandHandler_fillBuffer(respData);
     switch (queryType) {
         case 0: {
-            uint8_t tempCount = 0;
-            uint8_t presCount = 0;
+            uint8_t tempCount = 0U;
+            uint8_t presCount = 0U;
             for (uint8_t i = 0; i < TEMP_INPUT_COUNT; i += 1) {
                 if (appConfig.tempInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
-                    tempCount = cnx_clamp_add_u8(tempCount, 1);
+                    tempCount = cnx_clamp_add_u8(tempCount, 1U);
                 }
             }
             for (uint8_t i = 0; i < PRESSURE_INPUT_COUNT; i += 1) {
                 if (appConfig.pressureInputs[i].assignedValue != EValueId_VALUE_UNASSIGNED) {
-                    presCount = cnx_clamp_add_u8(presCount, 1);
+                    presCount = cnx_clamp_add_u8(presCount, 1U);
                 }
             }
             respData[0] = tempCount;
             respData[1] = presCount;
-            if (appConfig.egtEnabled) {
-                respData[2] = 1;
+            if (appConfig.egtEnabled == true) {
+                respData[2] = 1U;
             } else {
-                respData[2] = 0;
+                respData[2] = 0U;
             }
-            if (appConfig.bme280Enabled) {
-                respData[3] = 1;
+            if (appConfig.bme280Enabled == true) {
+                respData[3] = 1U;
             } else {
-                respData[3] = 0;
+                respData[3] = 0U;
             }
-            J1939CommandHandler_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 4);
+            J1939CommandHandler_sendConfigResponse(5U, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 4U);
             break;
         }
         case 1: {
-            uint8_t startIdx = subQuery * 6;
+            uint8_t startIdx = subQuery * 6U;
             for (uint8_t i = 0; i < 6; i += 1) {
                 uint8_t idx = startIdx + i;
                 if (idx < TEMP_INPUT_COUNT) {
@@ -121,11 +121,11 @@ static void J1939CommandHandler_handleQuery(const uint8_t data[8]) {
                     respData[i] = static_cast<uint8_t>(EValueId_VALUE_UNASSIGNED);
                 }
             }
-            J1939CommandHandler_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6);
+            J1939CommandHandler_sendConfigResponse(5U, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6U);
             break;
         }
         case 2: {
-            uint8_t startIdx = subQuery * 6;
+            uint8_t startIdx = subQuery * 6U;
             for (uint8_t i = 0; i < 6; i += 1) {
                 uint8_t idx = startIdx + i;
                 if (idx < PRESSURE_INPUT_COUNT) {
@@ -134,33 +134,33 @@ static void J1939CommandHandler_handleQuery(const uint8_t data[8]) {
                     respData[i] = static_cast<uint8_t>(EValueId_VALUE_UNASSIGNED);
                 }
             }
-            J1939CommandHandler_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6);
+            J1939CommandHandler_sendConfigResponse(5U, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 6U);
             break;
         }
         case 4: {
             respData[0] = appConfig.j1939SourceAddress;
             respData[1] = static_cast<uint8_t>(appConfig.thermocoupleType);
-            J1939CommandHandler_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 2);
+            J1939CommandHandler_sendConfigResponse(5U, static_cast<uint8_t>(ECommandResult_CMD_SUCCESS), respData, 2U);
             break;
         }
         default: {
-            J1939CommandHandler_sendConfigResponse(5, static_cast<uint8_t>(ECommandResult_CMD_UNKNOWN_COMMAND), respData, 0);
+            J1939CommandHandler_sendConfigResponse(5U, static_cast<uint8_t>(ECommandResult_CMD_UNKNOWN_COMMAND), respData, 0U);
             break;
         }
     }
 }
 
 static void J1939CommandHandler_handleNtcParam(const uint8_t data[8]) {
-    uint8_t input = data[1];
-    uint8_t param = data[2];
-    float value = FloatBytes_fromBytesLE(data[3], data[4], data[5], data[6]);
+    uint8_t input = data[1U];
+    uint8_t param = data[2U];
+    float value = FloatBytes_fromBytesLE(data[3U], data[4U], data[5U], data[6U]);
     ECommandResult result = CommandHandler_setNtcParam(input, param, value);
-    uint8_t emptyData[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    J1939CommandHandler_sendConfigResponse(10, static_cast<uint8_t>(result), emptyData, 0);
+    uint8_t emptyData[8] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
+    J1939CommandHandler_sendConfigResponse(10U, static_cast<uint8_t>(result), emptyData, 0U);
 }
 
 static void J1939CommandHandler_processCommand(const uint8_t data[8]) {
-    uint8_t cmd = data[0];
+    uint8_t cmd = data[0U];
     switch (cmd) {
         case 5: {
             J1939CommandHandler_handleQuery(data);
@@ -172,10 +172,13 @@ static void J1939CommandHandler_processCommand(const uint8_t data[8]) {
             return;
             break;
         }
+        default: {
+            break;
+        }
     }
     ECommandResult result = CommandHandler_process(data);
-    uint8_t emptyData[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    J1939CommandHandler_sendConfigResponse(cmd, static_cast<uint8_t>(result), emptyData, 0);
+    uint8_t emptyData[8] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
+    J1939CommandHandler_sendConfigResponse(cmd, static_cast<uint8_t>(result), emptyData, 0U);
 }
 
 void J1939CommandHandler_update(void) {

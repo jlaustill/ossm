@@ -3,7 +3,7 @@
  * A safer C for embedded systems
  */
 
-#include "TimingDebugHandler.h"
+#include "TimingDebugHandler.hpp"
 
 /**
  * Timing Debug Handler
@@ -11,30 +11,30 @@
  * Wrap with #ifdef DEBUG_TIMING to exclude from release builds
  */
 #include <Arduino.h>
-#include <AppConfig.h>
+#include <AppConfig.hpp>
 
 #include <stdint.h>
 
 /* Scope: TimingDebugHandler */
 static elapsedMicros TimingDebugHandler_phaseTimer = {};
 static elapsedMillis TimingDebugHandler_reportTimer = {};
-static uint32_t TimingDebugHandler_currentSensor = 0;
-static uint32_t TimingDebugHandler_maxSensor = 0;
-static uint32_t TimingDebugHandler_currentSerial = 0;
-static uint32_t TimingDebugHandler_maxSerial = 0;
-static uint32_t TimingDebugHandler_currentJ1939 = 0;
-static uint32_t TimingDebugHandler_maxJ1939 = 0;
-static uint32_t TimingDebugHandler_maxTotal = 0;
+static uint32_t TimingDebugHandler_currentSensor = 0U;
+static uint32_t TimingDebugHandler_maxSensor = 0U;
+static uint32_t TimingDebugHandler_currentSerial = 0U;
+static uint32_t TimingDebugHandler_maxSerial = 0U;
+static uint32_t TimingDebugHandler_currentJ1939 = 0U;
+static uint32_t TimingDebugHandler_maxJ1939 = 0U;
+static uint32_t TimingDebugHandler_maxTotal = 0U;
 
 void TimingDebugHandler_initialize(void) {
     TimingDebugHandler_reportTimer = 0;
-    TimingDebugHandler_currentSensor = 0;
-    TimingDebugHandler_maxSensor = 0;
-    TimingDebugHandler_currentSerial = 0;
-    TimingDebugHandler_maxSerial = 0;
-    TimingDebugHandler_currentJ1939 = 0;
-    TimingDebugHandler_maxJ1939 = 0;
-    TimingDebugHandler_maxTotal = 0;
+    TimingDebugHandler_currentSensor = 0U;
+    TimingDebugHandler_maxSensor = 0U;
+    TimingDebugHandler_currentSerial = 0U;
+    TimingDebugHandler_maxSerial = 0U;
+    TimingDebugHandler_currentJ1939 = 0U;
+    TimingDebugHandler_maxJ1939 = 0U;
+    TimingDebugHandler_maxTotal = 0U;
 }
 
 void TimingDebugHandler_startSensor(void) {
@@ -84,10 +84,10 @@ void TimingDebugHandler_maybeReport(void) {
         Serial.print(TimingDebugHandler_maxJ1939);
         Serial.print(" total=");
         Serial.println(TimingDebugHandler_maxTotal);
-        TimingDebugHandler_maxSensor = 0;
-        TimingDebugHandler_maxSerial = 0;
-        TimingDebugHandler_maxJ1939 = 0;
-        TimingDebugHandler_maxTotal = 0;
+        TimingDebugHandler_maxSensor = 0U;
+        TimingDebugHandler_maxSerial = 0U;
+        TimingDebugHandler_maxJ1939 = 0U;
+        TimingDebugHandler_maxTotal = 0U;
         TimingDebugHandler_reportTimer = 0;
     }
 }

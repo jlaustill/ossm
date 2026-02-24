@@ -3,11 +3,11 @@
  * A safer C for embedded systems
  */
 
-#include "Presets.h"
+#include "Presets.hpp"
 
 // Sensor Preset Lookup Tables
 // Provides NTC thermistor and pressure sensor preset configurations
-#include "../AppConfig.h"
+#include "../AppConfig.hpp"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -129,7 +129,7 @@ uint16_t Presets_psiPresetValue(uint8_t preset) {
     if (preset > 30) {
         return 0;
     }
-    uint8_t idx = preset - 20;
+    uint8_t idx = preset - 20U;
     if (idx == 0) {
         return 15;
     }
