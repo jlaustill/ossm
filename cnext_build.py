@@ -3,22 +3,17 @@ import sys
 from pathlib import Path
 
 def transpile_cnext():
-    """Transpile all .cnx files before build"""
-    src_dir = Path("src")
-    if not src_dir.exists():
-        print("Error: src directory not found")
+    """Transpile from main.cnx entry point — cnext follows includes"""
+    entry = Path("src/main.cnx")
+    if not entry.exists():
+        print("Error: src/main.cnx not found")
         return 1
 
-    cnx_files = list(src_dir.rglob("*.cnx"))
-    if not cnx_files:
-        print("No .cnx files found")
-        return 0
-
-    print(f"C-Next: Transpiling {len(cnx_files)} files...")
+    print("C-Next: Transpiling from main.cnx...")
 
     try:
         result = subprocess.run(
-            ["cnext", "src"],
+            ["cnext", str(entry)],
             check=True,
             capture_output=True,
             text=True
