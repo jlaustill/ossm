@@ -3,7 +3,7 @@
 // Supports both 1-indexed (user-facing) and 0-indexed (internal) inputs
 
 scope InputValid {
-    // Input counts (matching AppConfig.h)
+    // Input counts (matching AppConfig)
     public const u8 TEMP_COUNT <- 8;
     public const u8 PRESSURE_COUNT <- 7;
     public const u8 NTC_PARAM_COUNT <- 4;
