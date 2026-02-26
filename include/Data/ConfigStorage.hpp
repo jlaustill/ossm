@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <AppConfig.hpp>
 #include <Display/Crc32.hpp>
-#include "../AppConfig.h"
 
 #ifdef __cplusplus
 extern "C" {

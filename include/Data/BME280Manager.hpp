@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <AppConfig.hpp>
-#include "../AppConfig.h"
 
 #ifdef __cplusplus
 extern "C" {

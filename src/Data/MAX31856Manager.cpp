@@ -8,7 +8,7 @@
 // MAX31856 Thermocouple Manager
 // Handles EGT (Exhaust Gas Temperature) readings via SPI
 #include <Adafruit_MAX31856.h>
-#include "AppConfig.h"
+#include <AppConfig.hpp>
 #include <Arduino.h>
 #include <SPI.h>
 

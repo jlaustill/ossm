@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../AppConfig.h"
+#include <AppConfig.hpp>
 #include <Adafruit_MAX31856.h>
 
 #ifdef __cplusplus

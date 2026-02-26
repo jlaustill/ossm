@@ -13,7 +13,6 @@
 #include <Data/MAX31856Manager.hpp>
 #include <Data/BME280Manager.hpp>
 #include <Data/SensorValues.hpp>
-#include "../AppConfig.h"
 
 #ifdef __cplusplus
 extern "C" {
