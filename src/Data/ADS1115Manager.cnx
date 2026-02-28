@@ -43,7 +43,7 @@ scope ADS1115Manager {
 
     // Private functions
 
-    void startConversion() {
+    private void startConversion() {
         if (currentDevice >= ADS_DEVICE_COUNT || !deviceInitialized[currentDevice]) {
             conversionStarted <- false;
             return;
@@ -54,7 +54,7 @@ scope ADS1115Manager {
         conversionStartTime <- millis();
     }
 
-    bool isConversionComplete() {
+    private bool isConversionComplete() {
         if (!conversionStarted || currentDevice >= ADS_DEVICE_COUNT) {
             return false;
         }
@@ -67,7 +67,7 @@ scope ADS1115Manager {
         return ads[currentDevice].conversionComplete();
     }
 
-    void readResult() {
+    private void readResult() {
         if (currentDevice >= ADS_DEVICE_COUNT || !deviceInitialized[currentDevice]) {
             return;
         }
@@ -84,7 +84,7 @@ scope ADS1115Manager {
         conversionStarted <- false;
     }
 
-    void advanceChannel() {
+    private void advanceChannel() {
         currentChannel <- currentChannel + 1;
 
         if (currentChannel >= ADS_CHANNEL_COUNT) {
@@ -107,7 +107,7 @@ scope ADS1115Manager {
 
     // Public functions
 
-    public void initialize(const AppConfig config) {
+    void initialize(const AppConfig config) {
         // Initialize reading buffers
         for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
             for (u8 c <- 0; c < ADS_CHANNEL_COUNT; c <- c + 1) {
@@ -176,7 +176,7 @@ scope ADS1115Manager {
         }
     }
 
-    public bool update() {
+    bool update() {
         if (currentDevice >= ADS_DEVICE_COUNT) {
             return false;
         }
@@ -215,7 +215,7 @@ scope ADS1115Manager {
         return false;
     }
 
-    public TAdcReading getReading(u8 device, u8 channel) {
+    TAdcReading getReading(u8 device, u8 channel) {
         TAdcReading copy <- { rawValue: 0, timestamp: 0, valid: false };
 
         if (device >= ADS_DEVICE_COUNT || channel >= ADS_CHANNEL_COUNT) {
@@ -231,7 +231,7 @@ scope ADS1115Manager {
         return copy;
     }
 
-    public f32 getVoltage(u8 device, u8 channel) {
+    f32 getVoltage(u8 device, u8 channel) {
         TAdcReading reading <- getReading(device, channel);
 
         if (!reading.valid) {
@@ -241,7 +241,7 @@ scope ADS1115Manager {
         return ads[device].computeVolts(reading.rawValue);
     }
 
-    public bool isDeviceEnabled(u8 device) {
+    bool isDeviceEnabled(u8 device) {
         if (device >= ADS_DEVICE_COUNT) {
             return false;
         }
@@ -249,7 +249,7 @@ scope ADS1115Manager {
     }
 
     // Debug function to print all ADC readings
-    public void printDebugInfo() {
+    void printDebugInfo() {
         Serial.println("=== ADS1115 Debug ===");
         for (u8 d <- 0; d < ADS_DEVICE_COUNT; d <- d + 1) {
             Serial.print("Device ");

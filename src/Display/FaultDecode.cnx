@@ -24,55 +24,55 @@ scope FaultDecode {
     public const u8 IDX_CJ_RANGE <- 7;
 
     // Check if any fault is present
-    public bool hasFault(u8 faultCode) {
+    bool hasFault(u8 faultCode) {
         if (faultCode != 0) { return true; }
         return false;
     }
 
     // Check individual fault bits
-    public bool isOpen(u8 faultCode) {
+    bool isOpen(u8 faultCode) {
         u8 masked <- faultCode & FAULT_OPEN;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isOvuv(u8 faultCode) {
+    bool isOvuv(u8 faultCode) {
         u8 masked <- faultCode & FAULT_OVUV;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isTcLow(u8 faultCode) {
+    bool isTcLow(u8 faultCode) {
         u8 masked <- faultCode & FAULT_TC_LOW;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isTcHigh(u8 faultCode) {
+    bool isTcHigh(u8 faultCode) {
         u8 masked <- faultCode & FAULT_TC_HIGH;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isCjLow(u8 faultCode) {
+    bool isCjLow(u8 faultCode) {
         u8 masked <- faultCode & FAULT_CJ_LOW;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isCjHigh(u8 faultCode) {
+    bool isCjHigh(u8 faultCode) {
         u8 masked <- faultCode & FAULT_CJ_HIGH;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isTcRange(u8 faultCode) {
+    bool isTcRange(u8 faultCode) {
         u8 masked <- faultCode & FAULT_TC_RANGE;
         if (masked != 0) { return true; }
         return false;
     }
 
-    public bool isCjRange(u8 faultCode) {
+    bool isCjRange(u8 faultCode) {
         u8 masked <- faultCode & FAULT_CJ_RANGE;
         if (masked != 0) { return true; }
         return false;
@@ -80,7 +80,7 @@ scope FaultDecode {
 
     // Get fault index for first set bit (for iterative decoding)
     // Returns 255 if no fault
-    public u8 getFirstFaultIndex(u8 faultCode) {
+    u8 getFirstFaultIndex(u8 faultCode) {
         if ((faultCode & FAULT_OPEN) != 0) { return IDX_OPEN; }
         if ((faultCode & FAULT_OVUV) != 0) { return IDX_OVUV; }
         if ((faultCode & FAULT_TC_LOW) != 0) { return IDX_TC_LOW; }
@@ -93,7 +93,7 @@ scope FaultDecode {
     }
 
     // Count number of faults
-    public u8 countFaults(u8 faultCode) {
+    u8 countFaults(u8 faultCode) {
         u8 count <- 0;
         if ((faultCode & FAULT_OPEN) != 0) { count <- count + 1; }
         if ((faultCode & FAULT_OVUV) != 0) { count <- count + 1; }
@@ -107,7 +107,7 @@ scope FaultDecode {
     }
 
     // Check if fault is critical (open or range errors)
-    public bool isCritical(u8 faultCode) {
+    bool isCritical(u8 faultCode) {
         u8 criticalMask <- FAULT_OPEN | FAULT_TC_RANGE | FAULT_CJ_RANGE;
         u8 masked <- faultCode & criticalMask;
         if (masked != 0) { return true; }

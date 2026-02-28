@@ -11,7 +11,7 @@ struct TSensorValue {
 scope SensorValues {
     public TSensorValue[EValueId.VALUE_ID_COUNT] current;
 
-    public void initialize() {
+    void initialize() {
         for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i <- i + 1) {
             current[i].value <- 0.0;
             current[i].hasHardware <- false;  

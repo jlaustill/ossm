@@ -15,7 +15,7 @@ scope J1939CommandHandler {
 
     // ─── Outbound PGN scheduling ─────────────────────────────────────
 
-    void sendScheduledPgns() {
+    private void sendScheduledPgns() {
         // Every 500ms - send fast-updating data
         if (halfSecondMillis >= 500) {
             J1939Bus.sendPgnGeneric(65270);  // Inlet/Exhaust Conditions 1
@@ -39,7 +39,7 @@ scope J1939CommandHandler {
 
     // ─── Helpers ─────────────────────────────────────────────────────
 
-    void fillBuffer(u8[8] buf) {
+    private void fillBuffer(u8[8] buf) {
         for (u8 i <- 0; i < 8; i +<- 1) {
             buf[i] <- 0xFF;
         }
@@ -47,7 +47,7 @@ scope J1939CommandHandler {
 
     // ─── Result formatting ───────────────────────────────────────────
 
-    void sendConfigResponse(u8 cmd, u8 resultCode, const u8[8] data, u8 dataLen) {
+    private void sendConfigResponse(u8 cmd, u8 resultCode, const u8[8] data, u8 dataLen) {
         u8[8] buf;
         buf[0] <- cmd;
         buf[1] <- resultCode;
@@ -65,7 +65,7 @@ scope J1939CommandHandler {
 
     // ─── CAN-only: Query ─────────────────────────────────────────────
 
-    void handleQuery(const u8[8] data) {
+    private void handleQuery(const u8[8] data) {
         u8 queryType <- data[1];
         u8 subQuery <- data[2];
         u8[8] respData;
@@ -140,7 +140,7 @@ scope J1939CommandHandler {
 
     // ─── CAN-only: NTC param (float bytes in CAN frame) ─────────────
 
-    void handleNtcParam(const u8[8] data) {
+    private void handleNtcParam(const u8[8] data) {
         u8 input <- data[1];
         u8 param <- data[2];
         f32 value <- FloatBytes.fromBytesLE(data[3], data[4], data[5], data[6]);
@@ -152,7 +152,7 @@ scope J1939CommandHandler {
 
     // ─── Command dispatch ────────────────────────────────────────────
 
-    void processCommand(const u8[8] data) {
+    private void processCommand(const u8[8] data) {
         u8 cmd <- data[0];
 
         // CAN-only commands
@@ -170,7 +170,7 @@ scope J1939CommandHandler {
     // ─── Public interface ────────────────────────────────────────────
 
     // Called from main loop - sends scheduled PGNs and processes inbound commands
-    public void update() {
+    void update() {
         sendScheduledPgns();
 
         bool pending <- J1939Bus.hasPendingCommand();

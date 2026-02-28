@@ -15,12 +15,12 @@ scope SensorProcessor {
     atomic bool sensorUpdateReady <- false;
     const u32 SENSOR_TIMER_INTERVAL_US <- 50000;  // 50ms
 
-    void sensorTimerISR() {
+    private void sensorTimerISR() {
         sensorUpdateReady <- true;
     }
 
     // Get atmospheric pressure for PSIG conversion (from BME280 or default)
-    f32 getAtmosphericPressurekPa() {
+    private f32 getAtmosphericPressurekPa() {
         f32 baro <- SensorValues.current[EValueId.AMBIENT_PRES].value;
         if (baro > 0.0) {
             return baro;
@@ -29,7 +29,7 @@ scope SensorProcessor {
     }
 
     // Process temperature inputs
-    void processTempInputs() {
+    private void processTempInputs() {
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i +<- 1) {
             EValueId val <- appConfig.tempInputs[i].assignedValue;
             if (val = EValueId.VALUE_UNASSIGNED) {
@@ -46,7 +46,7 @@ scope SensorProcessor {
     }
 
     // Process pressure inputs
-    void processPressureInputs() {
+    private void processPressureInputs() {
         for (u8 i <- 0; i < PRESSURE_INPUT_COUNT; i +<- 1) {
             EValueId val <- appConfig.pressureInputs[i].assignedValue;
             if (val = EValueId.VALUE_UNASSIGNED) {
@@ -64,7 +64,7 @@ scope SensorProcessor {
     }
 
     // Process EGT from MAX31856
-    void processEgt() {
+    private void processEgt() {
         bool egtReady <- MAX31856Manager.isEnabled();
         if (appConfig.egtEnabled && egtReady) {
             f32 temp <- MAX31856Manager.getTemperatureC();
@@ -73,7 +73,7 @@ scope SensorProcessor {
     }
 
     // Process BME280 ambient sensors
-    void processBme280() {
+    private void processBme280() {
         bool bmeReady <- BME280Manager.isEnabled();
         if (appConfig.bme280Enabled && bmeReady) {
             f32 temp <- BME280Manager.getTemperatureC();
@@ -86,7 +86,7 @@ scope SensorProcessor {
     }
 
     // Process all enabled inputs
-    void processAllInputs() {
+    private void processAllInputs() {
         processTempInputs();
         processPressureInputs();
         processEgt();
@@ -94,19 +94,19 @@ scope SensorProcessor {
     }
 
     // Poll all hardware managers and process readings
-    void pollAndProcess() {
+    private void pollAndProcess() {
         ADS1115Manager.update();
         MAX31856Manager.update();
         BME280Manager.update();
         processAllInputs();
     }
 
-    public void initialize() {
+    void initialize() {
         sensorTimer.begin(sensorTimerISR, SENSOR_TIMER_INTERVAL_US);
     }
 
     // Called from main loop - checks ISR flag and processes if ready
-    public void update() {
+    void update() {
         if (sensorUpdateReady) {
             pollAndProcess();
             sensorUpdateReady <- false;

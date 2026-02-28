@@ -33,7 +33,7 @@ scope MAX31856Manager {
     bool readingValid <- false;
 
     // Start a one-shot conversion
-    void startConversion() {
+    private void startConversion() {
         if (!enabled || !initialized) {
             conversionStarted <- false;
             return;
@@ -45,7 +45,7 @@ scope MAX31856Manager {
     }
 
     // Check if conversion is complete
-    bool isConversionComplete() {
+    private bool isConversionComplete() {
         if (!conversionStarted || !enabled || !initialized) {
             return false;
         }
@@ -61,7 +61,7 @@ scope MAX31856Manager {
     }
 
     // Read the conversion result
-    void readResult() {
+    private void readResult() {
         if (!enabled || !initialized) {
             return;
         }
@@ -83,7 +83,7 @@ scope MAX31856Manager {
     }
 
     // Initialize the MAX31856 based on config
-    public void initialize(const AppConfig config) {
+    void initialize(const AppConfig config) {
         enabled <- config.egtEnabled;
 
         if (!enabled) {
@@ -123,7 +123,7 @@ scope MAX31856Manager {
 
     // Call from main loop to update readings
     // Returns true if a new reading is available
-    public bool update() {
+    bool update() {
         if (!enabled || !initialized) {
             return false;
         }
@@ -159,7 +159,7 @@ scope MAX31856Manager {
     }
 
     // Get the latest temperature reading in Celsius
-    public f32 getTemperatureC() {
+    f32 getTemperatureC() {
         if (!readingValid) {
             return -273.15;  // Return absolute zero as error indicator
         }
@@ -167,7 +167,7 @@ scope MAX31856Manager {
     }
 
     // Get the latest cold junction temperature in Celsius
-    public f32 getColdJunctionC() {
+    f32 getColdJunctionC() {
         if (!readingValid) {
             return -273.15;
         }
@@ -175,12 +175,12 @@ scope MAX31856Manager {
     }
 
     // Check if the device is enabled and initialized
-    public bool isEnabled() {
+    bool isEnabled() {
         return enabled && initialized;
     }
 
     // Get the fault status code
-    public u8 getFaultStatus() {
+    u8 getFaultStatus() {
         return faultCode;
     }
 }

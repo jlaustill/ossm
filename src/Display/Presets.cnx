@@ -26,7 +26,7 @@ scope Presets {
     const f32 GM_RESISTOR <- 3000.0;
 
     // Get NTC coefficient A for preset (returns 0 if invalid)
-    public f32 ntcCoeffA(u8 preset) {
+    f32 ntcCoeffA(u8 preset) {
         if (preset = 0) { return AEM_COEFF_A; }
         if (preset = 1) { return BOSCH_COEFF_A; }
         if (preset = 2) { return GM_COEFF_A; }
@@ -34,7 +34,7 @@ scope Presets {
     }
 
     // Get NTC coefficient B for preset
-    public f32 ntcCoeffB(u8 preset) {
+    f32 ntcCoeffB(u8 preset) {
         if (preset = 0) { return AEM_COEFF_B; }
         if (preset = 1) { return BOSCH_COEFF_B; }
         if (preset = 2) { return GM_COEFF_B; }
@@ -42,7 +42,7 @@ scope Presets {
     }
 
     // Get NTC coefficient C for preset
-    public f32 ntcCoeffC(u8 preset) {
+    f32 ntcCoeffC(u8 preset) {
         if (preset = 0) { return AEM_COEFF_C; }
         if (preset = 1) { return BOSCH_COEFF_C; }
         if (preset = 2) { return GM_COEFF_C; }
@@ -50,7 +50,7 @@ scope Presets {
     }
 
     // Get NTC pull-up resistor value for preset
-    public f32 ntcResistor(u8 preset) {
+    f32 ntcResistor(u8 preset) {
         if (preset = 0) { return AEM_RESISTOR; }
         if (preset = 1) { return BOSCH_RESISTOR; }
         if (preset = 2) { return GM_RESISTOR; }
@@ -58,7 +58,7 @@ scope Presets {
     }
 
     // Check if NTC preset is valid
-    public bool isValidNtcPreset(u8 preset) {
+    bool isValidNtcPreset(u8 preset) {
         return preset <= 2;
     }
 
@@ -67,7 +67,7 @@ scope Presets {
     // PSI presets (20-30): PSIG gauge, stored in PSI
 
     // Get pressure max value for bar preset (returns centibar, 0 if invalid)
-    public u16 barPresetValue(u8 preset) {
+    u16 barPresetValue(u8 preset) {
         if (preset = 0) { return 100; }    // 1 bar
         if (preset = 1) { return 150; }    // 1.5 bar
         if (preset = 2) { return 200; }    // 2 bar
@@ -88,7 +88,7 @@ scope Presets {
     }
 
     // Get pressure max value for PSI preset (returns PSI, 0 if invalid)
-    public u16 psiPresetValue(u8 preset) {
+    u16 psiPresetValue(u8 preset) {
         // PSI presets are 20-30, map to 0-10 index
         if (preset < 20) { return 0; }
         if (preset > 30) { return 0; }
@@ -108,19 +108,19 @@ scope Presets {
     }
 
     // Check if pressure preset is valid bar preset (0-15)
-    public bool isBarPreset(u8 preset) {
+    bool isBarPreset(u8 preset) {
         return preset <= 15;
     }
 
     // Check if pressure preset is valid PSI preset (20-30)
-    public bool isPsiPreset(u8 preset) {
+    bool isPsiPreset(u8 preset) {
         if (preset < 20) { return false; }
         if (preset > 30) { return false; }
         return true;
     }
 
     // Check if any pressure preset is valid
-    public bool isValidPressurePreset(u8 preset) {
+    bool isValidPressurePreset(u8 preset) {
         bool isBar <- isBarPreset(preset);
         if (isBar) { return true; }
         bool isPsi <- isPsiPreset(preset);
@@ -131,12 +131,12 @@ scope Presets {
     // MAX31856 supports types 0-7 (B, E, J, K, N, R, S, T)
 
     // Check if thermocouple type is valid
-    public bool isValidTcType(u8 tcType) {
+    bool isValidTcType(u8 tcType) {
         return tcType <= 7;
     }
 
     // Get default thermocouple type (K-type)
-    public u8 defaultTcType() {
+    u8 defaultTcType() {
         return 3;
     }
 }

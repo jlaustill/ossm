@@ -19,7 +19,7 @@ scope TimingDebugHandler {
     u32 maxJ1939 <- 0;
     u32 maxTotal <- 0;
 
-    public void initialize() {
+    void initialize() {
         reportTimer <- 0;
         currentSensor <- 0;
         maxSensor <- 0;
@@ -30,40 +30,40 @@ scope TimingDebugHandler {
         maxTotal <- 0;
     }
 
-    public void startSensor() {
+    void startSensor() {
         phaseTimer <- 0;
     }
 
-    public void finishSensor() {
+    void finishSensor() {
         currentSensor <- phaseTimer;
         if (currentSensor > maxSensor) {
             maxSensor <- currentSensor;
         }
     }
 
-    public void startSerial() {
+    void startSerial() {
         phaseTimer <- 0;
     }
 
-    public void finishSerial() {
+    void finishSerial() {
         currentSerial <- phaseTimer;
         if (currentSerial > maxSerial) {
             maxSerial <- currentSerial;
         }
     }
 
-    public void startJ1939() {
+    void startJ1939() {
         phaseTimer <- 0;
     }
 
-    public void finishJ1939() {
+    void finishJ1939() {
         currentJ1939 <- phaseTimer;
         if (currentJ1939 > maxJ1939) {
             maxJ1939 <- currentJ1939;
         }
     }
 
-    public void maybeReport() {
+    void maybeReport() {
         u32 currentTotal <- currentSensor + currentSerial + currentJ1939;
         if (currentTotal > maxTotal) {
             maxTotal <- currentTotal;

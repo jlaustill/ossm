@@ -16,7 +16,7 @@ scope Ossm {
     elapsedMicros loopTimer;
     const u32 LOOP_INTERVAL_US <- 500;  // 500μs (2kHz)
 
-    public void setup() {
+    void setup() {
         Serial.begin(115200);
 
         SensorValues.initialize();
@@ -45,7 +45,7 @@ scope Ossm {
         Serial.println("OSSM Ready");
     }
 
-    public void loop() {
+    void loop() {
         if (loopTimer >= LOOP_INTERVAL_US) {
             loopTimer <- 0;
 

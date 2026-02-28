@@ -30,7 +30,7 @@ enum EValueCategory {
 
 scope CommandHandler {
 
-    public EValueCategory getValueCategory(EValueId valueId) {
+    EValueCategory getValueCategory(EValueId valueId) {
         switch (valueId) {
             case AMBIENT_PRES { return EValueCategory.VALUE_CAT_BME280; }
             case AMBIENT_TEMP { return EValueCategory.VALUE_CAT_BME280; }
@@ -63,7 +63,7 @@ scope CommandHandler {
 
     // ─── Handlers ───────────────────────────────────────────────────
 
-    ECommandResult enableValue(const u8[8] data) {
+    private ECommandResult enableValue(const u8[8] data) {
         EValueId valueId <- (EValueId)data[1];
         EValueCategory category <- getValueCategory(valueId);
 
@@ -112,7 +112,7 @@ scope CommandHandler {
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult disableValue(const u8[8] data) {
+    private ECommandResult disableValue(const u8[8] data) {
         EValueId valueId <- (EValueId)data[1];
         EValueCategory category <- getValueCategory(valueId);
 
@@ -151,7 +151,7 @@ scope CommandHandler {
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult setPressureRange(const u8[8] data) {
+    private ECommandResult setPressureRange(const u8[8] data) {
         bool valid <- InputValid.isValidPressureInput(data[1]);
         if (!valid) {
             return ECommandResult.CMD_INVALID_SENSOR_NUMBER;
@@ -162,7 +162,7 @@ scope CommandHandler {
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult setTcType(const u8[8] data) {
+    private ECommandResult setTcType(const u8[8] data) {
         bool valid <- Presets.isValidTcType(data[1]);
         if (!valid) {
             return ECommandResult.CMD_INVALID_TC_TYPE;
@@ -172,7 +172,7 @@ scope CommandHandler {
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult applyNtcPreset(const u8[8] data) {
+    private ECommandResult applyNtcPreset(const u8[8] data) {
         bool validInput <- InputValid.isValidTempInput(data[1]);
         if (!validInput) {
             return ECommandResult.CMD_INVALID_SENSOR_NUMBER;
@@ -190,7 +190,7 @@ scope CommandHandler {
         return ECommandResult.CMD_SUCCESS;
     }
 
-    ECommandResult applyPressurePreset(const u8[8] data) {
+    private ECommandResult applyPressurePreset(const u8[8] data) {
         bool validInput <- InputValid.isValidPressureInput(data[1]);
         if (!validInput) {
             return ECommandResult.CMD_INVALID_SENSOR_NUMBER;
@@ -215,7 +215,7 @@ scope CommandHandler {
     // Auto-save after every config change - no explicit save command needed
 
     // NTC param (public - CAN calls directly with decoded float)
-    public ECommandResult setNtcParam(u8 input, u8 param, f32 value) {
+    ECommandResult setNtcParam(u8 input, u8 param, f32 value) {
         bool validInput <- InputValid.isValidTempInput(input);
         if (!validInput) {
             return ECommandResult.CMD_INVALID_SENSOR_NUMBER;
@@ -241,7 +241,7 @@ scope CommandHandler {
     //   8: NTC preset [8, input, preset]
     //   9: Pressure preset [9, input, preset]
 
-    public ECommandResult process(const u8[8] data) {
+    ECommandResult process(const u8[8] data) {
         switch (data[0]) {
             case 1 { return enableValue(data); }
             case 2 { return disableValue(data); }

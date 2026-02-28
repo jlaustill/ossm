@@ -10,7 +10,7 @@ scope ConfigStorage {
     const i32 EEPROM_CONFIG_ADDRESS <- 0;
 
     // Validate configuration structure
-    public bool validateConfig(const AppConfig config) {
+    bool validateConfig(const AppConfig config) {
         // Check magic number
         if (config.magic != CONFIG_MAGIC) {
             return false;
@@ -31,7 +31,7 @@ scope ConfigStorage {
     }
 
     // Load default configuration values
-    public void loadDefaults(AppConfig config) {
+    void loadDefaults(AppConfig config) {
         // Clear structure - fields will be set explicitly below
         // (C-Next transpiler handles struct initialization)
 
@@ -72,7 +72,7 @@ scope ConfigStorage {
 
     // Save configuration to EEPROM
     // Returns true on success
-    public bool saveConfig(const AppConfig config) {
+    bool saveConfig(const AppConfig config) {
         // Create a copy with updated checksum
         AppConfig configToSave <- config;
         configToSave.checksum <- Crc32.calculateChecksum(config);
@@ -83,7 +83,7 @@ scope ConfigStorage {
 
     // Load configuration from EEPROM into provided struct
     // If EEPROM data is invalid, loads defaults and saves them
-    public void loadConfig(AppConfig config) {
+    void loadConfig(AppConfig config) {
         EEPROM.get(EEPROM_CONFIG_ADDRESS, config);
 
         bool isValid <- validateConfig(config);

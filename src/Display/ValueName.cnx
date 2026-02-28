@@ -35,7 +35,7 @@ const TValueInfo[EValueId.VALUE_ID_COUNT] VALUE_NAMES <- [
 
 scope ValueName {
     // Print the human-readable name for a value ID
-    public void print(EValueId id) {
+    void print(EValueId id) {
         u8 idx <- (u8)id;
         if (idx < EValueId.VALUE_ID_COUNT) {
             Serial.print(VALUE_NAMES[idx].name);

@@ -19,7 +19,7 @@ scope J1939Bus {
 
     // ─── Helpers ─────────────────────────────────────────────────────
 
-    u32 buildCanId(u16 pgn, u8 priority, u8 sourceAddr) {
+    private u32 buildCanId(u16 pgn, u8 priority, u8 sourceAddr) {
         u32 id <- 0;
         id[26,3] <- priority;
         id[8,18] <- pgn;
@@ -27,17 +27,17 @@ scope J1939Bus {
         return id;
     }
 
-    void fillBuffer(u8[8] buf) {
+    private void fillBuffer(u8[8] buf) {
         for (u8 i <- 0; i < 8; i +<- 1) {
             buf[i] <- 0xFF;
         }
     }
 
-    bool isValueEnabled(EValueId valueId) {
+    private bool isValueEnabled(EValueId valueId) {
         return SensorValues.current[valueId].hasHardware;
     }
 
-    public void sendMessage(u16 pgn, const u8[8] buf) {
+    void sendMessage(u16 pgn, const u8[8] buf) {
         CAN_message_t msg;
         msg.flags.extended <- 1;
         msg.id <- buildCanId(pgn, 6, appConfig.j1939SourceAddress);
@@ -52,7 +52,7 @@ scope J1939Bus {
 
     // ─── Generic PGN sender ─────────────────────────────────────────
 
-    public void sendPgnGeneric(u16 pgn) {
+    void sendPgnGeneric(u16 pgn) {
         u8[8] buf;
         fillBuffer(buf);
 
@@ -83,11 +83,11 @@ scope J1939Bus {
 
     // ─── Pending config command interface ────────────────────────────
 
-    public bool hasPendingCommand() {
+    bool hasPendingCommand() {
         return configCmdPending;
     }
 
-    public void getPendingCommand(u8[8] outData) {
+    void getPendingCommand(u8[8] outData) {
         critical {
             for (u8 i <- 0; i < 8; i +<- 1) {
                 outData[i] <- configCmdData[i];
@@ -98,7 +98,7 @@ scope J1939Bus {
 
     // ─── CAN message reception ──────────────────────────────────────
 
-    void sniffDataPrivateISR(const CAN_message_t msg) {
+    private void sniffDataPrivateISR(const CAN_message_t msg) {
         J1939Message message <- { pgn: 0 };
         message.setCanId(msg.id);
         message.setData(msg.buf);
@@ -120,7 +120,7 @@ scope J1939Bus {
 
     // ─── Initialization ─────────────────────────────────────────────
 
-    public void initialize() {
+    void initialize() {
         Serial.println("J1939 Bus initializing");
 
         canBus.begin();

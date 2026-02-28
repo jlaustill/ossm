@@ -10,7 +10,7 @@ const u8 PRES_COUNT <- 7;
 scope HardwareMap {
     // Get ADS1115 device index for temperature input (0-based)
     // Returns 0xFF if input out of range
-    public u8 tempDevice(u8 input) {
+    u8 tempDevice(u8 input) {
         if (input >= TEMP_COUNT) { return 0xFF; }
 
         // temp1-2 -> device 0 (0x48)
@@ -31,7 +31,7 @@ scope HardwareMap {
 
     // Get ADS1115 channel for temperature input (0-based)
     // Returns 0xFF if input out of range
-    public u8 tempChannel(u8 input) {
+    u8 tempChannel(u8 input) {
         if (input >= TEMP_COUNT) { return 0xFF; }
 
         if (input = 0) { return 0; }  // temp1 -> ch0
@@ -48,7 +48,7 @@ scope HardwareMap {
 
     // Get ADS1115 device index for pressure input (0-based)
     // Returns 0xFF if input out of range
-    public u8 pressureDevice(u8 input) {
+    u8 pressureDevice(u8 input) {
         if (input >= PRES_COUNT) { return 0xFF; }
 
         // pres1-2 -> device 0 (0x48)
@@ -68,7 +68,7 @@ scope HardwareMap {
 
     // Get ADS1115 channel for pressure input (0-based)
     // Returns 0xFF if input out of range
-    public u8 pressureChannel(u8 input) {
+    u8 pressureChannel(u8 input) {
         if (input >= PRES_COUNT) { return 0xFF; }
 
         if (input = 0) { return 1; }  // pres1 -> ch1
@@ -84,7 +84,7 @@ scope HardwareMap {
 
     // Get I2C address for ADS1115 device index
     // Returns 0 if device out of range
-    public u8 adsI2cAddress(u8 device) {
+    u8 adsI2cAddress(u8 device) {
         if (device = 0) { return 0x48; }
         if (device = 1) { return 0x49; }
         if (device = 2) { return 0x4A; }
@@ -93,14 +93,14 @@ scope HardwareMap {
     }
 
     // Validate temperature input (1-based, user-facing)
-    public bool isValidTempInput(u8 input) {
+    bool isValidTempInput(u8 input) {
         if (input < 1) { return false; }
         if (input > TEMP_COUNT) { return false; }
         return true;
     }
 
     // Validate pressure input (1-based, user-facing)
-    public bool isValidPressureInput(u8 input) {
+    bool isValidPressureInput(u8 input) {
         if (input < 1) { return false; }
         if (input > PRES_COUNT) { return false; }
         return true;

@@ -23,7 +23,7 @@ scope SerialCommandHandler {
 
     // ─── Result formatting ──────────────────────────────────────────
 
-    void printResult(ECommandResult result) {
+    private void printResult(ECommandResult result) {
         switch (result) {
             case CMD_SUCCESS { Serial.println("OK"); }
             case CMD_UNKNOWN_COMMAND { Serial.println("ERR,Unknown command"); }
@@ -40,7 +40,7 @@ scope SerialCommandHandler {
 
     // ─── Serial-only: Query ─────────────────────────────────────────
 
-    void printEnabledValues() {
+    private void printEnabledValues() {
         Serial.println("=== Enabled Values ===");
         for (u8 i <- 0; i < TEMP_INPUT_COUNT; i <- i + 1) {
             EValueId val <- appConfig.tempInputs[i].assignedValue;
@@ -70,7 +70,7 @@ scope SerialCommandHandler {
         }
     }
 
-    void handleQuery() {
+    private void handleQuery() {
         u8 queryType <- 0;
         if (parsed.count > 1) {
             queryType <- parsed.data[1];
@@ -108,7 +108,7 @@ scope SerialCommandHandler {
 
     // ─── Serial-only: Read sensors ──────────────────────────────────
 
-    void handleReadSensors() {
+    private void handleReadSensors() {
         u8 sensorType <- 0;
         if (parsed.count > 1) {
             sensorType <- parsed.data[1];
@@ -223,7 +223,7 @@ scope SerialCommandHandler {
 
     // ─── Serial-only: Diagnostics ───────────────────────────────────
 
-    void reportFaults() {
+    private void reportFaults() {
         u8 egtFault <- MAX31856Manager.getFaultStatus();
         bool hasFault <- FaultDecode.hasFault(egtFault);
 
@@ -259,7 +259,7 @@ scope SerialCommandHandler {
         }
     }
 
-    void handleDumpEeprom() {
+    private void handleDumpEeprom() {
         u32 configSize <- sizeof(AppConfig);
 
         Serial.println("=== EEPROM Dump ===");
@@ -292,7 +292,7 @@ scope SerialCommandHandler {
 
     // ─── Command dispatch ───────────────────────────────────────────
 
-    void processCommand() {
+    private void processCommand() {
         u32 len <- cmdBuffer.char_count;
         if (len = 0) {
             return;
@@ -329,7 +329,7 @@ scope SerialCommandHandler {
 
     // ─── Public interface ───────────────────────────────────────────
 
-    public void initialize() {
+    void initialize() {
         cmdIndex <- 0;
         cmdBuffer <- "";
 
@@ -337,7 +337,7 @@ scope SerialCommandHandler {
         Serial.println("Commands: 1,valueId[,input] | 2,valueId | 5,query | 6 | 7 | 8,in,preset | 9,in,preset");
     }
 
-    public void update() {
+    void update() {
         i32 available <- Serial.available();
         while (available > 0) {
             i32 readResult <- Serial.read();

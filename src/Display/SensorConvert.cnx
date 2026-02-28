@@ -14,7 +14,7 @@ scope SensorConvert {
     const f32 PRESSURE_VOLTAGE_MAX <- 4.5;
 
     // Clamp value to non-negative
-    public f32 clampPositive(f32 x) {
+    f32 clampPositive(f32 x) {
         if (x < 0.0) {
             return 0.0;
         }
@@ -22,7 +22,7 @@ scope SensorConvert {
     }
 
     // Default atmospheric pressure when BME280 not available
-    public f32 defaultAtmosphericPressure() {
+    f32 defaultAtmosphericPressure() {
         return STANDARD_ATMOSPHERE_KPA;
     }
 
@@ -30,7 +30,7 @@ scope SensorConvert {
     // V = VREF * R_ntc / (R_known + R_ntc)
     // R_ntc = R_known * V / (VREF - V)
     // 1/T = A + B*ln(R) + C*(ln(R))^3
-    public f32 ntcTemperature(f32 voltage, const TTempInputConfig cfg) {
+    f32 ntcTemperature(f32 voltage, const TTempInputConfig cfg) {
         // Bounds check
         if (voltage <= 0.0) {
             return -273.15;
@@ -54,7 +54,7 @@ scope SensorConvert {
 
     // Convert pressure sensor voltage to kPa
     // Voltage range: 0.5V = 0, 4.5V = max
-    public f32 pressure(f32 voltage, const TPressureInputConfig cfg, f32 atmosphericPressurekPa) {
+    f32 pressure(f32 voltage, const TPressureInputConfig cfg, f32 atmosphericPressurekPa) {
         // Clamp voltage to valid range
         if (voltage < PRESSURE_VOLTAGE_MIN) {
             return 0.0;

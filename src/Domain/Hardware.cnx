@@ -10,7 +10,7 @@
 
 scope Hardware {
     // Check if a value ID is assigned to any hardware input
-    bool isValueAssigned(const AppConfig config, EValueId id) {
+    private bool isValueAssigned(const AppConfig config, EValueId id) {
         // Single-flag sensors: no looping needed
         if (id = EValueId.TURBO1_TURB_INLET_TEMP) { return config.egtEnabled; }
         if (id = EValueId.AMBIENT_PRES) { return config.bme280Enabled; }
@@ -26,7 +26,7 @@ scope Hardware {
     }
 
     // Set each hardware flag exactly once based on current config
-    void populateHardwareFlags(const AppConfig config) {
+    private void populateHardwareFlags(const AppConfig config) {
         for (u8 i <- 0; i < EValueId.VALUE_ID_COUNT; i +<- 1) {
             EValueId id <- (EValueId)i;
             bool hasHardwareAssigned <- isValueAssigned(config, id);
@@ -34,7 +34,7 @@ scope Hardware {
         }
     }
 
-    public void initialize(const AppConfig config) {
+    void initialize(const AppConfig config) {
         populateHardwareFlags(config);
         ADS1115Manager.initialize(config);
         MAX31856Manager.initialize(config);

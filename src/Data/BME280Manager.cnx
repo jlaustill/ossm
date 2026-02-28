@@ -27,7 +27,7 @@ scope BME280Manager {
 
     // Call from main loop to update readings
     // Returns true if readings were updated
-    public bool update() {
+    bool update() {
         if (!enabled || !initialized) {
             return false;
         }
@@ -61,7 +61,7 @@ scope BME280Manager {
     }
 
     // Initialize the BME280 based on config
-    public void initialize(const AppConfig config) {
+    void initialize(const AppConfig config) {
         enabled <- config.bme280Enabled;
 
         if (!enabled) {
@@ -103,7 +103,7 @@ scope BME280Manager {
     }
 
     // Get the latest temperature reading in Celsius
-    public f32 getTemperatureC() {
+    f32 getTemperatureC() {
         if (!readingValid) {
             return -273.15;  // Return absolute zero as error indicator
         }
@@ -111,7 +111,7 @@ scope BME280Manager {
     }
 
     // Get the latest humidity reading in %
-    public f32 getHumidity() {
+    f32 getHumidity() {
         if (!readingValid) {
             return 0.0;
         }
@@ -119,7 +119,7 @@ scope BME280Manager {
     }
 
     // Get the latest pressure reading in kPa
-    public f32 getPressurekPa() {
+    f32 getPressurekPa() {
         if (!readingValid) {
             return 0.0;
         }
@@ -127,7 +127,7 @@ scope BME280Manager {
     }
 
     // Check if the device is enabled and initialized
-    public bool isEnabled() {
+    bool isEnabled() {
         return enabled && initialized;
     }
 }
